@@ -1,11 +1,14 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, ReactNode, useCallback, useState } from 'react';
 import clsx from 'clsx';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
 import { useUser } from '@gitroom/frontend/components/layout/user.context';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
-const useFaqList = () => {
+
+// Account deletion is not offered in the UI. The delete-account component and
+// its API stay in the product; the FAQ only drops the entry that linked to it.
+export const useFaqList = () => {
   const { isGeneral } = useVariables();
   const user = useUser();
   const t = useT();
@@ -61,8 +64,9 @@ For example, you can schedule your posts on X, Facebook, Instagram, TikTok, YouT
 export const FAQSection: FC<{
   title: string;
   description: string;
+  content?: ReactNode;
 }> = (props) => {
-  const { title, description } = props;
+  const { title, description, content } = props;
   const [show, setShow] = useState(false);
   const changeShow = useCallback(() => {
     setShow(!show);
@@ -123,6 +127,16 @@ export const FAQSection: FC<{
             __html: description,
           }}
         />
+        {content && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            className="mt-[16px]"
+          >
+            {content}
+          </div>
+        )}
       </div>
     </div>
   );

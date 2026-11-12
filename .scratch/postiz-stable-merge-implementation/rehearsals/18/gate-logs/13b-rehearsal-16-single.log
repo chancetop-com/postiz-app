@@ -1,0 +1,33 @@
+[harness] database postgresql://postgres:postiz@127.0.0.1:55014/postiz
+[harness] prisma db push complete
+[harness] redis redis://127.0.0.1:55015
+[harness] media origin http://127.0.0.1:51207
+time=2026-11-12T08:58:53.308 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+[harness] temporal (real) 127.0.0.1:51208
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:51208
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:51209/metrics
+[harness] orchestrator on 51223
+
+=== provider-queue-workflow-compat — A synthetic old execution whose task queue is the provider queue stays untouched while provider workers are activity-only; after COMPAT_WORKFLOW_QUEUES names that queue, the same compatible bundle consumes it and publishes once.
+  · provider-queue execution without compat: {"status":"RUNNING","events":2,"activities":[]}
+  ✓ provider queue does not consume workflows by default
+  ✓ no activity was scheduled without a workflow worker
+  ✓ the synthetic provider workflow did not publish
+  ✓ the post is still QUEUE
+  · compatible provider worker enabled: COMPAT_WORKFLOW_QUEUES=bluesky
+  · provider-queue publish: {"at":"2026-11-12T00:59:08.799Z","pid":89969,"method":"post","internalId":"stub-internal-org-mwcuaye1-1","token":"synthetic-token-org-mwcuaye1-1","integrationId":"int_org-mwcuaye1-1","organizationId":"org_org-mwcuaye1-1","posts":[{"id":"post-mwcuayg1-3","message":"Synthetic provider-queue workflow","settings":{},"media":[{"path":"<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/16/work/uploads-mwcuas6p/uploads/rehearsal15/org-mwcuaye1-1.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwcuaye1-1","type":"image"}]}]}
+  ✓ compatible worker publishes once
+  ✓ provider-queue execution keeps the old type
+  · provider-queue execution after compat: {"workflowId":"post_post-mwcuayg1-3","runId":"01a1cd43-daf6-7766-9e97-b42ef898ceec","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"bluesky","searchAttributes":{"postId":"post-mwcuayg1-3","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"],"organizationId":"org_org-mwcuaye1-1"}}
+  ✓ provider-queue workflow completed
+  ✓ workflow id is unchanged
+  ✓ workflow type is unchanged
+  ✓ workflow still runs on the provider queue
+  ✓ business post id is unchanged
+  ✓ publishing activity stayed on the provider queue
+  ✓ database activity follows the workflow queue
+
+[harness] PASS — 1 scenario(s), results /Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/16/results/latest.json

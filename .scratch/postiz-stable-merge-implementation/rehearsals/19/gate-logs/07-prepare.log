@@ -1,0 +1,4 @@
+prepare-build-context: prepared /Users/chancetio/Desktop/Web/postiz-worktrees/19/k8s
+  source commit : 61bb2b9dec9858e97e436d8e3d41d04aca126f7e (dirty)
+  generated files: 970
+  manifest      : /Users/chancetio/Desktop/Web/postiz-worktrees/19/k8s/BUILD_CONTEXT_MANIFEST.json

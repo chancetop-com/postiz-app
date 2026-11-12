@@ -1,0 +1,71 @@
+
+> gitroom@1.0.0 test:replay /Users/chancetio/Desktop/Web/postiz-worktrees/18
+> node .scratch/postiz-stable-merge-implementation/rehearsals/14/run.mjs replay
+
+2026-11-12T00:22:22.488Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+ok   autopost-post-patch-continue-as-new/continue-as-new-run (autoPostWorkflow, 271 events)
+2026-11-12T00:22:22.563Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+ok   autopost-pre-patch/in-flight (autoPostWorkflow, 44 events)
+2026-11-12T00:22:22.595Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:22.607Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.608Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   legacy-email-continue-as-new/continue-as-new-run (sendEmailWorkflow, 335 events)
+2026-11-12T00:22:22.653Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:22.662Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.662Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+2026-11-12T00:22:22.670Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.671Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   legacy-email-signal-drain/in-flight (sendEmailWorkflow, 39 events)
+2026-11-12T00:22:22.691Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+ok   missing-post-patch-continue-as-new/continue-as-new-run (missingPostWorkflow, 271 events)
+2026-11-12T00:22:22.741Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+ok   missing-pre-patch/in-flight (missingPostWorkflow, 44 events)
+2026-11-12T00:22:22.770Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:22.787Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.787Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+2026-11-12T00:22:22.787Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.787Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+2026-11-12T00:22:22.787Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.787Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   refresh-token-loop/execution (refreshTokenWorkflow, 34 events)
+2026-11-12T00:22:22.806Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+ok   streak-post-patch-v2-handoff/continue-as-new-run (streakWorkflow, 37 events)
+2026-11-12T00:22:22.835Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:22.853Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.853Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+2026-11-12T00:22:22.853Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.853Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   streak-pre-patch/execution (streakWorkflow, 39 events)
+2026-11-12T00:22:22.872Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:22.890Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.890Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   v101-scheduled-sleep-success/execution (postWorkflowV101, 52 events)
+2026-11-12T00:22:22.912Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:22.927Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.927Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   v102-bad-body/execution (postWorkflowV102, 34 events)
+2026-11-12T00:22:22.949Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:22.966Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:22.966Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   v102-delayed-comment/execution (postWorkflowV102, 75 events)
+2026-11-12T00:22:22.987Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+ok   v102-inflight-sleep/in-flight (postWorkflowV102, 11 events)
+2026-11-12T00:22:23.017Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:23.030Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:23.030Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+2026-11-12T00:22:23.035Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:23.036Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   v102-refresh-token/execution (postWorkflowV102, 64 events)
+2026-11-12T00:22:23.059Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:23.075Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:23.075Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   v102-repeat-child/parent (postWorkflowV102, 62 events)
+2026-11-12T00:22:23.098Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:22:23.115Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:23.115Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+ok   v102-repeat-child/repeat-child (postWorkflowV102, 47 events)
+
+16 histories replayed with the candidate bundle (de20c87f30fd)
+Report: /Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/14/results/replay-latest.json
+2026-11-12T00:22:31.230Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:22:31.230Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }

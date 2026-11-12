@@ -1,0 +1,4 @@
+DRIFT  apps/
+  >f+++++++ frontend/next-env.d.ts
+  >f.s..... frontend/public/magic.svg
+prepare-build-context: build context is out of date with the repository root

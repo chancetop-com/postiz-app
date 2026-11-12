@@ -1,0 +1,23 @@
+[
+  {
+    "name": "backend",
+    "status": "online",
+    "restarts": 0,
+    "script": "/app/apps/backend/dist/apps/backend/src/main.js",
+    "cwd": "/app"
+  },
+  {
+    "name": "frontend",
+    "status": "online",
+    "restarts": 0,
+    "script": "/app/node_modules/next/dist/bin/next",
+    "cwd": "/app/apps/frontend"
+  },
+  {
+    "name": "orchestrator",
+    "status": "online",
+    "restarts": 0,
+    "script": "/app/apps/orchestrator/dist/apps/orchestrator/src/main.js",
+    "cwd": "/app"
+  }
+]

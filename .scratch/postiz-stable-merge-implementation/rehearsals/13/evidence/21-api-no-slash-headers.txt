@@ -1,0 +1,15 @@
+http/1.1 301 moved permanently
+server: nginx/1.22.1
+date: thu, 12 nov 2026 01:05:27 gmt
+content-type: text/html
+content-length: 169
+location: http://localhost:5000/api/
+connection: keep-alive
+
+<html>
+<head><title>301 moved permanently</title></head>
+<body>
+<center><h1>301 moved permanently</h1></center>
+<hr><center>nginx/1.22.1</center>
+</body>
+</html>

@@ -1,0 +1,1254 @@
+{
+  "generatedAt": "2026-11-12T00:42:13.295Z",
+  "node": "v22.23.4",
+  "scenarios": [
+    {
+      "id": "new-post-v112-http",
+      "description": "A post scheduled through the public API with an uploaded image starts V112, publishes through the pending/check/finalize path, writes the result back and does not publish twice after a worker restart.",
+      "startedAt": "2026-11-12T00:42:29.969Z",
+      "observations": [
+        {
+          "name": "uploaded media",
+          "value": {
+            "id": "0fd46498-481e-4d26-a915-62ab84fae896",
+            "name": "70418243a980fc3b5f0144c32aabc910c.png",
+            "originalName": null,
+            "path": "http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png",
+            "thumbnail": null,
+            "alt": null,
+            "status": "ready"
+          }
+        },
+        {
+          "name": "post id",
+          "value": "cmwctprnb0000cbv38ytmlzhh"
+        },
+        {
+          "name": "running execution",
+          "value": {
+            "workflowId": "post_cmwctprnb0000cbv38ytmlzhh",
+            "runId": "01a1cd34-c554-7a31-91d7-616337578722",
+            "type": "postWorkflowV112",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "startTime": "2026-11-12T00:42:30.100Z"
+          }
+        },
+        {
+          "name": "published row",
+          "value": {
+            "id": "cmwctprnb0000cbv38ytmlzhh",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-12T00:42:45.053Z",
+            "releaseId": "stub-pending-86639-1",
+            "releaseURL": "https://stub.invalid/stub-pending-86639-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"0fd46498-481e-4d26-a915-62ab84fae896\",\"name\":\"70418243a980fc3b5f0144c32aabc910c.png\",\"originalName\":null,\"path\":\"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png\",\"thumbnail\":null,\"alt\":null,\"status\":\"ready\"}]"
+          }
+        },
+        {
+          "name": "publish calls",
+          "value": [
+            "postPending"
+          ]
+        },
+        {
+          "name": "payload contract",
+          "value": {
+            "id": "cmwctprnb0000cbv38ytmlzhh",
+            "message": "Synthetic scheduled post created through the public API",
+            "settings": {
+              "__type": "bluesky"
+            },
+            "media": [
+              {
+                "path": "http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png",
+                "remote": true,
+                "status": 200,
+                "bytes": 70,
+                "sha256": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+                "id": "0fd46498-481e-4d26-a915-62ab84fae896",
+                "type": "image"
+              }
+            ]
+          }
+        },
+        {
+          "name": "execution history",
+          "value": {
+            "workflowId": "post_cmwctprnb0000cbv38ytmlzhh",
+            "runId": "01a1cd34-c554-7a31-91d7-616337578722",
+            "eventCount": 70,
+            "eventTypes": [
+              "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_TIMER_STARTED",
+              "EVENT_TYPE_TIMER_FIRED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+              "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+              "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+            ],
+            "firstEvent": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+            "lastEvent": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+            "timers": 1,
+            "activityScheduled": [
+              {
+                "activity": "getPost",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "getPostsList",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "postSocialPending",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "checkPostStatus",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "finalizePost",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "updatePost",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "inAppNotification",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "sendWebhooks",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "internalPlugs",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "globalPlugs",
+                "taskQueue": "bluesky"
+              }
+            ],
+            "childWorkflows": [],
+            "continuedAsNew": 0
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "upload accepted",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"id\":\"0fd46498-481e-4d26-a915-62ab84fae896\",\"name\":\"70418243a980fc3b5f0144c32aabc910c.png\",\"originalName\":null,\"path\":\"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png\",\"thumbnail\":null,\"alt\":null,\"status\":\"ready\"}"
+        },
+        {
+          "name": "post created",
+          "ok": true,
+          "actual": true,
+          "detail": "[{\"postId\":\"cmwctprnb0000cbv38ytmlzhh\",\"integration\":\"int_org-mwctprki-1\"}]"
+        },
+        {
+          "name": "new post starts QUEUE",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "new post keeps the requested publish date",
+          "ok": true,
+          "actual": "2026-11-12T00:42:45.053Z",
+          "expected": "2026-11-12T00:42:45.053Z"
+        },
+        {
+          "name": "new post keeps the uploaded media reference",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "new starts use postWorkflowV112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "workflow id keeps the post id",
+          "ok": true,
+          "actual": "post_cmwctprnb0000cbv38ytmlzhh",
+          "expected": "post_cmwctprnb0000cbv38ytmlzhh"
+        },
+        {
+          "name": "new execution polls the main queue",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "state is PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "publishDate is not rewritten",
+          "ok": true,
+          "actual": "2026-11-12T00:42:45.053Z",
+          "expected": "2026-11-12T00:42:45.053Z"
+        },
+        {
+          "name": "releaseId written",
+          "ok": true,
+          "actual": true,
+          "detail": "stub-pending-86639-1"
+        },
+        {
+          "name": "releaseURL written",
+          "ok": true,
+          "actual": true,
+          "detail": "https://stub.invalid/stub-pending-86639-1"
+        },
+        {
+          "name": "exactly one publish attempt",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "new path uses postPending",
+          "ok": true,
+          "actual": "postPending",
+          "expected": "postPending"
+        },
+        {
+          "name": "publish targets the bound channel",
+          "ok": true,
+          "actual": "int_org-mwctprki-1",
+          "expected": "int_org-mwctprki-1"
+        },
+        {
+          "name": "publish uses the stored credential",
+          "ok": true,
+          "actual": "synthetic-token-org-mwctprki-1",
+          "expected": "synthetic-token-org-mwctprki-1"
+        },
+        {
+          "name": "payload message matches the API content",
+          "ok": true,
+          "actual": "Synthetic scheduled post created through the public API",
+          "expected": "Synthetic scheduled post created through the public API"
+        },
+        {
+          "name": "payload carries the uploaded image",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "provider read the uploaded bytes through the media URL",
+          "ok": true,
+          "actual": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+          "expected": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77"
+        },
+        {
+          "name": "provider read the whole image",
+          "ok": true,
+          "actual": 70,
+          "expected": 70
+        },
+        {
+          "name": "pending post was polled once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "finalize ran once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "releaseId comes from finalize",
+          "ok": true,
+          "actual": "stub-pending-86639-1",
+          "expected": "stub-pending-86639-1"
+        },
+        {
+          "name": "publish activities run on the provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "database activities run on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "execution completed normally",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        },
+        {
+          "name": "streak workflow started by the publish",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "streak workflow type",
+          "ok": true,
+          "actual": "streakWorkflowV2",
+          "expected": "streakWorkflowV2"
+        },
+        {
+          "name": "restart does not republish",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "restart does not rewrite state",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "restart does not rewrite releaseId",
+          "ok": true,
+          "actual": "stub-pending-86639-1",
+          "expected": "stub-pending-86639-1"
+        }
+      ]
+    },
+    {
+      "id": "legacy-v102-continuity",
+      "description": "A V102 execution created by the pre-upgrade code is still sleeping when the candidate worker takes over; it keeps its id, type and history, publishes with the blocking postSocial contract, writes the result back and does not republish after a restart.",
+      "startedAt": "2026-11-12T00:42:55.412Z",
+      "observations": [
+        {
+          "name": "legacy bundle sha256",
+          "value": "963d9c32ff4585a54c29a5f090ba1068e6ff1b91cf1557151514ce6e5f94b9ab"
+        },
+        {
+          "name": "candidate bundle sha256",
+          "value": "963d9c32ff4585a54c29a5f090ba1068e6ff1b91cf1557151514ce6e5f94b9ab"
+        },
+        {
+          "name": "legacy run id",
+          "value": "01a1cd35-2bce-7376-bf11-f3eebe93b826"
+        },
+        {
+          "name": "legacy history before hand-over",
+          "value": {
+            "eventCount": 11,
+            "lastEvent": "EVENT_TYPE_TIMER_STARTED",
+            "timers": 1,
+            "activityScheduled": [
+              {
+                "activity": "getPostsList",
+                "taskQueue": "main"
+              }
+            ]
+          }
+        },
+        {
+          "name": "legacy worker stopped before publish",
+          "value": true
+        },
+        {
+          "name": "published row",
+          "value": {
+            "id": "post-mwctqb82-4",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-12T00:43:07.442Z",
+            "releaseId": "stub-post-86739-1",
+            "releaseURL": "https://stub.invalid/stub-post-86739-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwctqb79-2\",\"name\":\"org-mwctqb79-2.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqb79-2.png\"}]"
+          }
+        },
+        {
+          "name": "publish calls",
+          "value": [
+            "post"
+          ]
+        },
+        {
+          "name": "payload contract",
+          "value": {
+            "id": "post-mwctqb82-4",
+            "message": "Synthetic post scheduled by the old code",
+            "settings": {},
+            "media": [
+              {
+                "path": "<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/15/work/uploads-mwctpeq4/uploads/rehearsal15/org-mwctqb79-2.png",
+                "readable": true,
+                "bytes": 70,
+                "sha256": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+                "id": "media_org-mwctqb79-2",
+                "type": "image"
+              }
+            ]
+          }
+        },
+        {
+          "name": "execution after hand-over",
+          "value": {
+            "workflowId": "post_post-mwctqb82-4",
+            "runId": "01a1cd35-2bce-7376-bf11-f3eebe93b826",
+            "type": "postWorkflowV102",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwctqb82-4",
+              "organizationId": "org_org-mwctqb79-2",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+58a4978f1c3e76bc2c7b3ba9237d91bd818f3762475d926b8dd8f825b12eeaae",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ]
+            }
+          }
+        },
+        {
+          "name": "executions for the post",
+          "value": [
+            {
+              "workflowId": "post_post-mwctqb82-4",
+              "runId": "01a1cd35-2bce-7376-bf11-f3eebe93b826",
+              "type": "postWorkflowV102",
+              "status": "COMPLETED",
+              "taskQueue": "main",
+              "startTime": "2026-11-12T00:42:56.334Z"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "legacy execution has the old workflow type",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED"
+        },
+        {
+          "name": "old execution publishes exactly once",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "old publishDate is preserved",
+          "ok": true,
+          "actual": "2026-11-12T00:43:07.442Z",
+          "expected": "2026-11-12T00:43:07.442Z"
+        },
+        {
+          "name": "releaseId written by the candidate",
+          "ok": true,
+          "actual": true,
+          "detail": "stub-post-86739-1"
+        },
+        {
+          "name": "releaseURL written by the candidate",
+          "ok": true,
+          "actual": true,
+          "detail": "https://stub.invalid/stub-post-86739-1"
+        },
+        {
+          "name": "old payload uses the blocking postSocial contract",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "old path never calls postPending",
+          "ok": true,
+          "actual": "post",
+          "expected": "post"
+        },
+        {
+          "name": "payload keeps the stored content",
+          "ok": true,
+          "actual": "Synthetic post scheduled by the old code",
+          "expected": "Synthetic post scheduled by the old code"
+        },
+        {
+          "name": "payload carries the old media",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "provider read the legacy media file from disk",
+          "ok": true,
+          "actual": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+          "expected": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77"
+        },
+        {
+          "name": "payload keeps the old integration",
+          "ok": true,
+          "actual": "int_org-mwctqb79-2",
+          "expected": "int_org-mwctqb79-2"
+        },
+        {
+          "name": "payload keeps the old credential",
+          "ok": true,
+          "actual": "synthetic-token-org-mwctqb79-2",
+          "expected": "synthetic-token-org-mwctqb79-2"
+        },
+        {
+          "name": "workflow id is unchanged",
+          "ok": true,
+          "actual": "post_post-mwctqb82-4",
+          "expected": "post_post-mwctqb82-4"
+        },
+        {
+          "name": "run id is unchanged",
+          "ok": true,
+          "actual": "01a1cd35-2bce-7376-bf11-f3eebe93b826",
+          "expected": "01a1cd35-2bce-7376-bf11-f3eebe93b826"
+        },
+        {
+          "name": "workflow type is still postWorkflowV102",
+          "ok": true,
+          "actual": "postWorkflowV102",
+          "expected": "postWorkflowV102"
+        },
+        {
+          "name": "old execution completed",
+          "ok": true,
+          "actual": "COMPLETED",
+          "expected": "COMPLETED"
+        },
+        {
+          "name": "history is not rebuilt",
+          "ok": true,
+          "actual": [
+            "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+            "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+            "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+            "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+            "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+            "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+            "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+            "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+            "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+            "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+            "EVENT_TYPE_TIMER_STARTED"
+          ],
+          "expected": [
+            "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+            "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+            "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+            "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+            "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+            "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+            "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+            "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+            "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+            "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+            "EVENT_TYPE_TIMER_STARTED"
+          ]
+        },
+        {
+          "name": "old publish activity stayed on the provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "exactly one execution exists for the post",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "no renamed or rebuilt execution",
+          "ok": true,
+          "actual": "post_post-mwctqb82-4",
+          "expected": "post_post-mwctqb82-4"
+        },
+        {
+          "name": "restart does not resend the old post",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "restart does not rewrite the old row",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "restart does not rewrite the old date",
+          "ok": true,
+          "actual": "2026-11-12T00:43:07.442Z",
+          "expected": "2026-11-12T00:43:07.442Z"
+        }
+      ]
+    },
+    {
+      "id": "reschedule-scheduled-post",
+      "description": "Rescheduling a queued post terminates only that post’s running execution and starts a new V112 for the new date; the post publishes once, at the new date, with the same channel and media.",
+      "startedAt": "2026-11-12T00:43:18.150Z",
+      "observations": [
+        {
+          "name": "reschedule response",
+          "value": {
+            "id": "cmwctqssn0001cbv3suexv6rm",
+            "state": "QUEUE",
+            "publishDate": "2026-11-12T00:43:28.751Z",
+            "organizationId": "org_org-mwctqsqu-5",
+            "integrationId": "int_org-mwctqsqu-5",
+            "content": "Synthetic post that will be rescheduled",
+            "delay": 0,
+            "group": "02c47853-1a04-4874-b359-8c68e7774f53",
+            "batchId": "32a7fa37-4f4f-4c01-8357-b0c778a51667",
+            "title": null,
+            "description": null,
+            "parentPostId": null,
+            "releaseId": null,
+            "releaseURL": null,
+            "settings": "{\"__type\":\"bluesky\"}",
+            "image": "[{\"id\":\"media_org-mwctqsqu-5\",\"name\":\"org-mwctqsqu-5.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqsqu-5.png\",\"organizationId\":\"org_org-mwctqsqu-5\",\"createdAt\":\"2026-11-12T00:43:18.169Z\",\"updatedAt\":\"2026-11-12T00:43:18.169Z\",\"deletedAt\":null,\"fileSize\":70,\"type\":\"image\",\"thumbnail\":null,\"alt\":null,\"thumbnailTimestamp\":null,\"status\":\"ready\",\"processingError\":null}]",
+            "submittedForOrderId": null,
+            "submittedForOrganizationId": null,
+            "approvedSubmitForOrder": "NO",
+            "creationMethod": "API",
+            "lastMessageId": null,
+            "intervalInDays": null,
+            "error": null,
+            "createdAt": "2026-11-12T00:43:18.215Z",
+            "updatedAt": "2026-11-12T00:43:18.800Z",
+            "deletedAt": null
+          }
+        },
+        {
+          "name": "old execution",
+          "value": {
+            "workflowId": "post_cmwctqssn0001cbv3suexv6rm",
+            "runId": "01a1cd35-815c-78a2-a8ff-87b7b6672e6b",
+            "type": "postWorkflowV112",
+            "status": "TERMINATED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "cmwctqssn0001cbv3suexv6rm",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ],
+              "organizationId": "org_org-mwctqsqu-5"
+            }
+          }
+        },
+        {
+          "name": "replacement execution",
+          "value": {
+            "workflowId": "post_cmwctqssn0001cbv3suexv6rm",
+            "runId": "01a1cd35-83af-7d69-a98c-9b9678997ec4",
+            "type": "postWorkflowV112",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "startTime": "2026-11-12T00:43:18.831Z"
+          }
+        },
+        {
+          "name": "published row",
+          "value": {
+            "id": "cmwctqssn0001cbv3suexv6rm",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-12T00:43:28.751Z",
+            "releaseId": "stub-pending-86762-1",
+            "releaseURL": "https://stub.invalid/stub-pending-86762-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwctqsqu-5\",\"name\":\"org-mwctqsqu-5.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqsqu-5.png\",\"organizationId\":\"org_org-mwctqsqu-5\",\"createdAt\":\"2026-11-12T00:43:18.169Z\",\"updatedAt\":\"2026-11-12T00:43:18.169Z\",\"deletedAt\":null,\"fileSize\":70,\"type\":\"image\",\"thumbnail\":null,\"alt\":null,\"thumbnailTimestamp\":null,\"status\":\"ready\",\"processingError\":null}]"
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "first execution is V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "first execution waits for the original date",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reschedule accepted",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"id\":\"cmwctqssn0001cbv3suexv6rm\",\"state\":\"QUEUE\",\"publishDate\":\"2026-11-12T00:43:28.751Z\",\"organizationId\":\"org_org-mwctqsqu-5\",\"integrationId\":\"int_org-mwctqsqu-5\",\"content\":\"Synthetic post that will be rescheduled\",\"delay\":0,\"group\":\"02c47853-1a04-4874-b359-8c68e7774f53\",\"batchId\":\"32a7fa37-4f4f-4c01-8357-b0c778a51667\",\"title\":null,\"description\":null,\"parentPostId\":null,\"releaseId\":null,\"releaseURL\":null,\"settings\":\"{\\\"__type\\\":\\\"bluesky\\\"}\",\"image\":\"[{\\\"id\\\":\\\"media_org-mwctqsqu-5\\\",\\\"name\\\":\\\"org-mwctqsqu-5.png\\\",\\\"originalName\\\":\\\"legacy.png\\\",\\\"path\\\":\\\"/uploads/rehearsal15/org-mwctqsqu-5.png\\\",\\\"organizationId\\\":\\\"org_org-mwctqsqu-5\\\",\\\"createdAt\\\":\\\"2026-11-12T00:43:18.169Z\\\",\\\"updatedAt\\\":\\\"2026-11-12T00:43:18.169Z\\\",\\\"deletedAt\\\":null,\\\"fileSize\\\":70,\\\"type\\\":\\\"image\\\",\\\"thumbnail\\\":null,\\\"alt\\\":null,\\\"thumbnailTimestamp\\\":null,\\\"status\\\":\\\"ready\\\",\\\"processingError\\\":null}]\",\"submittedForOrderId\":null,\"submittedForOrganizationId\":null,\"approvedSubmitForOrder\":\"NO\",\"creationMethod\":\"API\",\"lastMessageId\":null,\"intervalInDays\":null,\"error\":null,\"createdAt\":\"2026-11-12T00:43:18.215Z\",\"updatedAt\":\"2026-11-12T00:43:18.800Z\",\"deletedAt\":null}"
+        },
+        {
+          "name": "replacement is V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "replacement keeps the workflow id",
+          "ok": true,
+          "actual": "post_cmwctqssn0001cbv3suexv6rm",
+          "expected": "post_cmwctqssn0001cbv3suexv6rm"
+        },
+        {
+          "name": "replacement has a new run id",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "database keeps the new publish date",
+          "ok": true,
+          "actual": "2026-11-12T00:43:28.751Z",
+          "expected": "2026-11-12T00:43:28.751Z"
+        },
+        {
+          "name": "database state is still QUEUE",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "publishes once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "publishes at the new date only",
+          "ok": true,
+          "actual": "2026-11-12T00:43:28.751Z",
+          "expected": "2026-11-12T00:43:28.751Z"
+        },
+        {
+          "name": "state is PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "old execution was terminated, not rewritten",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED"
+        }
+      ]
+    },
+    {
+      "id": "draft-update-delete",
+      "description": "Drafts start no workflow, switching a draft to schedule starts V112, deleting a queued post marks it deleted and terminates its execution without publishing, and an “update” date change of a published post never requeues or republishes it.",
+      "startedAt": "2026-11-12T00:43:28.962Z",
+      "observations": [
+        {
+          "name": "deleted execution",
+          "value": {
+            "workflowId": "post_cmwctr13u0002cbv3tls8c3ym",
+            "runId": "01a1cd35-b557-77f7-97eb-143869aff9b8",
+            "type": "postWorkflowV112",
+            "status": "TERMINATED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "cmwctr13u0002cbv3tls8c3ym",
+              "organizationId": "org_org-mwctr136-6",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updated published row",
+          "value": {
+            "id": "post-mwctr347-8",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-11T23:42:31.596Z",
+            "releaseId": "stub-existing-release",
+            "releaseURL": "https://stub.invalid/existing",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwctr136-6\",\"name\":\"org-mwctr136-6.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctr136-6.png\"}]"
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "draft created",
+          "ok": true,
+          "actual": true,
+          "detail": "[{\"postId\":\"cmwctr13u0002cbv3tls8c3ym\",\"integration\":\"int_org-mwctr136-6\"}]"
+        },
+        {
+          "name": "draft state",
+          "ok": true,
+          "actual": "DRAFT",
+          "expected": "DRAFT"
+        },
+        {
+          "name": "draft starts no workflow",
+          "ok": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "name": "draft switched to schedule",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"id\":\"cmwctr13u0002cbv3tls8c3ym\",\"state\":\"QUEUE\"}"
+        },
+        {
+          "name": "switching a draft starts V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "switched draft is QUEUE",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "delete accepted",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"id\":\"cmwctr13u0002cbv3tls8c3ym\"}"
+        },
+        {
+          "name": "delete sets deletedAt",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"id\":\"cmwctr13u0002cbv3tls8c3ym\",\"state\":\"QUEUE\",\"publishDate\":\"2026-11-12T00:45:28.975Z\",\"releaseId\":null,\"releaseURL\":null,\"error\":null,\"deletedAt\":\"2026-11-12T00:43:31.574Z\",\"image\":\"[{\\\"id\\\":\\\"media_org-mwctr136-6\\\",\\\"name\\\":\\\"org-mwctr136-6.png\\\",\\\"originalName\\\":\\\"legacy.png\\\",\\\"path\\\":\\\"/uploads/rehearsal15/org-mwctr136-6.png\\\",\\\"organizationId\\\":\\\"org_org-mwctr136-6\\\",\\\"createdAt\\\":\\\"2026-11-12T00:43:28.972Z\\\",\\\"updatedAt\\\":\\\"2026-11-12T00:43:28.972Z\\\",\\\"deletedAt\\\":null,\\\"fileSize\\\":70,\\\"type\\\":\\\"image\\\",\\\"thumbnail\\\":null,\\\"alt\\\":null,\\\"thumbnailTimestamp\\\":null,\\\"status\\\":\\\"ready\\\",\\\"processingError\\\":null}]\"}"
+        },
+        {
+          "name": "delete keeps the row state",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "update date accepted",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"id\":\"post-mwctr347-8\",\"state\":\"PUBLISHED\",\"publishDate\":\"2026-11-11T23:42:31.596Z\",\"organizationId\":\"org_org-mwctr136-6\",\"integrationId\":\"int_org-mwctr136-6\",\"content\":\"Synthetic already-published post\",\"delay\":0,\"group\":\"group-mwctr347-7\",\"batchId\":null,\"title\":null,\"description\":null,\"parentPostId\":null,\"releaseId\":\"stub-existing-release\",\"releaseURL\":\"https://stub.invalid/existing\",\"settings\":\"{}\",\"image\":\"[{\\\"id\\\":\\\"media_org-mwctr136-6\\\",\\\"name\\\":\\\"org-mwctr136-6.png\\\",\\\"originalName\\\":\\\"legacy.png\\\",\\\"path\\\":\\\"/uploads/rehearsal15/org-mwctr136-6.png\\\"}]\",\"submittedForOrderId\":null,\"submittedForOrganizationId\":null,\"approvedSubmitForOrder\":\"NO\",\"creationMethod\":\"UNKNOWN\",\"lastMessageId\":null,\"intervalInDays\":null,\"error\":null,\"createdAt\":\"2026-11-12T00:43:31.592Z\",\"updatedAt\":\"2026-11-12T00:43:31.608Z\",\"deletedAt\":null}"
+        },
+        {
+          "name": "update keeps PUBLISHED state",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "update keeps releaseId",
+          "ok": true,
+          "actual": "stub-existing-release",
+          "expected": "stub-existing-release"
+        },
+        {
+          "name": "update is not requeued as a new execution",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "deleted post never publishes",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "deleted post records no platform call",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "update did not republish",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "legacy-email-backlog",
+      "description": "The pre-upgrade singleton sendEmailWorkflow is created by the old worker, receives signals after hand-over, and the candidate worker drains them through the e-mail boundary exactly once.",
+      "startedAt": "2026-11-12T00:43:43.237Z",
+      "observations": [
+        {
+          "name": "legacy email worker stopped before signals",
+          "value": true
+        },
+        {
+          "name": "emails sent",
+          "value": [
+            {
+              "to": "legacy-one@synthetic.invalid",
+              "subject": "Synthetic legacy email one"
+            },
+            {
+              "to": "legacy-two@synthetic.invalid",
+              "subject": "Synthetic legacy email two"
+            }
+          ]
+        },
+        {
+          "name": "email execution history",
+          "value": {
+            "eventCount": 30,
+            "activityScheduled": [
+              {
+                "activity": "sendEmail",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "sendEmail",
+                "taskQueue": "main"
+              }
+            ]
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "both queued emails were sent",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "old queue order and recipients are preserved",
+          "ok": true,
+          "actual": [
+            "legacy-one@synthetic.invalid",
+            "legacy-two@synthetic.invalid"
+          ],
+          "expected": [
+            "legacy-one@synthetic.invalid",
+            "legacy-two@synthetic.invalid"
+          ]
+        },
+        {
+          "name": "old email activity ran on the main queue",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "old execution consumed the signals",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "restart does not resend legacy emails",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        }
+      ]
+    },
+    {
+      "id": "missing-post-sweep",
+      "description": "The missing-posts sweep still finds a stale QUEUE post and pokes the new V112 path; the post publishes with its original past date and no batch rebuild.",
+      "startedAt": "2026-11-12T00:44:03.711Z",
+      "observations": [
+        {
+          "name": "published row",
+          "value": {
+            "id": "post-mwctrrx0-12",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-11T19:44:03.732Z",
+            "releaseId": "stub-pending-86921-1",
+            "releaseURL": "https://stub.invalid/stub-pending-86921-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwctrrwf-10\",\"name\":\"org-mwctrrwf-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctrrwf-10.png\"}]"
+          }
+        },
+        {
+          "name": "sweep history",
+          "value": {
+            "eventCount": 11,
+            "activityScheduled": [
+              {
+                "activity": "searchForMissingThreeHoursPosts",
+                "taskQueue": "main"
+              }
+            ]
+          }
+        },
+        {
+          "name": "execution for the swept post",
+          "value": {
+            "workflowId": "post_post-mwctrrx0-12",
+            "runId": "f4d80062-d8b9-4d98-b3db-6f4f3c5dd892",
+            "type": "postWorkflowV112",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwctrrx0-12",
+              "organizationId": "org_org-mwctrrwf-10"
+            }
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "sweep publishes the stale post",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "sweep does not rewrite the old date",
+          "ok": true,
+          "actual": "2026-11-11T19:44:03.732Z",
+          "expected": "2026-11-11T19:44:03.732Z"
+        },
+        {
+          "name": "sweep publishes exactly once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "sweep activity runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "sweep starts the new workflow version",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "sweep keeps the post workflow id",
+          "ok": true,
+          "actual": "post_post-mwctrrx0-12",
+          "expected": "post_post-mwctrrx0-12"
+        },
+        {
+          "name": "the sweep pokes the execution instead of rebuilding it",
+          "ok": true,
+          "actual": true
+        }
+      ]
+    },
+    {
+      "id": "autopost-maintenance",
+      "description": "autoPostWorkflow still runs its activity on main, reads the feed, creates a draft through the normal post service and records the source URL; it does not publish anything.",
+      "startedAt": "2026-11-12T00:44:04.284Z",
+      "observations": [
+        {
+          "name": "autopost row",
+          "value": {
+            "id": "autopost-mwctrscv-14",
+            "lastUrl": "http://feed.invalid/item-1"
+          }
+        },
+        {
+          "name": "autopost drafts",
+          "value": [
+            {
+              "id": "cmwctrsfb0000cb2he812seo0",
+              "state": "DRAFT",
+              "content": "Synthetic autopost content\n\nhttp://feed.invalid/item-1"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "autopost records the feed url",
+          "ok": true,
+          "actual": true,
+          "detail": "http://feed.invalid/item-1"
+        },
+        {
+          "name": "autopost creates exactly one draft",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "autopost draft is a DRAFT",
+          "ok": true,
+          "actual": "DRAFT",
+          "expected": "DRAFT"
+        },
+        {
+          "name": "autopost draft carries the feed text",
+          "ok": true,
+          "actual": true,
+          "detail": "Synthetic autopost content\n\nhttp://feed.invalid/item-1"
+        },
+        {
+          "name": "autopost never publishes to the platform",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "autopost activity runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        }
+      ]
+    },
+    {
+      "id": "streak-email",
+      "description": "streakWorkflow still sets the streak, waits the day, sends the streak-end e-mail through the new sendSingleEmailWorkflow/e-mail-bulk path and clears the streak.",
+      "startedAt": "2026-11-12T00:44:04.835Z",
+      "observations": [
+        {
+          "name": "streak e-mails",
+          "value": [
+            {
+              "to": "org-mwctrsro-15@synthetic.invalid",
+              "subject": "Streak Ended"
+            }
+          ]
+        },
+        {
+          "name": "per-email workflow starts",
+          "value": [
+            {
+              "at": "2026-11-12T00:44:05.491Z",
+              "pid": 86921,
+              "method": "newEmailWorkflow",
+              "to": "org-mwctrsro-15@synthetic.invalid",
+              "subject": "Streak Ended",
+              "addTo": "bottom"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "streak start is written",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "streak sent one e-mail",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "streak e-mail subject",
+          "ok": true,
+          "actual": "Streak Ended",
+          "expected": "Streak Ended"
+        },
+        {
+          "name": "streak end clears streakSince",
+          "ok": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "name": "streak workflow completed",
+          "ok": true,
+          "actual": "COMPLETED",
+          "expected": "COMPLETED"
+        },
+        {
+          "name": "streak uses the new per-email workflow path",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "streak e-mail is queued as bulk",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"at\":\"2026-11-12T00:44:05.491Z\",\"pid\":86921,\"method\":\"newEmailWorkflow\",\"to\":\"org-mwctrsro-15@synthetic.invalid\",\"subject\":\"Streak Ended\",\"addTo\":\"bottom\"}"
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "finishedAt": "2026-11-12T00:44:05.547Z",
+  "ok": true
+}

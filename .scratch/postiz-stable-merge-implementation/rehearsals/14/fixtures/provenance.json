@@ -1,0 +1,280 @@
+{
+  "generatedAt": "2026-11-11T13:15:27.229Z",
+  "generator": "rehearsals/14/run.mjs generate",
+  "synthetic": true,
+  "note": "All ids, tokens, emails and payloads are synthetic (.invalid). No production history was read or stored.",
+  "candidate": {
+    "workflowsPath": "apps/orchestrator/src/workflows/index.ts",
+    "commit": "5fc45bfdb664364dd5b0d78762c3f96cce5465c4",
+    "branch": "codex/ticket-14-temporal-replay",
+    "dirtyFiles": 8
+  },
+  "legacy": {
+    "commit": "6fdf7cb53543fa28a470ad63e7619e8b98bcee43",
+    "extractedFrom": "legacy/extract.mjs (git show, verbatim)",
+    "manifestSha256": "0c41c684deabf17a1f75a0b3a576b34d1e8bc5a6a00f14ea16be76cdf3ce364b",
+    "patchedDerivation": "legacy/patched = legacy/base + documented patched()/continue-as-new gates (lib/derive-patched.mjs)"
+  },
+  "bundles": {
+    "base": {
+      "workflowsPath": ".scratch/postiz-stable-merge-implementation/rehearsals/14/legacy/base/workflows/index.ts",
+      "sha256": "028e69b6f80804d0ac6afd4b881847ba089e4ff189ba543e0695918899c20ded"
+    },
+    "patched": {
+      "workflowsPath": ".scratch/postiz-stable-merge-implementation/rehearsals/14/legacy/patched/workflows/index.ts",
+      "sha256": "6983fd53ff4f9c8fc8bbc66fb20cfcb8d7896512b73242263fe97d8b7f17d3c0"
+    }
+  },
+  "lockfileSha256": "caba97c3e0351d85580979737e06f22ca825039605b232b49d51f1e2c2929197",
+  "tooling": {
+    "node": "v22.23.4",
+    "sdk": "1.15.0",
+    "testing": "1.15.0",
+    "testServer": [
+      {
+        "file": "temporal-test-server-sdk-typescript-1.15.0",
+        "size": 65436232,
+        "sha256": "3a9cd757fc118c0cf134c6fa16d5cf901a02985d02782a11029f7c2833e95cb6"
+      }
+    ]
+  },
+  "searchAttributes": [
+    "postId TEXT",
+    "organizationId TEXT"
+  ],
+  "timeSkipping": true,
+  "scenarios": [
+    {
+      "id": "v101-scheduled-sleep-success",
+      "workflowType": "postWorkflowV101",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "execution",
+          "workflowId": "rehearsal_v101_scheduled",
+          "runId": "45328add-f70d-42d9-97c1-8e35f4e18877",
+          "eventCount": 52,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ],
+      "wallClockMs": 352
+    },
+    {
+      "id": "v102-delayed-comment",
+      "workflowType": "postWorkflowV102",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "execution",
+          "workflowId": "rehearsal_v102_delayed_comment",
+          "runId": "d5556ee9-2b55-4bcd-99a1-445b473886ab",
+          "eventCount": 75,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ],
+      "wallClockMs": 297
+    },
+    {
+      "id": "v102-repeat-child",
+      "workflowType": "postWorkflowV102",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "parent",
+          "workflowId": "rehearsal_v102_repeat_parent",
+          "runId": "1b539f5a-79e3-408c-9df3-84f7f7bb6171",
+          "eventCount": 62,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        },
+        {
+          "name": "repeat-child",
+          "workflowId": "post_post_synthetic_0001_3Fywzsbksw",
+          "runId": "811df9a5-e2cb-422f-a2cd-810698a2441b",
+          "eventCount": 47,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ],
+      "wallClockMs": 313
+    },
+    {
+      "id": "v102-refresh-token",
+      "workflowType": "postWorkflowV102",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "execution",
+          "workflowId": "rehearsal_v102_refresh_token",
+          "runId": "82d1679d-680d-4eff-b378-da7d226240b5",
+          "eventCount": 64,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ],
+      "wallClockMs": 291
+    },
+    {
+      "id": "v102-bad-body",
+      "workflowType": "postWorkflowV102",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "execution",
+          "workflowId": "rehearsal_v102_bad_body",
+          "runId": "260a2efc-404d-440b-82cf-302aa749508b",
+          "eventCount": 34,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ],
+      "wallClockMs": 267
+    },
+    {
+      "id": "v102-inflight-sleep",
+      "workflowType": "postWorkflowV102",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "in-flight",
+          "workflowId": "rehearsal_v102_inflight",
+          "runId": "b5086030-f028-4b82-8437-e5dbb879f70c",
+          "eventCount": 11,
+          "lastEventType": "EVENT_TYPE_TIMER_STARTED"
+        }
+      ],
+      "wallClockMs": 262
+    },
+    {
+      "id": "refresh-token-loop",
+      "workflowType": "refreshTokenWorkflow",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "execution",
+          "workflowId": "refresh_integration_synthetic_0001",
+          "runId": "e621b9cc-c54e-4d61-8276-b56c81d28dc7",
+          "eventCount": 34,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ],
+      "wallClockMs": 290
+    },
+    {
+      "id": "legacy-email-signal-drain",
+      "workflowType": "sendEmailWorkflow",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "in-flight",
+          "workflowId": "send_email",
+          "runId": "91d400db-64d2-4cb2-b113-a6dc94674f2c",
+          "eventCount": 39,
+          "lastEventType": "EVENT_TYPE_TIMER_STARTED"
+        }
+      ],
+      "wallClockMs": 271
+    },
+    {
+      "id": "legacy-email-continue-as-new",
+      "workflowType": "sendEmailWorkflow",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "continue-as-new-run",
+          "workflowId": "send_email",
+          "runId": "d8d79424-99bb-4f76-b0dc-3d60b76a010c",
+          "eventCount": 335,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_CONTINUED_AS_NEW"
+        }
+      ],
+      "wallClockMs": 346
+    },
+    {
+      "id": "autopost-pre-patch",
+      "workflowType": "autoPostWorkflow",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "in-flight",
+          "workflowId": "autopost_synthetic_1",
+          "runId": "6fec0eb1-6f0a-4063-b6a8-181e7e5ab175",
+          "eventCount": 44,
+          "lastEventType": "EVENT_TYPE_TIMER_STARTED"
+        }
+      ],
+      "wallClockMs": 272
+    },
+    {
+      "id": "autopost-post-patch-continue-as-new",
+      "workflowType": "autoPostWorkflow",
+      "bundle": "patched",
+      "histories": [
+        {
+          "name": "continue-as-new-run",
+          "workflowId": "autopost_synthetic_2",
+          "runId": "4c77bd90-2fb4-483c-9929-7afbe655091d",
+          "eventCount": 271,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_CONTINUED_AS_NEW"
+        }
+      ],
+      "wallClockMs": 332
+    },
+    {
+      "id": "missing-pre-patch",
+      "workflowType": "missingPostWorkflow",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "in-flight",
+          "workflowId": "missing_post_synthetic_1",
+          "runId": "65f9298b-b74f-4317-a171-1384b56199e6",
+          "eventCount": 44,
+          "lastEventType": "EVENT_TYPE_TIMER_STARTED"
+        }
+      ],
+      "wallClockMs": 267
+    },
+    {
+      "id": "missing-post-patch-continue-as-new",
+      "workflowType": "missingPostWorkflow",
+      "bundle": "patched",
+      "histories": [
+        {
+          "name": "continue-as-new-run",
+          "workflowId": "missing_post_synthetic_2",
+          "runId": "3fcf1317-6014-40cf-b3a2-0556eb258bfe",
+          "eventCount": 271,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_CONTINUED_AS_NEW"
+        }
+      ],
+      "wallClockMs": 319
+    },
+    {
+      "id": "streak-pre-patch",
+      "workflowType": "streakWorkflow",
+      "bundle": "base",
+      "histories": [
+        {
+          "name": "execution",
+          "workflowId": "streak_org_synthetic_0001",
+          "runId": "11dcdc48-ac9a-4ab8-ad03-e1a75050b53f",
+          "eventCount": 39,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ],
+      "wallClockMs": 269
+    },
+    {
+      "id": "streak-post-patch-v2-handoff",
+      "workflowType": "streakWorkflow",
+      "bundle": "patched",
+      "histories": [
+        {
+          "name": "continue-as-new-run",
+          "workflowId": "streak_org_synthetic_0001_patched",
+          "runId": "d64a7e2c-4e81-43d6-87f2-adda55b33c46",
+          "eventCount": 37,
+          "lastEventType": "EVENT_TYPE_WORKFLOW_EXECUTION_CONTINUED_AS_NEW"
+        }
+      ],
+      "wallClockMs": 278
+    }
+  ]
+}

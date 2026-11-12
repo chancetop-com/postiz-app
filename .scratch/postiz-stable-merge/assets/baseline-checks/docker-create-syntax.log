@@ -1,0 +1,3 @@
+$ bash -n var/docker/docker-create.sh
+
+exit=0

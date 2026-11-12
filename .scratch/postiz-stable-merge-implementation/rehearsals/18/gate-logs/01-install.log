@@ -1,0 +1,58 @@
+Scope: all 7 workspace projects
+Lockfile is up to date, resolution step is skipped
+Packages: +4384
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 0, reused 1, downloaded 0, added 0
+Progress: resolved 0, reused 524, downloaded 0, added 0
+Progress: resolved 0, reused 1145, downloaded 0, added 0
+Progress: resolved 0, reused 2612, downloaded 0, added 0
+Progress: resolved 0, reused 3490, downloaded 0, added 25
+Progress: resolved 0, reused 3490, downloaded 0, added 140
+Progress: resolved 0, reused 3490, downloaded 0, added 251
+Progress: resolved 0, reused 3490, downloaded 0, added 416
+Progress: resolved 0, reused 3490, downloaded 0, added 506
+Progress: resolved 0, reused 3490, downloaded 0, added 706
+Progress: resolved 0, reused 3490, downloaded 0, added 882
+Progress: resolved 0, reused 3490, downloaded 0, added 1141
+Progress: resolved 0, reused 3490, downloaded 0, added 1382
+Progress: resolved 0, reused 3490, downloaded 0, added 1628
+Progress: resolved 0, reused 3490, downloaded 0, added 2033
+Progress: resolved 0, reused 3490, downloaded 0, added 2374
+Progress: resolved 0, reused 3490, downloaded 0, added 2726
+Progress: resolved 0, reused 3490, downloaded 0, added 2878
+Progress: resolved 0, reused 3490, downloaded 0, added 2923
+Progress: resolved 0, reused 3490, downloaded 0, added 3140
+Progress: resolved 0, reused 3490, downloaded 0, added 3248
+Progress: resolved 0, reused 3490, downloaded 0, added 3289
+Progress: resolved 0, reused 3490, downloaded 0, added 3382
+Progress: resolved 0, reused 3490, downloaded 0, added 3651
+Progress: resolved 0, reused 3490, downloaded 0, added 3927
+Progress: resolved 0, reused 3490, downloaded 0, added 4323
+Progress: resolved 0, reused 3490, downloaded 0, added 4379
+Progress: resolved 0, reused 3490, downloaded 0, added 4380
+Progress: resolved 0, reused 3490, downloaded 0, added 4384, done
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @parcel/watcher, @prisma/client, @prisma/engines,   ││   @scarf/scarf, @sentry-internal/node-cpu-profiler, @sentry/cli,             ││   @swc/core, bufferutil, canvas, core-js, core-js-pure, esbuild, prisma,     ││   protobufjs, unrs-resolver, utf-8-validate.                                 ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+
+apps/frontend postinstall$ node scripts/fetch-gtm.mjs
+apps/frontend postinstall: [fetch-gtm] NEXT_PUBLIC_GTM_ID not set, skipping
+apps/frontend postinstall: Done
+. postinstall$ pnpm run prisma-generate
+. postinstall: > gitroom@1.0.0 prisma-generate /Users/chancetio/Desktop/Web/postiz-worktrees/18
+. postinstall: > pnpm dlx prisma@6.5.0 generate --schema ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+. postinstall: Prisma schema loaded from libraries/nestjs-libraries/src/database/prisma/schema.prisma
+. postinstall: ✔ Generated Prisma Client (v6.5.0) to ./node_modules/@prisma/client in 282ms
+. postinstall: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+. postinstall: Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+. postinstall: ┌─────────────────────────────────────────────────────────┐
+. postinstall: │  Update available 6.5.0 -> 8.0.0-rc.33                  │
+. postinstall: │                                                         │
+. postinstall: │  This is a major update - please follow the guide at    │
+. postinstall: │  https://pris.ly/d/major-version-upgrade                │
+. postinstall: │                                                         │
+. postinstall: │  Run the following to update                            │
+. postinstall: │    npm i --save-dev prisma@latest                       │
+. postinstall: │    npm i @prisma/client@latest                          │
+. postinstall: └─────────────────────────────────────────────────────────┘
+. postinstall: Done
+Done in 30.5s using pnpm v10.6.1

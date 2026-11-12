@@ -1,0 +1,55 @@
+# Ticket 03 rehearsal summary
+
+image: postiz-ticket18:candidate
+postgres: PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+docker: 29.7.2
+
+PASS|pre-merge schema applied with the official CLI|
+PASS|synthetic pre-merge data inserted|
+PASS|pre-merge Mastra spans table created with two rows|
+PASS|baseline inventory captured|54 facts
+PASS|start #1 exits zero|
+PASS|start #1 ran the schema sync|
+PASS|start #1 started the application command|
+PASS|sync output precedes the application command|
+PASS|start #1 kept every checked value, id set and relation|
+PASS|post-sync checks ran (new defaults, models, indexes, spans)|
+PASS|start #2 exits zero|
+PASS|start #2 reported the schema already in sync|
+PASS|start #2 started the application command|
+PASS|start #2 kept every checked value, id set and relation|
+PASS|start #2 issued no further schema change|
+PASS|connection failure exits non-zero|status=1
+PASS|connection failure did not start the application|
+PASS|connection failure printed the refusal|
+PASS|connection failure kept the Prisma error visible|
+PASS|connection failure left the data untouched|
+PASS|destructive change exits non-zero|status=1
+PASS|destructive change did not start the application|
+PASS|destructive change printed the refusal|
+PASS|destructive change left the existing data untouched|
+PASS|failed sync changed no schema object|see 14-schema-diff-after-failure.txt
+PASS|recovery start exits zero|
+PASS|recovery start started the application command|
+PASS|recovery kept every checked value, id set and relation|
+PASS|pre-merge schema applied to the spans database|
+PASS|duplicate span row inserted|
+PASS|sync with duplicate spans exits non-zero|status=1
+PASS|duplicate spans did not start the application|
+PASS|duplicate spans kept the composite-key error visible|
+PASS|failed sync deleted no span|
+PASS|failed spans sync changed schema objects (recorded in 19-schema-diff-after-spans-failure.txt)|
+PASS|failed spans sync left the business rows untouched|
+PASS|documented spans migration ran|
+PASS|spans migration kept one row per composite key|
+PASS|retained spans recorded|trace-synth-1:span-synth-1a:agent run trace-synth-1:span-synth-1b:tool call (retried) 
+PASS|sync succeeds after the documented spans migration|
+PASS|application starts after the spans migration|
+PASS|spans primary key after the sync recorded|public_mastra_ai_spans_traceid_spanid_pk
+PASS|Mastra PostgresStore.init succeeds on the synced database|
+PASS|real start synced the schema first|
+PASS|real start reached the process manager after the sync|
+PASS|pm2 process list captured|
+PASS|nginx answered on :5000|http_status=307
+PASS|real application writes after start recorded|0 diff lines
+PASS|upgraded synthetic sample written|196K

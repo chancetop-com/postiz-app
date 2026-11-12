@@ -1,0 +1,5 @@
+/app/apps/frontend/.next/static
+/app/apps/frontend/next.config.js
+/app/apps/frontend/package.json
+/app/apps/frontend/public
+/app/node_modules/next/dist/bin/next

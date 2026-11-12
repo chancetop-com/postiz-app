@@ -1,0 +1,61 @@
+{
+  "legacyCommit": "6fdf7cb53543fa28a470ad63e7619e8b98bcee43",
+  "extractedWith": "legacy/extract.mjs (git show, no manual edits)",
+  "files": [
+    {
+      "path": "apps/orchestrator/src/workflows/index.ts",
+      "blob": "4e0bccd3890f5d9d1f51445389b31239cddf9562",
+      "target": "workflows/index.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/workflows/post-workflows/post.workflow.v1.0.1.ts",
+      "blob": "b8fce6acbcbd9726ea66a09389f051ad25487bd2",
+      "target": "workflows/post-workflows/post.workflow.v1.0.1.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/workflows/post-workflows/post.workflow.v1.0.2.ts",
+      "blob": "65fea772ca01a0ae2e952d360e1e96e4fc90afaf",
+      "target": "workflows/post-workflows/post.workflow.v1.0.2.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/workflows/autopost.workflow.ts",
+      "blob": "62afe9825236adf2282d466a73fa6e954cb515f7",
+      "target": "workflows/autopost.workflow.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/workflows/missing.post.workflow.ts",
+      "blob": "17babfd236c8701b0011c23220b3d8deb51aa9a7",
+      "target": "workflows/missing.post.workflow.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/workflows/streak.workflow.ts",
+      "blob": "0ee49ed00d8a87fce88d97ca2bbe7c68d00b2555",
+      "target": "workflows/streak.workflow.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/workflows/send.email.workflow.ts",
+      "blob": "fc1038880f4efb44c144941974c801a3aaab2ec2",
+      "target": "workflows/send.email.workflow.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/workflows/digest.email.workflow.ts",
+      "blob": "db746036f620a5ee7c372b2ef2ea9fbe3aa01594",
+      "target": "workflows/digest.email.workflow.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/workflows/refresh.token.workflow.ts",
+      "blob": "dc189ff0833e8eba1deb1e8e3952fdfd391aebc8",
+      "target": "workflows/refresh.token.workflow.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/signals/email.signal.ts",
+      "blob": "339e82181ef5991299d3288e10ad7f6faf6c4a6a",
+      "target": "signals/email.signal.ts"
+    },
+    {
+      "path": "apps/orchestrator/src/signals/send.email.signal.ts",
+      "blob": "5158b3869ff0c5520faefb1b596b6cd668e40f25",
+      "target": "signals/send.email.signal.ts"
+    }
+  ]
+}

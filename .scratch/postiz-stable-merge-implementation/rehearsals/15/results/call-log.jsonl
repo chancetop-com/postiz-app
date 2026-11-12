@@ -1,0 +1,52 @@
+{"at":"2026-11-12T00:42:19.196Z","pid":86639,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:42:19.497Z","pid":86639,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:42:23.712Z","pid":86639,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:42:23.853Z","pid":86639,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:42:25.249Z","pid":86655,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":"redis://127.0.0.1:55009"}
+{"at":"2026-11-12T00:42:45.151Z","pid":86639,"method":"postPending","internalId":"stub-internal-org-mwctprki-1","token":"synthetic-token-org-mwctprki-1","integrationId":"int_org-mwctprki-1","organizationId":"org_org-mwctprki-1","posts":[{"id":"cmwctprnb0000cbv38ytmlzhh","message":"Synthetic scheduled post created through the public API","settings":{"__type":"bluesky"},"media":[{"path":"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png","remote":true,"status":200,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"0fd46498-481e-4d26-a915-62ab84fae896","type":"image"}]}],"pendingData":{"step":"accepted","id":"stub-pending-86639-1"}}
+{"at":"2026-11-12T00:42:45.177Z","pid":86639,"method":"checkPostStatus","token":"synthetic-token-org-mwctprki-1","integrationId":"int_org-mwctprki-1","pendingData":{"step":"accepted","id":"stub-pending-86639-1"}}
+{"at":"2026-11-12T00:42:45.182Z","pid":86639,"method":"finalizePost","token":"synthetic-token-org-mwctprki-1","integrationId":"int_org-mwctprki-1","pendingData":{"step":"finalize","id":"stub-pending-86639-1"}}
+{"at":"2026-11-12T00:42:46.082Z","pid":86707,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:42:46.219Z","pid":86707,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:42:49.032Z","pid":86707,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:42:49.170Z","pid":86707,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:42:56.367Z","method":"legacy.getPostsList","orgId":"org_org-mwctqb79-2","postId":"post-mwctqb82-4"}
+{"at":"2026-11-12T00:42:57.608Z","pid":86739,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:42:57.745Z","pid":86739,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:00.483Z","pid":86739,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:00.622Z","pid":86739,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:07.537Z","pid":86739,"method":"post","internalId":"stub-internal-org-mwctqb79-2","token":"synthetic-token-org-mwctqb79-2","integrationId":"int_org-mwctqb79-2","organizationId":"org_org-mwctqb79-2","posts":[{"id":"post-mwctqb82-4","message":"Synthetic post scheduled by the old code","settings":{},"media":[{"path":"<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/15/work/uploads-mwctpeq4/uploads/rehearsal15/org-mwctqb79-2.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwctqb79-2","type":"image"}]}]}
+{"at":"2026-11-12T00:43:08.789Z","pid":86762,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:08.925Z","pid":86762,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:11.645Z","pid":86762,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:11.786Z","pid":86762,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:28.821Z","pid":86762,"method":"postPending","internalId":"stub-internal-org-mwctqsqu-5","token":"synthetic-token-org-mwctqsqu-5","integrationId":"int_org-mwctqsqu-5","organizationId":"org_org-mwctqsqu-5","posts":[{"id":"cmwctqssn0001cbv3suexv6rm","message":"Synthetic post that will be rescheduled","settings":{"__type":"bluesky"},"media":[{"path":"<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/15/work/uploads-mwctpeq4/uploads/rehearsal15/org-mwctqsqu-5.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwctqsqu-5","type":"image"}]}],"pendingData":{"step":"accepted","id":"stub-pending-86762-1"}}
+{"at":"2026-11-12T00:43:28.851Z","pid":86762,"method":"checkPostStatus","token":"synthetic-token-org-mwctqsqu-5","integrationId":"int_org-mwctqsqu-5","pendingData":{"step":"accepted","id":"stub-pending-86762-1"}}
+{"at":"2026-11-12T00:43:28.859Z","pid":86762,"method":"finalizePost","token":"synthetic-token-org-mwctqsqu-5","integrationId":"int_org-mwctqsqu-5","pendingData":{"step":"finalize","id":"stub-pending-86762-1"}}
+{"at":"2026-11-12T00:43:33.019Z","pid":86822,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:33.282Z","pid":86822,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:36.711Z","pid":86822,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:36.852Z","pid":86822,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:44.189Z","pid":86852,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:44.325Z","pid":86852,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:47.023Z","pid":86852,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:47.168Z","pid":86852,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:47.593Z","pid":86852,"method":"email","to":"legacy-one@synthetic.invalid","subject":"Synthetic legacy email one","htmlLength":1717,"from":"Synthetic Postiz","fromAddress":"synthetic@postiz.invalid"}
+{"at":"2026-11-12T00:43:48.612Z","pid":86852,"method":"email","to":"legacy-two@synthetic.invalid","subject":"Synthetic legacy email two","htmlLength":1717,"from":"Synthetic Postiz","fromAddress":"synthetic@postiz.invalid"}
+{"at":"2026-11-12T00:43:49.839Z","pid":86867,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:49.977Z","pid":86867,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:43:52.590Z","pid":86867,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:43:52.731Z","pid":86867,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:44:00.414Z","pid":86921,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:44:00.555Z","pid":86921,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:44:03.223Z","pid":86921,"method":"preload","role":"provider","identifier":"bluesky","redisUrl":null}
+{"at":"2026-11-12T00:44:03.366Z","pid":86921,"method":"preload","role":"email"}
+{"at":"2026-11-12T00:44:03.872Z","pid":86921,"method":"postPending","internalId":"stub-internal-org-mwctrrwf-10","token":"synthetic-token-org-mwctrrwf-10","integrationId":"int_org-mwctrrwf-10","organizationId":"org_org-mwctrrwf-10","posts":[{"id":"post-mwctrrx0-12","message":"Synthetic stale queued post","settings":{},"media":[{"path":"<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/15/work/uploads-mwctpeq4/uploads/rehearsal15/org-mwctrrwf-10.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwctrrwf-10","type":"image"}]}],"pendingData":{"step":"accepted","id":"stub-pending-86921-1"}}
+{"at":"2026-11-12T00:44:03.881Z","pid":86921,"method":"checkPostStatus","token":"synthetic-token-org-mwctrrwf-10","integrationId":"int_org-mwctrrwf-10","pendingData":{"step":"accepted","id":"stub-pending-86921-1"}}
+{"at":"2026-11-12T00:44:03.884Z","pid":86921,"method":"finalizePost","token":"synthetic-token-org-mwctrrwf-10","integrationId":"int_org-mwctrrwf-10","pendingData":{"step":"finalize","id":"stub-pending-86921-1"}}
+{"at":"2026-11-12T00:44:05.415Z","pid":86921,"method":"newEmailWorkflow","to":"org-mwctrrwf-10@synthetic.invalid","subject":"Your post has been published on Bluesky","addTo":"bottom"}
+{"at":"2026-11-12T00:44:05.436Z","pid":86921,"method":"email","to":"org-mwctrrwf-10@synthetic.invalid","subject":"Your post has been published on Bluesky","htmlLength":1804,"from":"Synthetic Postiz","fromAddress":"synthetic@postiz.invalid"}
+{"at":"2026-11-12T00:44:05.470Z","pid":86921,"method":"newEmailWorkflow","to":"org-mwctrrwf-10@synthetic.invalid","subject":"Streak Ended","addTo":"bottom"}
+{"at":"2026-11-12T00:44:05.481Z","pid":86921,"method":"email","to":"org-mwctrrwf-10@synthetic.invalid","subject":"Streak Ended","htmlLength":1812,"from":"Synthetic Postiz","fromAddress":"synthetic@postiz.invalid"}
+{"at":"2026-11-12T00:44:05.491Z","pid":86921,"method":"newEmailWorkflow","to":"org-mwctrsro-15@synthetic.invalid","subject":"Streak Ended","addTo":"bottom"}
+{"at":"2026-11-12T00:44:05.500Z","pid":86921,"method":"email","to":"org-mwctrsro-15@synthetic.invalid","subject":"Streak Ended","htmlLength":1812,"from":"Synthetic Postiz","fromAddress":"synthetic@postiz.invalid"}

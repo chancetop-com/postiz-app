@@ -1,0 +1,15 @@
+Prisma schema loaded from .scratch/postiz-stable-merge-implementation/rehearsals/03/old-schema.prisma
+Datasource "db": PostgreSQL database "postiz_spans", schema "public" at "127.0.0.1:55432"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 304ms
+
+┌─────────────────────────────────────────────────────────┐
+│  Update available 6.5.0 -> 8.0.0-rc.33                  │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘

@@ -1,0 +1,523 @@
+[startup-sync] cwd=/app command=pnpm run prisma-db-push
+
+> gitroom@1.0.0 prisma-db-push /app
+> prisma db push --schema ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+
+Prisma schema loaded from libraries/nestjs-libraries/src/database/prisma/schema.prisma
+Datasource "db": PostgreSQL database "postiz", schema "public" at "db:5432"
+
+The database is already in sync with the Prisma schema.
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.5.0) to ./node_modules/@prisma/client in 478ms
+
+[startup-sync] database schema is in sync; starting: sh -c nginx && pm2-runtime ecosystem.config.cjs
+2026-11-12T00:41:49: PM2 log: Launching in no daemon mode
+2026-11-12T00:41:49: PM2 log: App [backend:0] starting in -fork mode-
+2026-11-12T00:41:49: PM2 log: App [frontend:1] starting in -fork mode-
+2026-11-12T00:41:49: PM2 log: App [backend:0] online
+2026-11-12T00:41:49: PM2 log: App [frontend:1] online
+2026-11-12T00:41:49: PM2 log: App [orchestrator:2] starting in -fork mode-
+2026-11-12T00:41:49: PM2 log: App [orchestrator:2] online
+2026/11/12 00:41:49 [error] 81#81: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:49 [warn] 81#81: *1 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:49 [error] 81#81: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:49 [warn] 81#81: *1 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+127.0.0.1 - - [12/Nov/2026:00:41:49 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+▲ Next.js 16.4.2
+- Local:         http://localhost:4200
+- Network:       http://172.18.0.3:4200
+✓ Ready in 139ms
+✓ Running next.config.js took 183ms
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mCreating new client connection to localhost:7233 (attempt 1)[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mSuccessfully connected to localhost:7233[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +3ms[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mVideoModule dependencies initialized[39m[38;5;3m +1ms[39m
+[33m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [33m   WARN[39m [38;5;3m[TemporalConnectionFactory] [39m[33mFailed to create worker connection, returning null[39m
+[33m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [33m   WARN[39m [38;5;3m[TemporalConnectionFactory] [39mTransportError: tonic::transport::Error(Transport, ConnectError(ConnectError("tcp connect error", 127.0.0.1:7233, Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })))
+    at Function.connect [90m(/app/[39mnode_modules/[4m@temporalio/worker[24m/src/connection.ts:250:15[90m)[39m
+    at TemporalConnectionFactory.createNewWorkerConnection [90m(/app/[39mnode_modules/[4mnestjs-temporal-core[24m/src/providers/temporal-connection.factory.ts:240:32[90m)[39m
+    at Injector.instantiateClass [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:444:37[90m)[39m
+    at callback [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:73:34[90m)[39m
+    at Injector.resolveConstructorParams [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:181:24[90m)[39m
+    at Injector.loadInstance [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:78:13[90m)[39m
+    at Injector.loadProvider [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:112:9[90m)[39m
+    at [90m/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:56:13
+    at async Promise.all (index 6)
+    at InstanceLoader.createInstancesOfProviders [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:55:9[90m)[39m
+    at [90m/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:40:13
+    at async Promise.all (index 4)
+    at InstanceLoader.createInstances [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:39:9[90m)[39m
+    at InstanceLoader.createInstancesOfDependencies [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:22:13[90m)[39m
+    at [90m/app/[39mnode_modules/[4m@nestjs/core[24m/nest-factory.js:113:17
+    at Function.asyncRun [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/errors/exceptions-zone.js:22:13[90m)[39m
+    at NestFactoryStatic.initialize [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/nest-factory.js:111:13[90m)[39m
+    at NestFactoryStatic.create [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/nest-factory.js:43:9[90m)[39m
+    at bootstrap [90m(/app/[39mapps/orchestrator/src/main.ts:14:15[90m)[39m
+Email service provider: no provider
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTemporalModule dependencies initialized[39m[38;5;3m +10ms[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDatabaseModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/health}:[39m[38;5;3m +4ms[39m
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health/status, GET} route[39m[38;5;3m +1ms[39m
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[31m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [31m  ERROR[39m [38;5;3m[TemporalWorkerManagerService] [39m[31mFailed to create connection[39m
+[31m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [31m  ERROR[39m [38;5;3m[TemporalWorkerManagerService] [39m[31mTransportError: tonic::transport::Error(Transport, ConnectError(ConnectError("tcp connect error", 127.0.0.1:7233, Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })))
+    at Function.connect (/app/node_modules/@temporalio/worker/src/connection.ts:250:15)
+    at TemporalWorkerManagerService.createConnection (/app/node_modules/nestjs-temporal-core/src/services/temporal-worker.service.ts:1043:31)
+    at TemporalWorkerManagerService.initializeMultipleWorkers (/app/node_modules/nestjs-temporal-core/src/services/temporal-worker.service.ts:229:9)
+    at TemporalWorkerManagerService.onModuleInit (/app/node_modules/nestjs-temporal-core/src/services/temporal-worker.service.ts:102:17)
+    at async Promise.all (index 3)
+    at callModuleInitHook (/app/node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:5)
+    at NestApplication.callInitHook (/app/node_modules/@nestjs/core/nest-application-context.js:245:13)
+    at NestApplication.init (/app/node_modules/@nestjs/core/nest-application.js:106:9)
+    at NestApplication.listen (/app/node_modules/@nestjs/core/nest-application.js:178:13)
+    at bootstrap (/app/apps/orchestrator/src/main.ts:17:3)[39m
+TemporalWorkerManagerService
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[32m[Nest] 113  - [39m11/12/2026, 12:41:52 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +98ms[39m
+Orchestrator health check listening on port 3002
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+2026/11/12 00:41:54 [error] 82#82: *4 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:54 [warn] 82#82: *4 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:54 [error] 82#82: *4 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:54 [warn] 82#82: *4 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+127.0.0.1 - - [12/Nov/2026:00:41:54 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mCreating new client connection to localhost:7233 (attempt 1)[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mSuccessfully connected to localhost:7233[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSentryModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUploadModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mThrottlerModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mVideoModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mThirdPartyModule dependencies initialized[39m[38;5;3m +0ms[39m
+[33m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [33m   WARN[39m [38;5;3m[TemporalConnectionFactory] [39m[33mFailed to create worker connection, returning null[39m
+[33m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [33m   WARN[39m [38;5;3m[TemporalConnectionFactory] [39mTransportError: tonic::transport::Error(Transport, ConnectError(ConnectError("tcp connect error", 127.0.0.1:7233, Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })))
+    at Function.connect [90m(/app/[39mnode_modules/[4m@temporalio/worker[24m/src/connection.ts:250:15[90m)[39m
+    at async TemporalConnectionFactory.createNewWorkerConnection [90m(/app/[39mnode_modules/[4mnestjs-temporal-core[24m/src/providers/temporal-connection.factory.ts:240:32[90m)[39m
+    at async Injector.instantiateClass [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:444:37[90m)[39m
+    at async callback [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:73:34[90m)[39m
+    at async Injector.resolveConstructorParams [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:181:24[90m)[39m
+    at async Injector.loadInstance [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:78:13[90m)[39m
+    at async Injector.loadProvider [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/injector.js:112:9[90m)[39m
+    at async [90m/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:56:13
+    at async Promise.all (index 6)
+    at async InstanceLoader.createInstancesOfProviders [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:55:9[90m)[39m
+    at async [90m/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:40:13
+    at async Promise.all (index 11)
+    at async InstanceLoader.createInstances [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:39:9[90m)[39m
+    at async InstanceLoader.createInstancesOfDependencies [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/injector/instance-loader.js:22:13[90m)[39m
+    at async [90m/app/[39mnode_modules/[4m@nestjs/core[24m/nest-factory.js:113:17
+    at async ExceptionsZone.asyncRun [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/errors/exceptions-zone.js:22:13[90m)[39m
+    at async NestFactoryStatic.initialize [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/nest-factory.js:111:13[90m)[39m
+    at async NestFactoryStatic.create [90m(/app/[39mnode_modules/[4m@nestjs/core[24m/nest-factory.js:43:9[90m)[39m
+    at async start [90m(/app/[39mapps/backend/src/main.ts:28:15[90m)[39m
+Email service provider: no provider
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTemporalModule dependencies initialized[39m[38;5;3m +4ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTemporalRegisterMissingSearchAttributesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mInfiniteWorkflowRegisterModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAgentModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDatabaseModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mChatModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPublicApiModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mApiModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRootController {/}:[39m[38;5;3m +108ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPaymentController {/payment}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/payment/:provider, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStripeController {/stripe}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/stripe, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/can-register, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/register, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/login, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/forgot, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/forgot-return, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/oauth-mobile-callback, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/oauth/:provider, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/activate, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/resend-activation, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/farcaster/signer, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/farcaster/signer, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/oauth/:provider/redirect, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/oauth/:provider/exists, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/sso, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPublicController {/public}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/agent, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/posts/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/posts/:id/comments, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/posts/:id/comments, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/t, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/modify-subscription, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/stream, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMonitorController {/monitor}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/monitor/queue/:name, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mEnterpriseController {/enterprise}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/enterprise/create-user, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/enterprise/url, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/enterprise/delete-channel, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNoAuthIntegrationsController {/integrations}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/social-connect/:integration, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/public/provider/:id/connect, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/extension-refresh, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOAuthController {/oauth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/register, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/authorize, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/authorize/self-hosted, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/token, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/userinfo, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/userinfo, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/hubspot/callback, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMediaWidgetController {/media-widget}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media-widget/upload, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media-widget/status, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mClippingWidgetController {/clipping-widget}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/clipping-widget/status, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUsersController {/user}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/chatbase-token, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/self, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/personal, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/impersonate, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/impersonate, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/switch, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/personal, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/email-notifications, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/email-notifications, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/timezone, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/api-key/rotate, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/subscription, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/subscription/tiers, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/join-org, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/organizations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/change-org, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/delete-account-info, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/delete-account, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/logout, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/t, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAnalyticsController {/analytics}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/analytics/:integration, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/analytics/post/:postId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntegrationsController {/integrations}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/provider/:id/connect, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:identifier/internal-plugs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/customers, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/customers/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/group, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/customer-name, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/custom-name, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/settings, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/nickname, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/social/:integration, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/time, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/mentions, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/function, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/disable, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/enable, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/plug/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/plugs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/plugs, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/plugs/:id/activate, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/telegram/updates, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/moltbook/register, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/moltbook/status, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSettingsController {/settings}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/team, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/team, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/team/add, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/team/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/shortlink, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/shortlink, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPostsController {/posts}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/statistics, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/missing, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/release-url, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/release-id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/should-shortlink, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/comments, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/comments/:commentId/resolve, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/tags, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/tags, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/tags/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/tags/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/find-slot, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/find-slot/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/old, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/group/:group/debug-export, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/group/:group, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/valid, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/generator/draft, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/generator, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:group, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/date, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/separate-posts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMediaController {/media}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/generate-video, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/generate-image, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/generate-image-with-prompt, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/upload-server, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/save-media, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/information, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/upload-simple, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/:endpoint, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/:id/status, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/video-options, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/video/function, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/generate-video/:type/allowed, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mClippingController {/clipping}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/clipping, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/clipping, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/clipping/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBillingController {/billing}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/check/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/check-discount, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/apply-discount, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/finish-trial, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/is-trial-finished, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/embedded, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/subscribe, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/sync, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/portal, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/invoices, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/renewal, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing, GET} route[39m[38;5;3m +9ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/cancel, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/prorate, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/charges, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/refund-charges, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/cancel-subscription, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/coupon-info, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/apply-coupon, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/cancel-coupon, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/chatbase-refund/preview, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/chatbase-refund, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/add-subscription, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNotificationsController {/notifications}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/notifications, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/notifications/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCopilotController {/copilot}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/chat, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/agent, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/credits, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/:thread/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWebhookController {/webhooks}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks/send, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignatureController {/signatures}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures/default, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAutopostController {/autopost}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost/:id/active, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost/send, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSetsController {/sets}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sets, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sets, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sets, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sets/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mThirdPartyController {/third-party}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/:id/submit, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/function/:id/:functionName, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/:id/import, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/:identifier, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOAuthAppController {/user/oauth-app}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app/rotate-secret, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mApprovedAppsController {/user/approved-apps}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/approved-apps, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/approved-apps/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOAuthAuthorizedController {/oauth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/authorize, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAnnouncementsController {/announcements}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/announcements, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/announcements, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/announcements/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminController {/admin}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/admin/errors, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/admin/errors/platforms, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/admin/stats, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPublicIntegrationsController {/public/v1}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/upload, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/upload-from-url, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/find-slot/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/group/:group, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/is-connected, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/media, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/media/:id/status, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/me, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/groups, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integrations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/social/:integration, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/users, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/posts/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/account, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/channels, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/activity, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/credits/reset, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/notifications, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/generate-video, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/video/function, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integrations/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integration-settings/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/missing, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/settings, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/status, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/release-id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/analytics/:integration, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/analytics/post/:postId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 101  - [39m11/12/2026, 12:41:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integration-trigger/:id, POST} route[39m[38;5;3m +0ms[39m
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+2026/11/12 00:41:59 [error] 84#84: *7 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:59 [warn] 84#84: *7 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:59 [error] 84#84: *7 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:41:59 [warn] 84#84: *7 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+127.0.0.1 - - [12/Nov/2026:00:41:59 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+2026/11/12 00:42:04 [error] 83#83: *10 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:42:04 [warn] 83#83: *10 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:42:04 [error] 83#83: *10 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:42:04 [warn] 83#83: *10 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+127.0.0.1 - - [12/Nov/2026:00:42:04 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+2026/11/12 00:42:09 [error] 86#86: *13 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:42:09 [warn] 86#86: *13 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:42:09 [error] 86#86: *13 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026/11/12 00:42:09 [warn] 86#86: *13 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+127.0.0.1 - - [12/Nov/2026:00:42:09 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16)

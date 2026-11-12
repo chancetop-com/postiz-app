@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Provider, User } from '@prisma/client';
 import { CreateOrgUserDto } from '@gitroom/nestjs-libraries/dtos/auth/create.org.user.dto';
 import { LoginUserDto } from '@gitroom/nestjs-libraries/dtos/auth/login.user.dto';
@@ -8,7 +8,6 @@ import { AuthService as AuthChecker } from '@gitroom/helpers/auth/auth.service';
 import { AuthProviderManager } from '@gitroom/backend/services/auth/providers/providers.manager';
 import { SsoService } from '@gitroom/backend/services/auth/sso.service';
 import dayjs from 'dayjs';
-import { NotificationService } from '@gitroom/nestjs-libraries/database/prisma/notifications/notification.service';
 import { ForgotReturnPasswordDto } from '@gitroom/nestjs-libraries/dtos/auth/forgot-return.password.dto';
 import { EmailService } from '@gitroom/nestjs-libraries/services/email.service';
 import { NewsletterService } from '@gitroom/nestjs-libraries/newsletter/newsletter.service';
@@ -18,7 +17,6 @@ export class AuthService {
   constructor(
     private _userService: UsersService,
     private _organizationService: OrganizationService,
-    private _notificationService: NotificationService,
     private _emailService: EmailService,
     private _providerManager: AuthProviderManager,
     private _ssoService: SsoService
@@ -44,6 +42,9 @@ export class AuthService {
     if (provider === Provider.LOCAL) {
       if (process.env.DISALLOW_PLUS && body.email.includes('+')) {
         throw new Error('Email with plus sign is not allowed');
+      }
+      if (body instanceof CreateOrgUserDto) {
+        body.email = body.email.toLowerCase();
       }
       const user = await this._userService.getUserByEmail(body.email);
       if (body instanceof CreateOrgUserDto) {
@@ -72,11 +73,10 @@ export class AuthService {
             : false;
 
         const obj = { addedOrg, jwt: await this.signJwt(create.users[0].user) };
-        await this._emailService.sendEmail(
+        await this._emailService.sendEmailSync(
           body.email,
           'Activate your account',
-          `Click <a href="${process.env.FRONTEND_URL}/auth/activate/${obj.jwt}">here</a> to activate your account`,
-          'top'
+          `Click <a href="${process.env.FRONTEND_URL}/auth/activate/${obj.jwt}">here</a> to activate your account`
         );
         return obj;
       }
@@ -118,7 +118,13 @@ export class AuthService {
 
     try {
       const getOrg: any = AuthChecker.verifyJWT(cookie);
-      if (dayjs(getOrg.timeLimit).isBefore(dayjs())) {
+      if (
+        typeof getOrg.orgId !== 'string' ||
+        typeof getOrg.id !== 'string' ||
+        !['USER', 'ADMIN'].includes(getOrg.role) ||
+        !getOrg.timeLimit ||
+        dayjs(getOrg.timeLimit).isBefore(dayjs())
+      ) {
         return false;
       }
 
@@ -219,24 +225,20 @@ export class AuthService {
       return false;
     }
 
-    const resetValues = AuthChecker.signJWT({
-      id: user.id,
-      expires: dayjs().add(20, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
-    });
+    const resetValues = AuthChecker.signPasswordResetToken(user.id);
 
-    await this._notificationService.sendEmail(
+    await this._emailService.sendEmailSync(
       user.email,
       'Reset your password',
-      `You have requested to reset your passsord. <br />Click <a href="${process.env.FRONTEND_URL}/auth/forgot/${resetValues}">here</a> to reset your password<br />The link will expire in 20 minutes`
+      `You have requested to reset your password. <br />Click <a href="${process.env.FRONTEND_URL}/auth/forgot/${resetValues}">here</a> to reset your password<br />The link will expire in 20 minutes`
     );
   }
 
   forgotReturn(body: ForgotReturnPasswordDto) {
-    const user = AuthChecker.verifyJWT(body.token) as {
-      id: string;
-      expires: string;
-    };
-    if (dayjs(user.expires).isBefore(dayjs())) {
+    let user: { id: string };
+    try {
+      user = AuthChecker.verifyPasswordResetToken(body.token);
+    } catch {
       return false;
     }
 
@@ -277,11 +279,10 @@ export class AuthService {
 
     const jwt = await this.signJwt(user);
 
-    await this._emailService.sendEmail(
+    await this._emailService.sendEmailSync(
       user.email,
       'Activate your account',
-      `Click <a href="${process.env.FRONTEND_URL}/auth/activate/${jwt}">here</a> to activate your account`,
-      'top'
+      `Click <a href="${process.env.FRONTEND_URL}/auth/activate/${jwt}">here</a> to activate your account`
     );
 
     return true;
@@ -292,7 +293,47 @@ export class AuthService {
     return providerInstance.generateLink(query);
   }
 
-  async checkExists(provider: string, code: string, redirectUri?: string) {
+  createOAuthStateToken(provider: string, state: string) {
+    // Kept in the initiating tab, separately from the public callback state.
+    return AuthChecker.signJWT({
+      purpose: 'oauth-state',
+      provider: provider.toUpperCase(),
+      state,
+      exp: Math.floor(Date.now() / 1000) + 10 * 60,
+    });
+  }
+
+  async checkExists(
+    provider: string,
+    code: string,
+    redirectUri?: string,
+    state?: string,
+    stateToken?: string
+  ) {
+    // Native clients keep their existing redirect_uri flow. Browser callbacks
+    // must carry the signed, expiring proof stored in their sessionStorage.
+    if (!redirectUri) {
+      try {
+        const proof = AuthChecker.verifyJWT(stateToken || '') as {
+          purpose?: string;
+          provider?: string;
+          state?: string;
+          exp?: number;
+        };
+        if (
+          !state ||
+          proof.purpose !== 'oauth-state' ||
+          proof.provider !== provider.toUpperCase() ||
+          proof.state !== state ||
+          typeof proof.exp !== 'number'
+        ) {
+          throw new Error('Invalid state');
+        }
+      } catch {
+        throw new BadRequestException('Invalid state');
+      }
+    }
+
     const providerInstance = this._providerManager.getProvider(provider);
     const token = await providerInstance.getToken(code, redirectUri);
     const user = await providerInstance.getUser(token);

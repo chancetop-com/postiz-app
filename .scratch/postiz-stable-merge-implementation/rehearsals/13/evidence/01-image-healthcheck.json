@@ -1,0 +1,1 @@
+{"Test":["CMD-SHELL","curl -f http://localhost:5000/api/ || exit 1"],"Interval":30000000000,"Timeout":10000000000,"StartPeriod":60000000000,"Retries":5}

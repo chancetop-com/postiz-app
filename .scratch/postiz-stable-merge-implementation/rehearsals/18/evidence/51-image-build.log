@@ -1,0 +1,607 @@
+============================================
+ Postiz local image build
+============================================
+ context: /Users/chancetio/Desktop/Web/postiz-worktrees/18/k8s
+ image  : postiz-ticket18:candidate
+ commit : bfc012c74b240eff6f0071556ee6ec06d434c9e0 (clean)
+ node   : 22.23.4 / pnpm 10.6.1 (pinned in the Dockerfile)
+============================================
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 6.67kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22.23.4-bookworm
+#2 ...
+
+#3 [internal] load metadata for docker.io/library/node:22.23.4-bookworm-slim
+#3 DONE 0.4s
+
+#2 [internal] load metadata for docker.io/library/node:22.23.4-bookworm
+#2 DONE 0.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 449B done
+#4 DONE 0.0s
+
+#5 [builder 1/8] FROM docker.io/library/node:22.23.4-bookworm@sha256:7702d8aa4d5910871692af4480eb3ba86f23047a6417a44d857d06c95d060d3f
+#5 resolve docker.io/library/node:22.23.4-bookworm@sha256:7702d8aa4d5910871692af4480eb3ba86f23047a6417a44d857d06c95d060d3f 0.0s done
+#5 DONE 0.2s
+
+#6 [runtime  1/18] FROM docker.io/library/node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d
+#6 resolve docker.io/library/node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d 0.0s done
+#6 DONE 0.1s
+
+#7 [internal] load build context
+#7 transferring context: 10.58MB 0.2s done
+#7 DONE 0.2s
+
+#8 [builder 2/8] WORKDIR /app
+#8 DONE 0.1s
+
+#9 [runtime  2/18] RUN apt-get update && apt-get install -y --no-install-recommends     nginx curl  && rm -rf /var/lib/apt/lists/*
+#9 0.909 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#9 1.416 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#9 1.607 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#9 1.785 Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8689 kB]
+#9 3.538 Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [6936 B]
+#9 3.704 Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [366 kB]
+#9 ...
+
+#10 [builder 3/8] RUN npm install --no-update-notifier --no-fund --global pnpm@10.6.1
+#10 3.705 
+#10 3.705 added 1 package in 3s
+#10 DONE 3.8s
+
+#11 [builder 4/8] COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json tsconfig.json ./
+#11 DONE 0.0s
+
+#12 [builder 5/8] COPY apps ./apps
+#12 DONE 0.1s
+
+#13 [builder 6/8] COPY libraries ./libraries
+#13 DONE 0.0s
+
+#14 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#14 0.481 Scope: all 7 workspace projects
+#14 0.580 Lockfile is up to date, resolution step is skipped
+#14 0.889 Packages: +4396
+#14 0.889 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#14 1.712 Progress: resolved 0, reused 0, downloaded 1, added 0
+#14 2.379 
+#14 2.379    ╭───────────────────────────────────────────────────────────────────╮
+#14 2.379    │                                                                   │
+#14 2.379    │                Update available! 10.6.1 → 12.18.0.                │
+#14 2.379    │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v12.18.0   │
+#14 2.379    │                 Run "pnpm add -g pnpm" to update.                 │
+#14 2.379    │                                                                   │
+#14 2.379    ╰───────────────────────────────────────────────────────────────────╯
+#14 2.379 
+#14 2.715 Progress: resolved 0, reused 0, downloaded 32, added 12
+#14 3.721 Progress: resolved 0, reused 0, downloaded 53, added 53
+#14 4.727 Progress: resolved 0, reused 0, downloaded 56, added 53
+#14 5.730 Progress: resolved 0, reused 0, downloaded 70, added 65
+#14 6.735 Progress: resolved 0, reused 0, downloaded 78, added 74
+#14 ...
+
+#9 [runtime  2/18] RUN apt-get update && apt-get install -y --no-install-recommends     nginx curl  && rm -rf /var/lib/apt/lists/*
+#9 4.295 Fetched 9304 kB in 4s (2293 kB/s)
+#9 4.295 Reading package lists...
+#9 4.579 Reading package lists...
+#9 4.886 Building dependency tree...
+#9 4.982 Reading state information...
+#9 5.061 The following additional packages will be installed:
+#9 5.061   iproute2 libbpf1 libbrotli1 libbsd0 libcap2-bin libcurl4 libelf1
+#9 5.061   libgssapi-krb5-2 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0
+#9 5.061   libldap-2.5-0 libmnl0 libnghttp2-14 libpsl5 librtmp1 libsasl2-2
+#9 5.061   libsasl2-modules-db libssh2-1 libssl3 libtirpc-common libtirpc3 libxtables12
+#9 5.061   nginx-common
+#9 5.062 Suggested packages:
+#9 5.062   iproute2-doc python3:any krb5-doc krb5-user fcgiwrap nginx-doc ssl-cert
+#9 5.062 Recommended packages:
+#9 5.062   libatm1 libpam-cap ca-certificates krb5-locales libldap-common publicsuffix
+#9 5.062   libsasl2-modules
+#9 5.138 The following NEW packages will be installed:
+#9 5.139   curl iproute2 libbpf1 libbrotli1 libbsd0 libcap2-bin libcurl4 libelf1
+#9 5.139   libgssapi-krb5-2 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0
+#9 5.139   libldap-2.5-0 libmnl0 libnghttp2-14 libpsl5 librtmp1 libsasl2-2
+#9 5.139   libsasl2-modules-db libssh2-1 libssl3 libtirpc-common libtirpc3 libxtables12
+#9 5.139   nginx nginx-common
+#9 5.580 0 upgraded, 27 newly installed, 0 to remove and 0 not upgraded.
+#9 5.580 Need to get 6156 kB of archives.
+#9 5.580 After this operation, 20.8 MB of additional disk space will be used.
+#9 5.580 Get:1 http://deb.debian.org/debian bookworm/main arm64 libelf1 arm64 0.188-2.1 [173 kB]
+#9 6.132 Get:2 http://deb.debian.org/debian bookworm/main arm64 libbpf1 arm64 1:1.1.2-0+deb12u1 [136 kB]
+#9 6.365 Get:3 http://deb.debian.org/debian bookworm/main arm64 libbsd0 arm64 0.11.7-2 [115 kB]
+#9 6.405 Get:4 http://deb.debian.org/debian bookworm/main arm64 libmnl0 arm64 1.0.4-3 [12.1 kB]
+#9 6.409 Get:5 http://deb.debian.org/debian bookworm/main arm64 libkrb5support0 arm64 1.20.1-2+deb12u5 [32.6 kB]
+#9 6.421 Get:6 http://deb.debian.org/debian bookworm/main arm64 libk5crypto3 arm64 1.20.1-2+deb12u5 [79.9 kB]
+#9 6.452 Get:7 http://deb.debian.org/debian bookworm/main arm64 libkeyutils1 arm64 1.6.3-2 [8844 B]
+#9 6.699 Get:8 http://deb.debian.org/debian-security bookworm-security/main arm64 libssl3 arm64 3.0.22-1~deb12u2 [1829 kB]
+#9 ...
+
+#14 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#14 7.734 Progress: resolved 0, reused 0, downloaded 92, added 90
+#14 8.734 Progress: resolved 0, reused 0, downloaded 118, added 115
+#14 9.735 Progress: resolved 0, reused 0, downloaded 153, added 149
+#14 10.74 Progress: resolved 0, reused 0, downloaded 173, added 171
+#14 11.74 Progress: resolved 0, reused 0, downloaded 195, added 198
+#14 12.75 Progress: resolved 0, reused 0, downloaded 217, added 219
+#14 13.75 Progress: resolved 0, reused 0, downloaded 234, added 230
+#14 14.75 Progress: resolved 0, reused 0, downloaded 253, added 250
+#14 15.75 Progress: resolved 0, reused 0, downloaded 266, added 259
+#14 16.76 Progress: resolved 0, reused 0, downloaded 285, added 285
+#14 17.76 Progress: resolved 0, reused 0, downloaded 295, added 295
+#14 18.76 Progress: resolved 0, reused 0, downloaded 327, added 332
+#14 19.76 Progress: resolved 0, reused 0, downloaded 361, added 373
+#14 20.76 Progress: resolved 0, reused 0, downloaded 395, added 417
+#14 21.76 Progress: resolved 0, reused 0, downloaded 417, added 433
+#14 22.76 Progress: resolved 0, reused 0, downloaded 453, added 509
+#14 ...
+
+#9 [runtime  2/18] RUN apt-get update && apt-get install -y --no-install-recommends     nginx curl  && rm -rf /var/lib/apt/lists/*
+#9 16.83 Get:9 http://deb.debian.org/debian bookworm/main arm64 libkrb5-3 arm64 1.20.1-2+deb12u5 [316 kB]
+#9 18.69 Get:10 http://deb.debian.org/debian bookworm/main arm64 libgssapi-krb5-2 arm64 1.20.1-2+deb12u5 [124 kB]
+#9 20.45 Get:11 http://deb.debian.org/debian bookworm/main arm64 libtirpc-common all 1.3.3+ds-1 [14.0 kB]
+#9 20.81 Get:12 http://deb.debian.org/debian bookworm/main arm64 libtirpc3 arm64 1.3.3+ds-1 [80.9 kB]
+#9 22.78 Get:13 http://deb.debian.org/debian bookworm/main arm64 libxtables12 arm64 1.8.9-2 [29.6 kB]
+#9 23.42 Get:14 http://deb.debian.org/debian bookworm/main arm64 libcap2-bin arm64 1:2.66-4+deb12u3+b1 [34.5 kB]
+#9 24.01 Get:15 http://deb.debian.org/debian bookworm/main arm64 iproute2 arm64 6.1.0-3 [1008 kB]
+#9 ...
+
+#14 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#14 23.77 Progress: resolved 0, reused 0, downloaded 464, added 518
+#14 24.77 Progress: resolved 0, reused 0, downloaded 478, added 536
+#14 25.77 Progress: resolved 0, reused 0, downloaded 522, added 584
+#14 26.77 Progress: resolved 0, reused 0, downloaded 559, added 626
+#14 27.77 Progress: resolved 0, reused 0, downloaded 597, added 663
+#14 28.77 Progress: resolved 0, reused 0, downloaded 606, added 672
+#14 29.77 Progress: resolved 0, reused 0, downloaded 624, added 690
+#14 30.78 Progress: resolved 0, reused 0, downloaded 648, added 716
+#14 31.78 Progress: resolved 0, reused 0, downloaded 665, added 738
+#14 32.78 Progress: resolved 0, reused 0, downloaded 690, added 758
+#14 33.78 Progress: resolved 0, reused 0, downloaded 709, added 776
+#14 34.78 Progress: resolved 0, reused 0, downloaded 733, added 804
+#14 ...
+
+#9 [runtime  2/18] RUN apt-get update && apt-get install -y --no-install-recommends     nginx curl  && rm -rf /var/lib/apt/lists/*
+#9 39.52 Get:16 http://deb.debian.org/debian-security bookworm-security/main arm64 libbrotli1 arm64 1.0.9-2+deb12u1 [267 kB]
+#9 42.99 Get:17 http://deb.debian.org/debian-security bookworm-security/main arm64 libsasl2-modules-db arm64 2.1.28+dfsg-10+deb12u1 [21.0 kB]
+#9 43.34 Get:18 http://deb.debian.org/debian-security bookworm-security/main arm64 libsasl2-2 arm64 2.1.28+dfsg-10+deb12u1 [58.3 kB]
+#9 43.91 Get:19 http://deb.debian.org/debian bookworm/main arm64 libldap-2.5-0 arm64 2.5.13+dfsg-5 [171 kB]
+#9 45.27 Get:20 http://deb.debian.org/debian bookworm/main arm64 libnghttp2-14 arm64 1.52.0-1+deb12u3 [69.0 kB]
+#9 45.80 Get:21 http://deb.debian.org/debian bookworm/main arm64 libpsl5 arm64 0.21.2-1 [58.6 kB]
+#9 46.16 Get:22 http://deb.debian.org/debian bookworm/main arm64 librtmp1 arm64 2.4+20151223.gitfa8646d.1-2+b2 [59.4 kB]
+#9 46.51 Get:23 http://deb.debian.org/debian-security bookworm-security/main arm64 libssh2-1 arm64 1.10.0-3+deb12u1 [169 kB]
+#9 47.19 Get:24 http://deb.debian.org/debian bookworm/main arm64 libcurl4 arm64 7.88.1-10+deb12u15 [367 kB]
+#9 48.81 Get:25 http://deb.debian.org/debian bookworm/main arm64 curl arm64 7.88.1-10+deb12u15 [310 kB]
+#9 ...
+
+#14 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#14 35.78 Progress: resolved 0, reused 0, downloaded 760, added 837
+#14 36.78 Progress: resolved 0, reused 0, downloaded 777, added 858
+#14 37.78 Progress: resolved 0, reused 0, downloaded 806, added 900
+#14 38.79 Progress: resolved 0, reused 0, downloaded 827, added 922
+#14 39.79 Progress: resolved 0, reused 0, downloaded 852, added 951
+#14 40.79 Progress: resolved 0, reused 0, downloaded 886, added 997
+#14 41.79 Progress: resolved 0, reused 0, downloaded 924, added 1033
+#14 42.79 Progress: resolved 0, reused 0, downloaded 955, added 1065
+#14 43.79 Progress: resolved 0, reused 0, downloaded 973, added 1087
+#14 44.79 Progress: resolved 0, reused 0, downloaded 991, added 1105
+#14 45.79 Progress: resolved 0, reused 0, downloaded 1012, added 1127
+#14 ...
+
+#9 [runtime  2/18] RUN apt-get update && apt-get install -y --no-install-recommends     nginx curl  && rm -rf /var/lib/apt/lists/*
+#9 50.54 Get:26 http://deb.debian.org/debian-security bookworm-security/main arm64 nginx-common all 1.22.1-9+deb12u10 [115 kB]
+#9 51.20 Get:27 http://deb.debian.org/debian-security bookworm-security/main arm64 nginx arm64 1.22.1-9+deb12u10 [498 kB]
+#9 53.42 debconf: delaying package configuration, since apt-utils is not installed
+#9 53.43 Fetched 6156 kB in 48s (128 kB/s)
+#9 53.44 Selecting previously unselected package libelf1:arm64.
+#9 53.44 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6090 files and directories currently installed.)
+#9 53.46 Preparing to unpack .../00-libelf1_0.188-2.1_arm64.deb ...
+#9 53.74 Unpacking libelf1:arm64 (0.188-2.1) ...
+#9 53.95 Selecting previously unselected package libbpf1:arm64.
+#9 53.95 Preparing to unpack .../01-libbpf1_1%3a1.1.2-0+deb12u1_arm64.deb ...
+#9 53.95 Unpacking libbpf1:arm64 (1:1.1.2-0+deb12u1) ...
+#9 53.98 Selecting previously unselected package libbsd0:arm64.
+#9 53.98 Preparing to unpack .../02-libbsd0_0.11.7-2_arm64.deb ...
+#9 53.98 Unpacking libbsd0:arm64 (0.11.7-2) ...
+#9 53.99 Selecting previously unselected package libmnl0:arm64.
+#9 53.99 Preparing to unpack .../03-libmnl0_1.0.4-3_arm64.deb ...
+#9 53.99 Unpacking libmnl0:arm64 (1.0.4-3) ...
+#9 54.00 Selecting previously unselected package libkrb5support0:arm64.
+#9 54.00 Preparing to unpack .../04-libkrb5support0_1.20.1-2+deb12u5_arm64.deb ...
+#9 54.01 Unpacking libkrb5support0:arm64 (1.20.1-2+deb12u5) ...
+#9 54.02 Selecting previously unselected package libk5crypto3:arm64.
+#9 54.02 Preparing to unpack .../05-libk5crypto3_1.20.1-2+deb12u5_arm64.deb ...
+#9 54.02 Unpacking libk5crypto3:arm64 (1.20.1-2+deb12u5) ...
+#9 54.03 Selecting previously unselected package libkeyutils1:arm64.
+#9 54.03 Preparing to unpack .../06-libkeyutils1_1.6.3-2_arm64.deb ...
+#9 54.03 Unpacking libkeyutils1:arm64 (1.6.3-2) ...
+#9 54.04 Selecting previously unselected package libssl3:arm64.
+#9 54.05 Preparing to unpack .../07-libssl3_3.0.22-1~deb12u2_arm64.deb ...
+#9 54.05 Unpacking libssl3:arm64 (3.0.22-1~deb12u2) ...
+#9 54.14 Selecting previously unselected package libkrb5-3:arm64.
+#9 54.14 Preparing to unpack .../08-libkrb5-3_1.20.1-2+deb12u5_arm64.deb ...
+#9 54.14 Unpacking libkrb5-3:arm64 (1.20.1-2+deb12u5) ...
+#9 54.18 Selecting previously unselected package libgssapi-krb5-2:arm64.
+#9 54.18 Preparing to unpack .../09-libgssapi-krb5-2_1.20.1-2+deb12u5_arm64.deb ...
+#9 54.18 Unpacking libgssapi-krb5-2:arm64 (1.20.1-2+deb12u5) ...
+#9 54.20 Selecting previously unselected package libtirpc-common.
+#9 54.20 Preparing to unpack .../10-libtirpc-common_1.3.3+ds-1_all.deb ...
+#9 54.20 Unpacking libtirpc-common (1.3.3+ds-1) ...
+#9 54.21 Selecting previously unselected package libtirpc3:arm64.
+#9 54.21 Preparing to unpack .../11-libtirpc3_1.3.3+ds-1_arm64.deb ...
+#9 54.21 Unpacking libtirpc3:arm64 (1.3.3+ds-1) ...
+#9 54.22 Selecting previously unselected package libxtables12:arm64.
+#9 54.22 Preparing to unpack .../12-libxtables12_1.8.9-2_arm64.deb ...
+#9 54.23 Unpacking libxtables12:arm64 (1.8.9-2) ...
+#9 54.23 Selecting previously unselected package libcap2-bin.
+#9 54.23 Preparing to unpack .../13-libcap2-bin_1%3a2.66-4+deb12u3+b1_arm64.deb ...
+#9 54.24 Unpacking libcap2-bin (1:2.66-4+deb12u3+b1) ...
+#9 54.25 Selecting previously unselected package iproute2.
+#9 54.25 Preparing to unpack .../14-iproute2_6.1.0-3_arm64.deb ...
+#9 54.25 Unpacking iproute2 (6.1.0-3) ...
+#9 54.31 Selecting previously unselected package libbrotli1:arm64.
+#9 54.31 Preparing to unpack .../15-libbrotli1_1.0.9-2+deb12u1_arm64.deb ...
+#9 54.31 Unpacking libbrotli1:arm64 (1.0.9-2+deb12u1) ...
+#9 54.34 Selecting previously unselected package libsasl2-modules-db:arm64.
+#9 54.34 Preparing to unpack .../16-libsasl2-modules-db_2.1.28+dfsg-10+deb12u1_arm64.deb ...
+#9 54.34 Unpacking libsasl2-modules-db:arm64 (2.1.28+dfsg-10+deb12u1) ...
+#9 54.35 Selecting previously unselected package libsasl2-2:arm64.
+#9 54.35 Preparing to unpack .../17-libsasl2-2_2.1.28+dfsg-10+deb12u1_arm64.deb ...
+#9 54.35 Unpacking libsasl2-2:arm64 (2.1.28+dfsg-10+deb12u1) ...
+#9 54.36 Selecting previously unselected package libldap-2.5-0:arm64.
+#9 54.36 Preparing to unpack .../18-libldap-2.5-0_2.5.13+dfsg-5_arm64.deb ...
+#9 54.36 Unpacking libldap-2.5-0:arm64 (2.5.13+dfsg-5) ...
+#9 54.38 Selecting previously unselected package libnghttp2-14:arm64.
+#9 54.38 Preparing to unpack .../19-libnghttp2-14_1.52.0-1+deb12u3_arm64.deb ...
+#9 54.38 Unpacking libnghttp2-14:arm64 (1.52.0-1+deb12u3) ...
+#9 54.40 Selecting previously unselected package libpsl5:arm64.
+#9 54.40 Preparing to unpack .../20-libpsl5_0.21.2-1_arm64.deb ...
+#9 54.40 Unpacking libpsl5:arm64 (0.21.2-1) ...
+#9 54.41 Selecting previously unselected package librtmp1:arm64.
+#9 54.41 Preparing to unpack .../21-librtmp1_2.4+20151223.gitfa8646d.1-2+b2_arm64.deb ...
+#9 54.41 Unpacking librtmp1:arm64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+#9 54.42 Selecting previously unselected package libssh2-1:arm64.
+#9 54.42 Preparing to unpack .../22-libssh2-1_1.10.0-3+deb12u1_arm64.deb ...
+#9 54.43 Unpacking libssh2-1:arm64 (1.10.0-3+deb12u1) ...
+#9 54.44 Selecting previously unselected package libcurl4:arm64.
+#9 54.44 Preparing to unpack .../23-libcurl4_7.88.1-10+deb12u15_arm64.deb ...
+#9 54.44 Unpacking libcurl4:arm64 (7.88.1-10+deb12u15) ...
+#9 54.47 Selecting previously unselected package curl.
+#9 54.47 Preparing to unpack .../24-curl_7.88.1-10+deb12u15_arm64.deb ...
+#9 54.47 Unpacking curl (7.88.1-10+deb12u15) ...
+#9 54.50 Selecting previously unselected package nginx-common.
+#9 54.50 Preparing to unpack .../25-nginx-common_1.22.1-9+deb12u10_all.deb ...
+#9 54.50 Unpacking nginx-common (1.22.1-9+deb12u10) ...
+#9 54.52 Selecting previously unselected package nginx.
+#9 54.52 Preparing to unpack .../26-nginx_1.22.1-9+deb12u10_arm64.deb ...
+#9 54.52 Unpacking nginx (1.22.1-9+deb12u10) ...
+#9 54.57 Setting up libkeyutils1:arm64 (1.6.3-2) ...
+#9 54.57 Setting up libpsl5:arm64 (0.21.2-1) ...
+#9 54.58 Setting up libtirpc-common (1.3.3+ds-1) ...
+#9 54.58 Setting up libbrotli1:arm64 (1.0.9-2+deb12u1) ...
+#9 54.58 Setting up libssl3:arm64 (3.0.22-1~deb12u2) ...
+#9 54.59 Setting up libnghttp2-14:arm64 (1.52.0-1+deb12u3) ...
+#9 54.59 Setting up nginx-common (1.22.1-9+deb12u10) ...
+#9 54.64 debconf: unable to initialize frontend: Dialog
+#9 54.64 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#9 54.64 debconf: falling back to frontend: Readline
+#9 54.64 debconf: unable to initialize frontend: Readline
+#9 54.64 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/aarch64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/aarch64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/aarch64-linux-gnu/perl-base /usr/lib/aarch64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+#9 54.64 debconf: falling back to frontend: Teletype
+#9 54.72 Setting up libkrb5support0:arm64 (1.20.1-2+deb12u5) ...
+#9 54.72 Setting up libsasl2-modules-db:arm64 (2.1.28+dfsg-10+deb12u1) ...
+#9 54.72 Setting up libcap2-bin (1:2.66-4+deb12u3+b1) ...
+#9 54.72 Setting up librtmp1:arm64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+#9 54.73 Setting up libmnl0:arm64 (1.0.4-3) ...
+#9 54.73 Setting up libk5crypto3:arm64 (1.20.1-2+deb12u5) ...
+#9 54.73 Setting up libxtables12:arm64 (1.8.9-2) ...
+#9 54.73 Setting up libsasl2-2:arm64 (2.1.28+dfsg-10+deb12u1) ...
+#9 54.74 Setting up libssh2-1:arm64 (1.10.0-3+deb12u1) ...
+#9 54.74 Setting up libkrb5-3:arm64 (1.20.1-2+deb12u5) ...
+#9 54.74 Setting up libbsd0:arm64 (0.11.7-2) ...
+#9 54.74 Setting up libelf1:arm64 (0.188-2.1) ...
+#9 54.75 Setting up libbpf1:arm64 (1:1.1.2-0+deb12u1) ...
+#9 54.75 Setting up libldap-2.5-0:arm64 (2.5.13+dfsg-5) ...
+#9 54.75 Setting up libgssapi-krb5-2:arm64 (1.20.1-2+deb12u5) ...
+#9 54.75 Setting up libcurl4:arm64 (7.88.1-10+deb12u15) ...
+#9 54.76 Setting up curl (7.88.1-10+deb12u15) ...
+#9 54.76 Setting up libtirpc3:arm64 (1.3.3+ds-1) ...
+#9 54.76 Setting up iproute2 (6.1.0-3) ...
+#9 54.80 debconf: unable to initialize frontend: Dialog
+#9 54.80 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#9 54.80 debconf: falling back to frontend: Readline
+#9 54.80 debconf: unable to initialize frontend: Readline
+#9 54.80 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/aarch64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/aarch64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/aarch64-linux-gnu/perl-base /usr/lib/aarch64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+#9 54.80 debconf: falling back to frontend: Teletype
+#9 54.81 Setting up nginx (1.22.1-9+deb12u10) ...
+#9 54.82 invoke-rc.d: could not determine current runlevel
+#9 54.82 invoke-rc.d: policy-rc.d denied execution of start.
+#9 54.82 Processing triggers for libc-bin (2.36-9+deb12u14) ...
+#9 DONE 55.2s
+
+#14 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#14 46.79 Progress: resolved 0, reused 0, downloaded 1040, added 1155
+#14 47.79 Progress: resolved 0, reused 0, downloaded 1085, added 1203
+#14 48.79 Progress: resolved 0, reused 0, downloaded 1135, added 1262
+#14 49.79 Progress: resolved 0, reused 0, downloaded 1185, added 1331
+#14 50.79 Progress: resolved 0, reused 0, downloaded 1218, added 1383
+#14 51.79 Progress: resolved 0, reused 0, downloaded 1247, added 1417
+#14 52.80 Progress: resolved 0, reused 0, downloaded 1273, added 1440
+#14 53.81 Progress: resolved 0, reused 0, downloaded 1293, added 1463
+#14 54.81 Progress: resolved 0, reused 0, downloaded 1310, added 1480
+#14 55.81 Progress: resolved 0, reused 0, downloaded 1318, added 1487
+#14 56.81 Progress: resolved 0, reused 0, downloaded 1327, added 1497
+#14 57.81 Progress: resolved 0, reused 0, downloaded 1336, added 1506
+#14 58.81 Progress: resolved 0, reused 0, downloaded 1346, added 1515
+#14 59.81 Progress: resolved 0, reused 0, downloaded 1369, added 1539
+#14 60.81 Progress: resolved 0, reused 0, downloaded 1375, added 1543
+#14 ...
+
+#15 [runtime  3/18] RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
+#15 ...
+
+#14 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#14 61.82 Progress: resolved 0, reused 0, downloaded 1388, added 1563
+#14 62.82 Progress: resolved 0, reused 0, downloaded 1399, added 1582
+#14 63.82 Progress: resolved 0, reused 0, downloaded 1412, added 1597
+#14 64.82 Progress: resolved 0, reused 0, downloaded 1438, added 1648
+#14 65.82 Progress: resolved 0, reused 0, downloaded 1465, added 1679
+#14 ...
+
+#15 [runtime  3/18] RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
+#15 14.36 
+#15 14.36 added 46 packages in 14s
+#15 DONE 15.1s
+
+#16 [runtime  4/18] RUN addgroup --system www  && adduser --system --ingroup www --home /www --shell /usr/sbin/nologin www  && mkdir -p /www /uploads /app /var/log/nginx  && chown -R www:www /www /uploads /var/lib/nginx /var/log/nginx /app
+#16 0.119 Adding group `www' (GID 101) ...
+#16 0.130 Done.
+#16 0.141 Adding system user `www' (UID 100) ...
+#16 0.141 Adding new user `www' (UID 100) with group `www' ...
+#16 0.151 Creating home directory `/www' ...
+#16 DONE 0.2s
+
+#17 [runtime  5/18] WORKDIR /app
+#17 DONE 0.0s
+
+#14 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#14 66.82 Progress: resolved 0, reused 0, downloaded 1487, added 1703
+#14 67.83 Progress: resolved 0, reused 0, downloaded 1510, added 1726
+#14 68.83 Progress: resolved 0, reused 0, downloaded 1542, added 1762
+#14 69.83 Progress: resolved 0, reused 0, downloaded 1565, added 1793
+#14 70.83 Progress: resolved 0, reused 0, downloaded 1589, added 1820
+#14 71.83 Progress: resolved 0, reused 0, downloaded 1623, added 1853
+#14 72.83 Progress: resolved 0, reused 0, downloaded 1656, added 1893
+#14 73.84 Progress: resolved 0, reused 0, downloaded 1684, added 1921
+#14 74.84 Progress: resolved 0, reused 0, downloaded 1713, added 1954
+#14 75.84 Progress: resolved 0, reused 0, downloaded 1749, added 2012
+#14 76.84 Progress: resolved 0, reused 0, downloaded 1792, added 2058
+#14 77.84 Progress: resolved 0, reused 0, downloaded 1831, added 2107
+#14 78.84 Progress: resolved 0, reused 0, downloaded 1879, added 2165
+#14 79.84 Progress: resolved 0, reused 0, downloaded 1926, added 2215
+#14 80.84 Progress: resolved 0, reused 0, downloaded 1964, added 2271
+#14 81.84 Progress: resolved 0, reused 0, downloaded 1996, added 2317
+#14 82.84 Progress: resolved 0, reused 0, downloaded 2029, added 2354
+#14 83.85 Progress: resolved 0, reused 0, downloaded 2069, added 2398
+#14 84.86 Progress: resolved 0, reused 0, downloaded 2095, added 2445
+#14 85.86 Progress: resolved 0, reused 0, downloaded 2130, added 2487
+#14 86.86 Progress: resolved 0, reused 0, downloaded 2168, added 2549
+#14 87.86 Progress: resolved 0, reused 0, downloaded 2209, added 2599
+#14 88.86 Progress: resolved 0, reused 0, downloaded 2251, added 2647
+#14 89.86 Progress: resolved 0, reused 0, downloaded 2293, added 2696
+#14 90.86 Progress: resolved 0, reused 0, downloaded 2336, added 2745
+#14 91.86 Progress: resolved 0, reused 0, downloaded 2387, added 2811
+#14 92.87 Progress: resolved 0, reused 0, downloaded 2413, added 2840
+#14 93.87 Progress: resolved 0, reused 0, downloaded 2418, added 2845
+#14 94.91 Progress: resolved 0, reused 0, downloaded 2425, added 2854
+#14 95.92 Progress: resolved 0, reused 0, downloaded 2450, added 2877
+#14 96.92 Progress: resolved 0, reused 0, downloaded 2467, added 2895
+#14 97.92 Progress: resolved 0, reused 0, downloaded 2485, added 2913
+#14 98.92 Progress: resolved 0, reused 0, downloaded 2512, added 2940
+#14 99.92 Progress: resolved 0, reused 0, downloaded 2550, added 2983
+#14 100.9 Progress: resolved 0, reused 0, downloaded 2594, added 3032
+#14 101.9 Progress: resolved 0, reused 0, downloaded 2624, added 3063
+#14 102.9 Progress: resolved 0, reused 0, downloaded 2659, added 3098
+#14 103.9 Progress: resolved 0, reused 0, downloaded 2702, added 3152
+#14 104.9 Progress: resolved 0, reused 0, downloaded 2755, added 3206
+#14 105.9 Progress: resolved 0, reused 0, downloaded 2804, added 3269
+#14 106.9 Progress: resolved 0, reused 0, downloaded 2855, added 3527
+#14 107.9 Progress: resolved 0, reused 0, downloaded 2904, added 3576
+#14 108.9 Progress: resolved 0, reused 0, downloaded 2965, added 3638
+#14 109.9 Progress: resolved 0, reused 0, downloaded 3010, added 3683
+#14 110.9 Progress: resolved 0, reused 0, downloaded 3066, added 3777
+#14 111.9 Progress: resolved 0, reused 0, downloaded 3124, added 3851
+#14 112.9 Progress: resolved 0, reused 0, downloaded 3176, added 3905
+#14 113.9 Progress: resolved 0, reused 0, downloaded 3227, added 3967
+#14 114.9 Progress: resolved 0, reused 0, downloaded 3282, added 4027
+#14 115.9 Progress: resolved 0, reused 0, downloaded 3300, added 4061
+#14 116.9 Progress: resolved 0, reused 0, downloaded 3344, added 4150
+#14 117.9 Progress: resolved 0, reused 0, downloaded 3385, added 4207
+#14 118.9 Progress: resolved 0, reused 0, downloaded 3439, added 4283
+#14 119.9 Progress: resolved 0, reused 0, downloaded 3484, added 4374
+#14 120.9 Progress: resolved 0, reused 0, downloaded 3497, added 4391
+#14 121.9 Progress: resolved 0, reused 0, downloaded 3498, added 4392
+#14 122.9 Progress: resolved 0, reused 0, downloaded 3499, added 4394
+#14 126.9 Progress: resolved 0, reused 0, downloaded 3500, added 4394
+#14 127.9 Progress: resolved 0, reused 0, downloaded 3500, added 4395
+#14 131.8 Progress: resolved 0, reused 0, downloaded 3501, added 4395
+#14 132.1 Progress: resolved 0, reused 0, downloaded 3501, added 4396, done
+#14 132.2 node_modules/bcrypt install$ node-gyp-build
+#14 132.2 node_modules/bcrypt install: Done
+#14 132.6 
+#14 132.6 ╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @parcel/watcher, @prisma/client, @prisma/engines,   ││   @scarf/scarf, @sentry-internal/node-cpu-profiler, @sentry/cli,             ││   @swc/core, bufferutil, canvas, core-js, core-js-pure, esbuild, prisma,     ││   protobufjs, unrs-resolver, utf-8-validate.                                 ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+#14 132.6 
+#14 132.6 apps/frontend postinstall$ node scripts/fetch-gtm.mjs
+#14 132.6 apps/frontend postinstall: [fetch-gtm] NEXT_PUBLIC_GTM_ID not set, skipping
+#14 132.6 apps/frontend postinstall: Done
+#14 132.8 . postinstall$ pnpm run prisma-generate
+#14 133.0 . postinstall: > gitroom@1.0.0 prisma-generate /app
+#14 133.0 . postinstall: > pnpm dlx prisma@6.5.0 generate --schema ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+#14 135.6 . postinstall: Progress: resolved 1, reused 0, downloaded 0, added 0
+#14 136.6 . postinstall: Progress: resolved 2, reused 0, downloaded 0, added 0
+#14 137.6 . postinstall: Progress: resolved 6, reused 0, downloaded 0, added 0
+#14 138.6 . postinstall: Progress: resolved 26, reused 0, downloaded 0, added 0
+#14 139.6 . postinstall: Progress: resolved 36, reused 0, downloaded 0, added 0
+#14 140.3 . postinstall: Packages: +12
+#14 140.3 . postinstall: ++++++++++++
+#14 140.4 . postinstall: Progress: resolved 38, reused 12, downloaded 0, added 12, done
+#14 140.4 . postinstall: .../1a1cd27026d-4c/node_modules/prisma preinstall$ node scripts/preinstall-entry.js
+#14 140.4 . postinstall: .../1a1cd27026d-4c/node_modules/prisma preinstall: Done
+#14 144.1 . postinstall: Prisma schema loaded from libraries/nestjs-libraries/src/database/prisma/schema.prisma
+#14 144.8 . postinstall: ✔ Generated Prisma Client (v6.5.0) to ./node_modules/@prisma/client in 387ms
+#14 144.8 . postinstall: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+#14 144.8 . postinstall: Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+#14 145.0 . postinstall: Done
+#14 145.1 Done in 2m 24.7s using pnpm v10.6.1
+#14 DONE 145.7s
+
+#18 [builder 8/8] RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build  && rm -rf apps/frontend/.next/cache
+#18 2.221 
+#18 2.221 > gitroom@1.0.0 build /app
+#18 2.221 > pnpm -r --workspace-concurrency=1 --filter ./apps/frontend --filter ./apps/backend --filter ./apps/orchestrator run build
+#18 2.221 
+#18 2.526 Scope: 3 of 7 workspace projects
+#18 2.528 
+#18 2.528 > postiz-frontend@1.0.0 build /app/apps/frontend
+#18 2.528 > next build
+#18 2.528 
+#18 2.756 ▲ Next.js 16.4.2 (Turbopack)
+#18 2.915 ✓ Running next.config.js took 160ms
+#18 2.920 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#18 2.920 This information is used to shape Next.js' roadmap and prioritize features.
+#18 2.920 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#18 2.920 https://nextjs.org/telemetry
+#18 2.920 
+#18 2.949 - Experiments (use with caution):
+#18 2.949   · clientTraceMetadata
+#18 2.949   · proxyTimeout: 90000
+#18 2.950 
+#18 2.969   Creating an optimized production build ...
+#18 27.02 ✓ Compiled successfully in 24.1s
+#18 27.02   Running next.config.js provided runAfterProductionCompile ...
+#18 29.15 ✓ Completed runAfterProductionCompile in 2.1s
+#18 29.15   Running TypeScript ...
+#18 41.92   Finished TypeScript in 12.8s ...
+#18 41.93   Collecting page data using 7 workers ...
+#18 42.58 🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+#18 42.59 🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+#18 42.59 🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+#18 42.59 🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+#18 42.60 🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+#18 42.60 🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+#18 43.08 🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+#18 43.09   Generating static pages using 7 workers (0/2) ...
+#18 43.32 ✓ Generating static pages using 7 workers (2/2) in 231ms
+#18 43.33   Finalizing page optimization ...
+#18 43.33 
+#18 43.34 Route (app)
+#18 43.34 ┌ ○ /_not-found
+#18 43.34 ├ ƒ /admin/errors
+#18 43.34 ├ ƒ /admin/stats
+#18 43.34 ├ ƒ /agents
+#18 43.34 ├ ƒ /agents/[id]
+#18 43.34 ├ ƒ /analytics
+#18 43.34 ├ ƒ /api/uploads/[[...path]]
+#18 43.34 ├ ƒ /auth
+#18 43.34 ├ ƒ /auth/activate
+#18 43.34 ├ ƒ /auth/activate/[code]
+#18 43.34 ├ ƒ /auth/forgot
+#18 43.34 ├ ƒ /auth/forgot/[token]
+#18 43.34 ├ ƒ /auth/login
+#18 43.34 ├ ƒ /auth/login-required
+#18 43.34 ├ ƒ /auth/sso
+#18 43.34 ├ ƒ /billing
+#18 43.34 ├ ƒ /billing/lifetime
+#18 43.34 ├ ƒ /channel-relay
+#18 43.34 ├ ƒ /err
+#18 43.34 ├ ƒ /integrations/social/[provider]
+#18 43.34 ├ ƒ /launches
+#18 43.34 ├ ƒ /media
+#18 43.34 ├ ƒ /modal/[style]/[platform]
+#18 43.34 ├ ƒ /oauth/authorize
+#18 43.34 ├ ƒ /p/[id]
+#18 43.34 ├ ƒ /plugs
+#18 43.34 ├ ƒ /provider/[p]
+#18 43.34 ├ ƒ /provider/add
+#18 43.34 ├ ƒ /settings
+#18 43.34 ├ ƒ /sso
+#18 43.34 └ ƒ /third-party
+#18 43.34 
+#18 43.34 
+#18 43.34 ƒ Proxy (Middleware)
+#18 43.34 
+#18 43.34 ○  (Static)   prerendered as static content
+#18 43.34 ƒ  (Dynamic)  server-rendered on demand
+#18 43.34 
+#18 43.71 
+#18 43.71 > postiz-backend@1.0.0 build /app/apps/backend
+#18 43.71 > cross-env NODE_ENV=production nest build
+#18 43.71 
+#18 66.24 
+#18 66.24 > postiz-orchestrator@1.0.0 build /app/apps/orchestrator
+#18 66.24 > cross-env NODE_ENV=production nest build
+#18 66.24 
+#18 DONE 84.8s
+
+#19 [runtime  6/18] COPY --from=builder /app/node_modules ./node_modules
+#19 DONE 24.1s
+
+#20 [runtime  7/18] COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+#20 DONE 1.2s
+
+#21 [runtime  8/18] COPY --from=builder /app/apps/orchestrator/dist ./apps/orchestrator/dist
+#21 DONE 0.1s
+
+#22 [runtime  9/18] COPY --from=builder /app/apps/frontend/.next ./apps/frontend/.next
+#22 DONE 0.8s
+
+#23 [runtime 10/18] COPY --from=builder /app/apps/frontend/public ./apps/frontend/public
+#23 DONE 0.0s
+
+#24 [runtime 11/18] COPY --from=builder /app/apps/frontend/package.json ./apps/frontend/package.json
+#24 DONE 0.0s
+
+#25 [runtime 12/18] COPY --from=builder /app/apps/frontend/next.config.js ./apps/frontend/next.config.js
+#25 DONE 0.0s
+
+#26 [runtime 13/18] COPY --from=builder /app/package.json ./
+#26 DONE 0.0s
+
+#27 [runtime 14/18] COPY libraries/nestjs-libraries/src/database/prisma/schema.prisma      ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+#27 DONE 0.0s
+
+#28 [runtime 15/18] COPY var/docker/entrypoint.sh ./var/docker/entrypoint.sh
+#28 DONE 0.0s
+
+#29 [runtime 16/18] RUN chmod +x ./var/docker/entrypoint.sh
+#29 DONE 0.2s
+
+#30 [runtime 17/18] COPY var/docker/nginx.conf /etc/nginx/nginx.conf
+#30 DONE 0.0s
+
+#31 [runtime 18/18] COPY --chown=www:www var/docker/ecosystem.config.cjs ./ecosystem.config.cjs
+#31 DONE 0.1s
+
+#32 exporting to image
+#32 exporting layers
+#32 exporting layers 73.2s done
+#32 exporting manifest sha256:635faedfc0cc0ab8dc7d2ccccd79b14709227d748fa4f9fa9b9252ce9f81ed56 0.0s done
+#32 exporting config sha256:ee9ebcd2b8d34163bf4b81c616ac16018550e3a68449bce129e29bf75de067e1 done
+#32 exporting attestation manifest sha256:b1ddfdf3746c51510514dcc4fd91f8331aef71fde1b15259807314bbd3da1dae done
+#32 exporting manifest list sha256:c77e3edea504ff786974039a79bab74e61e1027d1c548730e92754dba0a69e6a done
+#32 naming to docker.io/library/postiz-ticket18:candidate done
+#32 unpacking to docker.io/library/postiz-ticket18:candidate
+#32 unpacking to docker.io/library/postiz-ticket18:candidate 30.0s done
+#32 DONE 103.3s
+
+Built postiz-ticket18:candidate
+Image ID: sha256:c77e3edea504ff786974039a79bab74e61e1027d1c548730e92754dba0a69e6a
+Provenance: /Users/chancetio/Desktop/Web/postiz-worktrees/18/k8s/BUILD_PROVENANCE.json
+
+This script did not publish or deploy anything.
+Publish: ./k8s/build-postiz.sh --local postiz-ticket18:candidate
+Deploy : ./k8s/deploy-postiz.sh --image <registry>/app/postiz:<tag>

@@ -1,0 +1,89 @@
+[
+    {
+        "Id": "sha256:c77e3edea504ff786974039a79bab74e61e1027d1c548730e92754dba0a69e6a",
+        "RepoTags": [
+            "postiz-ticket18:candidate"
+        ],
+        "RepoDigests": [
+            "postiz-ticket18@sha256:c77e3edea504ff786974039a79bab74e61e1027d1c548730e92754dba0a69e6a"
+        ],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-11-12T00:30:11.985548632Z",
+        "Config": {
+            "ExposedPorts": {
+                "5000/tcp": {}
+            },
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=22.23.4",
+                "YARN_VERSION=1.22.22"
+            ],
+            "Entrypoint": [
+                "/app/var/docker/entrypoint.sh"
+            ],
+            "Cmd": [
+                "sh",
+                "-c",
+                "nginx && pm2-runtime ecosystem.config.cjs"
+            ],
+            "WorkingDir": "/app",
+            "ArgsEscaped": true,
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost:5000/api/ || exit 1"
+                ],
+                "Interval": 30000000000,
+                "Timeout": 10000000000,
+                "StartPeriod": 60000000000,
+                "Retries": 5
+            }
+        },
+        "Architecture": "arm64",
+        "Os": "linux",
+        "Size": 848639073,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:c96c411090da09187c55ab267826b3903b542b5c03f1cafa912d60e060e7850c",
+                "sha256:4abeeef2ca3a3d173deb8a099f58ecc4d0cadd9b3e836cf623799fedde03a73f",
+                "sha256:28d12d73db4377daf9f622b00d53a3b436bb7fc040a363e7aefb315bac863b20",
+                "sha256:74c551b61db177ad49ea94a6e62bb57cc0f1112a8500f94edf748df5c2dbf10d",
+                "sha256:dfa8e016441c6ebafa38a33de7f73e2383d43ffb4d698437752ea78c5d6ed358",
+                "sha256:56bbbadec2deec5e8ab7f7e86bbb2e039090947dfab1672c47d13f27edfdd178",
+                "sha256:63ff499ad63af1211ba319dbcf5ebbdfc7a50884be7951e908641a52a479ecb4",
+                "sha256:00997c2f5049caf623cd00b617dcb23918f26f6bbb7000f754a59ae8f730895f",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:68d8326e7230399de3e49f50e435b4ff18a7efd4adbad5374c518df39b27ab7d",
+                "sha256:a1ef16709cad070b4391967fbf4732dcdf1ae0d4551a3ea0bca2a4f163e26885",
+                "sha256:5913c6beb162e2929b3dab83aa6d8f987e62e18d4898fc41379cbba629527126",
+                "sha256:28fb919231d5c8e9872e7c5218c4351e5cd8e03241166475e7830ee80005c908",
+                "sha256:7e349cf235db1a0f7031c5eddc3af83929633ac19778da69dff7f3a5995a5582",
+                "sha256:c8c154206922d8e058bc342e5b54f8e87f7f697db6936b38d812b8c51ba5c552",
+                "sha256:f3c8273027a14bfefdb049d9a6e596815390e8ed1b8deb0ec67a13e01c1daa9b",
+                "sha256:0dbbdb7f277106175adc2191fad7e9dc1789ad9ec8bd94afe7d053491a7d866e",
+                "sha256:fb09c2d8e2dd5fd33d91dbc98f5ca8261588f18c13b66c2c3a14851aa6f8f7e8",
+                "sha256:4587f5d8e6bb42f3701c620ca835a9a71a3608fa5ded29161819aae2e1cff069",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:694d09c5b9418da1ad9724295c3a32f41c450fc8fdb8e6ac1588fde5e2012b96",
+                "sha256:041e2165de3694e82fd769d254d3c156df75e7951779e7b308d361036f37e43a"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-11-12T00:31:25.261713972Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:c77e3edea504ff786974039a79bab74e61e1027d1c548730e92754dba0a69e6a",
+            "size": 856
+        },
+        "Identity": {
+            "Build": [
+                {
+                    "Ref": "4k38ot58nkpwnubrt1oofwmbd",
+                    "CreatedAt": "2026-11-12T00:31:55.247623972Z"
+                }
+            ]
+        }
+    }
+]

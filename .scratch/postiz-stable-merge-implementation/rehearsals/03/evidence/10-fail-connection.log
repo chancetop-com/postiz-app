@@ -1,0 +1,16 @@
+[startup-sync] cwd=/app command=pnpm run prisma-db-push
+
+> gitroom@1.0.0 prisma-db-push /app
+> prisma db push --schema ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+
+Prisma schema loaded from libraries/nestjs-libraries/src/database/prisma/schema.prisma
+Datasource "db": PostgreSQL database "postiz", schema "public" at "db.invalid:5432"
+
+Error: P1001: Can't reach database server at `db.invalid:5432`
+
+Please make sure your database server is running at `db.invalid:5432`.
+ ELIFECYCLE  Command failed with exit code 1.
+[startup-sync] schema sync FAILED with exit 1.
+[startup-sync] refusing to start: sh -c echo APP_STARTED_MARKER
+[startup-sync] the database keeps its rows and whatever the failed sync already changed.
+[startup-sync] inspect the error above before retrying; do not drop tables or data to force a start.

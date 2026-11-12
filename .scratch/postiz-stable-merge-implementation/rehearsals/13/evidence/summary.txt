@@ -1,0 +1,93 @@
+# Ticket 13 rehearsal summary
+
+image: postiz-ticket18:candidate
+docker: 29.7.2
+postgres: PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+
+PASS|an isolated Temporal server is reachable on 127.0.0.1:7233|temporal version 1.10.0 (Server 1.32.2, UI 2.56.1)
+PASS|an isolated Redis is reachable as redis:6379|redis:7-alpine
+PASS|the API answered /api/ 200 within the wait window|after ~10s
+PASS|three consecutive /api/ requests answer 200|
+PASS|image Node is 22.23.4|
+PASS|image pnpm is 10.6.1|
+PASS|image Prisma CLI is 6.5.0|
+PASS|image runs PM2|7.1.2
+PASS|image runs nginx|
+PASS|bcrypt native module loads and hashes|
+PASS|sharp native module renders an image|
+PASS|the generated Prisma client reaches the database|
+PASS|the Temporal worker package loads|
+PASS|the Temporal native bridge loads|
+PASS|the complete Next output and hoisted entry exist|
+PASS|no standalone output in the image|
+PASS|three processes are defined|
+PASS|backend is online|
+PASS|frontend is online|
+PASS|orchestrator is online|
+PASS|backend runs the real Nest output|
+PASS|orchestrator runs the real Nest output|
+PASS|frontend runs with an explicit cwd|
+PASS|frontend runs the hoisted Next entry|
+PASS|nginx answers on 5000|http_status=307
+PASS|frontend answers directly on 4200|http_status=307
+PASS|backend answers directly on 3000|
+PASS|the entrypoint synced the schema first|
+PASS|the entrypoint then started the application command|
+PASS|the HEALTHCHECK targets /api/|
+PASS|the Docker HEALTHCHECK reports healthy|
+PASS|/api/ answers 200|
+PASS|/api/ is the backend root route|
+PASS|/api behaviour recorded (no trailing slash)|301 http://localhost:5000/api/
+PASS|frontend responses keep the iframe CSP|
+PASS|the API allows the configured frontend origin|
+PASS|the API exposes the identity headers|
+PASS|the API exposes [reload]|
+PASS|the API exposes [onboarding]|
+PASS|the API exposes [activate]|
+PASS|the API exposes [auth]|
+PASS|the API exposes [showorg]|
+PASS|the API exposes [impersonate]|
+PASS|the API exposes [logout]|
+PASS|a normal API route answers through nginx|
+PASS|the normal API route returns its JSON|
+PASS|nginx keeps [proxy_set_header Auth $http_auth]|
+PASS|nginx keeps [proxy_set_header Showorg $http_showorg]|
+PASS|nginx keeps [proxy_set_header Impersonate $http_impersonate]|
+PASS|nginx keeps [proxy_set_header Connection '']|
+PASS|nginx keeps [proxy_read_timeout 300s]|
+PASS|nginx keeps [proxy_send_timeout 300s]|
+PASS|nginx keeps [proxy_buffering off]|
+PASS|nginx keeps [proxy_cache off]|
+PASS|nginx keeps [access_log                  /dev/stdout]|
+PASS|nginx keeps [error_log                       /dev/stderr]|
+PASS|nginx keeps [pid                             /tmp/nginx.pid]|
+PASS|the API proxy clears Connection|
+PASS|the build-time sentinel is in the browser bundle|/app/apps/frontend/.next/static/chunks/0hoyu7g9o0s9k.js
+PASS|the runtime sentinel is not in the browser bundle|
+PASS|the parent origin supplied at build time is in the build output|
+PASS|/auth/login renders|
+PASS|the served page carries the runtime FRONTEND_URL|
+PASS|the served page carries runtime STORAGE_PROVIDER=local|
+PASS|the served page carries runtime IS_GENERAL=true|
+PASS|the runtime parent-origin sentinel never reaches the page|
+PASS|the runtime upload-directory sentinel never reaches the page|
+PASS|an old /uploads file is readable through nginx|
+PASS|the old file content is served unchanged|
+PASS|uploads keep X-Content-Type-Options nosniff|
+PASS|uploads keep their own CSP|
+PASS|a new upload returns the documented /uploads URL|http://localhost:5000/uploads/2026/11/12/f0f1efc76a9d437589ba1010ca10f553890.png
+PASS|the new upload is readable through nginx|
+PASS|the new upload is served as an image|
+PASS|the direct Next upload entry is recorded|404 http://localhost:4200/404
+PASS|nginx answers a Range request with 206|
+PASS|the Range response carries Content-Range|
+PASS|the uploaded file can be deleted through the storage layer|
+PASS|the deleted file is gone from nginx|
+PASS|a restart syncs the schema again|
+PASS|the upload survives a container restart|
+PASS|the old media file survives a container restart|
+PASS|three processes are online after the restart|
+PASS|final container state recorded|restartCount=0 oomKilled=false health=starting; pm2: backend=online/restarts:0 frontend=online/restarts:0 orchestrator=online/restarts:0
+PASS|provenance records every required field|
+
+passed: 85  failed: 0

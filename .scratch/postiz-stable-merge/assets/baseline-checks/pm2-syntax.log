@@ -1,0 +1,3 @@
+$ node --check var/docker/ecosystem.config.cjs
+
+exit=0

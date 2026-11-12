@@ -1,0 +1,10 @@
+$ pnpm test --runInBand
+
+> gitroom@1.0.0 test /Users/chancetio/Desktop/Web/postiz-app
+> jest --coverage --detectOpenHandles --reporters=default --reporters=jest-junit --runInBand
+
+ ELIFECYCLE  Test failed. See above for more details.
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+sh: jest: command not found
+
+exit=1

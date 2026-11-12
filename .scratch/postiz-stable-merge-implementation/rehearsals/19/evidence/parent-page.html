@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>merchant parent</title></head>
+  <body style="font-family: system-ui; margin: 16px">
+    <h1 id="parent-title">Merchant parent (http://127.0.0.1:5099)</h1>
+    <p id="parent-origin"></p>
+    <button id="open-popup" style="padding: 8px 16px">Connect a channel</button>
+    <div style="margin-top: 12px">
+      <iframe id="app-frame" src="http://localhost:5066/auth/sso?token=iframe-sso-token-19"
+              width="900" height="700" style="border: 1px solid #ccc"></iframe>
+    </div>
+    <script>
+      document.getElementById('parent-origin').textContent = 'origin=' + window.location.origin;
+      const target = "http://localhost:5066/p/relay-landed-19";
+      const relay = "http://localhost:5066" + '/channel-relay?redirect=' + encodeURIComponent(target)
+        + '#auth=' + encodeURIComponent("auth-from-parent")
+        + '&showorg=' + encodeURIComponent("org-from-parent")
+        + '&impersonate=' + encodeURIComponent("imp-from-parent");
+      window.__relayUrl = relay;
+      document.getElementById('open-popup').addEventListener('click', () => {
+        window.open(relay, 'channel-relay', 'width=560,height=760');
+      });
+    </script>
+  </body>
+</html>

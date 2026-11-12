@@ -1,0 +1,22 @@
+[
+  {
+    "check": "build",
+    "exit": 1,
+    "output": "\n> gitroom@1.0.0 build /Users/chancetio/Desktop/Web/postiz-app\n> pnpm -r --workspace-concurrency=1 --filter ./apps/frontend --filter ./apps/backend --filter ./apps/orchestrator run build\n\nScope: 3 of 7 workspace projects\n\n> postiz-frontend@1.0.0 build /Users/chancetio/Desktop/Web/postiz-app/apps/frontend\n> next build\n\n/Users/chancetio/Desktop/Web/postiz-app/apps/frontend:\n ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  postiz-frontend@1.0.0 build: `next build`\nspawn ENOENT\n WARN   Local package.json exists, but node_modules missing, did you mean to install?\n\n> postiz-backend@1.0.0 build /Users/chancetio/Desktop/Web/postiz-app/apps/backend\n> cross-env NODE_ENV=production nest build\n\n ELIFECYCLE  Command failed with exit code 1.\n WARN   Local package.json exists, but node_modules missing, did you mean to install?\nsh: next: command not found\n"
+  },
+  {
+    "check": "test",
+    "exit": 1,
+    "output": "\n> gitroom@1.0.0 test /Users/chancetio/Desktop/Web/postiz-app\n> jest --coverage --detectOpenHandles --reporters=default --reporters=jest-junit --runInBand\n\n ELIFECYCLE  Test failed. See above for more details.\n WARN   Local package.json exists, but node_modules missing, did you mean to install?\nsh: jest: command not found\n"
+  },
+  {
+    "check": "typecheck",
+    "exit": 254,
+    "output": "undefined\n ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command \"tsc\" not found\n"
+  },
+  {
+    "check": "lint",
+    "exit": 254,
+    "output": "undefined\n ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command \"eslint\" not found\n"
+  }
+]

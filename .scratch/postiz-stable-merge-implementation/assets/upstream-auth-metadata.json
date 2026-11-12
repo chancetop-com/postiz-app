@@ -1,0 +1,13 @@
+{
+  "latestRelease": {
+    "tag": "v2.25.3",
+    "publishedAt": "2026-10-24T14:16:43Z",
+    "url": "https://github.com/gitroomhq/postiz-app/releases/tag/v2.25.3"
+  },
+  "main": {
+    "sha": "4823080b413b9d3dc625d466939eb43b9657c66c",
+    "date": "2026-11-12T14:44:22Z",
+    "message": "feat: connect tool",
+    "url": "https://github.com/gitroomhq/postiz-app/commit/4823080b413b9d3dc625d466939eb43b9657c66c"
+  }
+}

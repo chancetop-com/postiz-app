@@ -15,6 +15,11 @@ import { useToaster } from '@gitroom/react/toaster/toaster';
 import { object, string } from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { web3List } from '@gitroom/frontend/components/launches/web3/web3.list';
+import { isAllowedAddChannel } from '@gitroom/frontend/components/launches/allowed.channels';
+import {
+  buildChannelRelayUrl,
+  isEmbeddedInIframe,
+} from '@gitroom/frontend/components/launches/channel.popup';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import clsx from 'clsx';
 import copy from 'copy-to-clipboard';
@@ -165,6 +170,7 @@ export const CustomVariables: FC<{
     defaultValue?: string;
     validation: string;
     type: 'text' | 'password';
+    hint?: string;
   }>;
   close?: () => void;
   identifier: string;
@@ -208,13 +214,15 @@ export const CustomVariables: FC<{
   });
   const submit = useCallback(
     async (data: FieldValues) => {
-      const { url } = await (
-        await fetch(
-          `/integrations/social/${identifier}${
-            onboarding ? '?onboarding=true' : ''
-          }`
-        )
-      ).json();
+      const response = await fetch(
+        `/integrations/social/${identifier}${
+          onboarding ? '?onboarding=true' : ''
+        }`
+      );
+      if (response.status === 402) {
+        return;
+      }
+      const { url } = await response.json();
       modals.closeAll();
       gotoUrl(
         `/integrations/social/${identifier}?state=${url}&code=${Buffer.from(
@@ -236,11 +244,31 @@ export const CustomVariables: FC<{
         >
           {variables.map((variable) => (
             <div key={variable.key}>
-              <Input
-                label={variable.label}
-                name={variable.key}
-                type={variable.type == 'text' ? 'text' : 'password'}
-              />
+              {variable.hint ? (
+                <div className="flex flex-col gap-[6px]">
+                  <div className="text-[14px] flex items-center gap-[6px]">
+                    <span>{variable.label}</span>
+                    <span
+                      data-tooltip-id="tooltip"
+                      data-tooltip-content={variable.hint}
+                      className="w-[16px] h-[16px] rounded-full border border-textColor/60 text-textColor/60 flex items-center justify-center text-[11px] leading-none cursor-help select-none"
+                    >
+                      i
+                    </span>
+                  </div>
+                  <Input
+                    label=""
+                    name={variable.key}
+                    type={variable.type == 'text' ? 'text' : 'password'}
+                  />
+                </div>
+              ) : (
+                <Input
+                  label={variable.label}
+                  name={variable.key}
+                  type={variable.type == 'text' ? 'text' : 'password'}
+                />
+              )}
             </div>
           ))}
           <div>
@@ -372,6 +400,7 @@ export const AddProviderComponent: FC<{
       label: string;
       validation: string;
       type: 'text' | 'password';
+      hint?: string;
     }>;
   }>;
   article: Array<{
@@ -402,6 +431,7 @@ export const AddProviderComponent: FC<{
           validation: string;
           defaultValue?: string;
           type: 'text' | 'password';
+          hint?: string;
         }>
       ) =>
       async () => {
@@ -410,13 +440,15 @@ export const AddProviderComponent: FC<{
           const { component: Web3Providers } = web3List.find(
             (item) => item.identifier === identifier
           )!;
-          const { url } = await (
-            await fetch(
-              `/integrations/social/${identifier}${
-                onboarding ? '?onboarding=true' : ''
-              }`
-            )
-          ).json();
+          const response = await fetch(
+            `/integrations/social/${identifier}${
+              onboarding ? '?onboarding=true' : ''
+            }`
+          );
+          if (response.status === 402) {
+            return;
+          }
+          const { url } = await response.json();
           modal.openModal({
             title: `Add ${capitalize(identifier)}`,
             withCloseButton: true,
@@ -430,7 +462,7 @@ export const AddProviderComponent: FC<{
               >
                 <Web3Providers
                   onComplete={(code, newState) => {
-                    window.location.href = `/integrations/social/${identifier}?code=${code}&state=${newState}${
+                    window.location.href = `/integrations/social/${identifier}?code=${encodeURIComponent(code)}&state=${newState}${
                       onboarding ? '&onboarding=true' : ''
                     }`;
                   }}
@@ -455,11 +487,13 @@ export const AddProviderComponent: FC<{
           ]
             .filter(Boolean)
             .join('&');
-          const { url, err } = await (
-            await fetch(
-              `/integrations/social/${identifier}${params ? `?${params}` : ''}`
-            )
-          ).json();
+          const response = await fetch(
+            `/integrations/social/${identifier}${params ? `?${params}` : ''}`
+          );
+          if (response.status === 402) {
+            return;
+          }
+          const { url, err } = await response.json();
           if (err) {
             toaster.show(
               t(
@@ -501,25 +535,14 @@ export const AddProviderComponent: FC<{
           // When embedded in an iframe, OAuth providers refuse to load in-iframe.
           // Open a popup relay that transfers the JWT to the new window and
           // then redirects to the OAuth URL. After the channel is added the
-          // popup writes to localStorage (keyed by user ID from JWT) so the
-          // iframe can detect completion and refresh its channel list.
-          let isInIframe = false;
-          try {
-            isInIframe = window.self !== window.top;
-          } catch {
-            // Accessing window.top throws in cross-origin iframes — that itself confirms iframe context.
-            isInIframe = true;
-          }
-          if (isInIframe) {
-            const auth = window.sessionStorage.getItem('auth') || '';
-            const showorg = window.sessionStorage.getItem('showorg') || '';
-            const impersonate = window.sessionStorage.getItem('impersonate') || '';
-            const hashParts = [
-              `auth=${encodeURIComponent(auth)}`,
-              showorg ? `showorg=${encodeURIComponent(showorg)}` : '',
-              impersonate ? `impersonate=${encodeURIComponent(impersonate)}` : '',
-            ].filter(Boolean).join('&');
-            const relayUrl = `/channel-relay?redirect=${encodeURIComponent(url)}#${hashParts}`;
+          // popup reports completion to this window so the list can refresh.
+          // Ordinary browser windows keep navigating in place.
+          if (isEmbeddedInIframe()) {
+            const relayUrl = buildChannelRelayUrl(url, {
+              auth: window.sessionStorage.getItem('auth'),
+              showorg: window.sessionStorage.getItem('showorg'),
+              impersonate: window.sessionStorage.getItem('impersonate'),
+            });
             window.open(relayUrl, '_blank', 'popup,width=600,height=700');
             modal.closeAll();
             return;
@@ -552,7 +575,11 @@ export const AddProviderComponent: FC<{
           if (!confirmed) {
             return;
           }
-          if (!extensionId || !chrome?.runtime?.sendMessage) {
+          if (
+            !extensionId ||
+            typeof chrome === 'undefined' ||
+            !chrome?.runtime?.sendMessage
+          ) {
             modal.openModal({
               title: t('extension_not_available_title', 'Extension Not Found'),
               withCloseButton: true,
@@ -609,13 +636,15 @@ export const AddProviderComponent: FC<{
               );
               return;
             }
-            const { url } = await (
-              await fetch(
-                `/integrations/social/${identifier}${
-                  onboarding ? '?onboarding=true' : ''
-                }`
-              )
-            ).json();
+            const response = await fetch(
+              `/integrations/social/${identifier}${
+                onboarding ? '?onboarding=true' : ''
+              }`
+            );
+            if (response.status === 402) {
+              return;
+            }
+            const { url } = await response.json();
             modal.closeAll();
             window.location.href = `/integrations/social/${identifier}?state=${url}&code=${Buffer.from(
               JSON.stringify(cookieResponse.cookies)
@@ -680,14 +709,13 @@ export const AddProviderComponent: FC<{
           className={clsx(
             isMobile && 'gap-[20px] flex flex-col',
             !isMobile &&
-              'grid grid-cols-5 gap-[10px] justify-items-center justify-center',
+              'grid grid-cols-5 gap-[10px] justify-items-center justify-center mobile:!grid-cols-3',
             isMobile ? {} : onboarding ? 'grid-cols-9' : 'grid-cols-5'
           )}
         >
           {social
             .filter((item) => {
-              const allowedChannels = ['youtube', 'linkedin', 'tiktok', 'facebook', 'instagram', 'instagram-standalone'];
-              if (!allowedChannels.includes(item.identifier)) {
+              if (!isAllowedAddChannel(item.identifier)) {
                 return false;
               }
               if (!props.invite) {
@@ -721,7 +749,7 @@ export const AddProviderComponent: FC<{
                 className={clsx(
                   isMobile
                     ? 'flex-row h-[72px] p-[16px]'
-                    : 'flex-col p-[10px] h-[100px] justify-center',
+                    : 'flex-col p-[10px] h-[100px] justify-center mobile:text-[13px] mobile:leading-[1.2]',
                   'w-full text-[14px] rounded-[8px] bg-newTableHeader text-textColor relative items-center flex gap-[10px] cursor-pointer'
                 )}
               >

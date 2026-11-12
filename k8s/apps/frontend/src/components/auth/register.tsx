@@ -5,7 +5,7 @@ import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import Link from 'next/link';
 import { Button } from '@gitroom/react/form/button';
 import { Input } from '@gitroom/react/form/input';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { classValidatorResolver } from '@hookform/resolvers/class-validator';
 import { CreateOrgUserDto } from '@gitroom/nestjs-libraries/dtos/auth/create.org.user.dto';
 import { GithubProvider } from '@gitroom/frontend/components/auth/providers/github.provider';
@@ -13,6 +13,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { LoadingComponent } from '@gitroom/frontend/components/layout/loading';
 import clsx from 'clsx';
 import { GoogleProvider } from '@gitroom/frontend/components/auth/providers/google.provider';
+import { AppleProvider } from '@gitroom/frontend/components/auth/providers/apple.provider';
 import { OauthProvider } from '@gitroom/frontend/components/auth/providers/oauth.provider';
 import { useFireEvents } from '@gitroom/helpers/utils/use.fire.events';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
@@ -42,26 +43,49 @@ export function Register() {
   const fetch = useFetch();
   const [provider] = useState(getQuery?.get('provider')?.toUpperCase());
   const [code, setCode] = useState(getQuery?.get('code') || '');
+  const [state] = useState(getQuery?.get('state') || '');
   const [show, setShow] = useState(false);
-  useEffect(() => {
-    if (provider && code) {
-      load();
-    }
-  }, []);
+  const [error, setError] = useState(
+    getQuery?.get('error') ? 'Sign-in was cancelled or denied.' : ''
+  );
+  const exchanging = useRef(false);
   const load = useCallback(async () => {
-    const { token } = await (
-      await fetch(`/auth/oauth/${provider?.toUpperCase() || 'LOCAL'}/exists`, {
+    try {
+      const response = await fetch(`/auth/oauth/${provider || 'LOCAL'}/exists`, {
         method: 'POST',
         body: JSON.stringify({
           code,
+          state,
         }),
-      })
-    ).json();
-    if (token) {
-      setCode(token);
-      setShow(true);
+      });
+      if (!response.ok) {
+        throw new Error('Sign-in failed');
+      }
+      const { token } = await response.json();
+      if (token) {
+        setCode(token);
+        setShow(true);
+      }
+    } catch {
+      setError('Sign-in could not be completed. Please sign in again.');
     }
-  }, [provider, code]);
+  }, [provider, code, state, fetch]);
+  useEffect(() => {
+    if (provider && code && !error && !exchanging.current) {
+      exchanging.current = true;
+      void load();
+    }
+  }, [provider, code, error, load]);
+  if (error) {
+    return (
+      <div role="alert" className="text-center text-textColor">
+        <p>{error}</p>
+        <Link href="/auth/login" className="underline">
+          Sign in again
+        </Link>
+      </div>
+    );
+  }
   if (!code && !provider) {
     return <RegisterAfter token="" provider="LOCAL" />;
   }
@@ -89,8 +113,13 @@ export function RegisterAfter({
   provider: string;
 }) {
   const t = useT();
-  const { isGeneral, genericOauth, neynarClientId, billingEnabled } =
-    useVariables();
+  const {
+    isGeneral,
+    genericOauth,
+    neynarClientId,
+    appleClientId,
+    billingEnabled,
+  } = useVariables();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const fireEvents = useFireEvents();
@@ -157,7 +186,7 @@ export function RegisterAfter({
           <div className="text-[14px] mt-[32px] mb-[12px]">
             {t('continue_with', 'Continue With')}
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col text-[14px]">
             {!isAfterProvider &&
               (!isGeneral ? (
                 <GithubProvider />
@@ -168,6 +197,7 @@ export function RegisterAfter({
                   ) : (
                     <GoogleProvider />
                   )}
+                  {!!appleClientId && <AppleProvider />}
                   {!!neynarClientId && <FarcasterProvider />}
                   {billingEnabled && <WalletProvider />}
                 </div>

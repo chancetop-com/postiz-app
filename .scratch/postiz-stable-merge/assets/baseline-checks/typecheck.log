@@ -1,0 +1,5 @@
+$ pnpm exec tsc --noEmit -p apps/backend/tsconfig.build.json --incremental false
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "tsc" not found
+
+exit=254

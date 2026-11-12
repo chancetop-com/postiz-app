@@ -1,81 +1,83 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ============================================================
-# Postiz Build & Deploy Script
-# Phase 1: ACR cloud build (download deps + build)
-#       OR push local image directly (--local [image])
-# Phase 2: Deploy to K8s
+# Postiz publish (publish only)
+#
+# Publishes an image to the registry. Never deploys.
+#
 # Usage:
-#   ./build-postiz.sh [git_tag]                  # ACR cloud build
-#   ./build-postiz.sh --local [image] [git_tag]  # push local image
+#   ./k8s/build-postiz.sh                  # ACR cloud build of the prepared context
+#   ./k8s/build-postiz.sh <git_tag>        # ACR cloud build with an explicit tag
+#   ./k8s/build-postiz.sh --local <image>  # push an image built by build-local.sh
+#   ./k8s/build-postiz.sh --prepare        # re-run the preparer first
+#
+# Deployment is a separate action: ./k8s/deploy-postiz.sh
 # ============================================================
 set -euo pipefail
 
-POSTIZ_DIR="/Users/cyril/workspaces/postiz-app"
-BUILD_DIR="$POSTIZ_DIR/k8s"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 
-# ========================
-# Configuration
-# ========================
 ACR_NAME="${BUILD_ACR:-FBRDevAcr}"
 ACR_HOST="${BUILD_ACR_HOST:-fbrdevacr.azurecr.io}"
 IMAGE_NAME="app/postiz"
-NAMESPACE="dev-ai"
-DEPLOYMENT_NAME="postiz"
 
-# ========================
-# Parse arguments
-# ========================
-LOCAL_MODE=false
-LOCAL_IMAGE="docker-postiz:latest"
+LOCAL_MODE=0
+LOCAL_IMAGE=""
 GIT_TAG=""
+RUN_PREPARE=0
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
   case "$1" in
     --local)
-      LOCAL_MODE=true
+      LOCAL_MODE=1
       shift
-      # Next arg is the local image name if it doesn't start with --
-      if [[ $# -gt 0 && "$1" != --* && "$1" != "" ]] && docker image inspect "$1" &>/dev/null 2>&1; then
+      if [ $# -gt 0 ] && [ "${1#--}" = "$1" ]; then
         LOCAL_IMAGE="$1"
         shift
       fi
+      # The optional value was consumed above; skip the loop's own shift so
+      # `--local <image>` as the last argument does not shift past the end.
+      continue
+      ;;
+    --prepare) RUN_PREPARE=1 ;;
+    -h|--help)
+      sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    -*)
+      echo "build-postiz: unknown argument: $1" >&2
+      exit 2
       ;;
     *)
       GIT_TAG="$1"
-      shift
       ;;
   esac
+  shift
 done
 
+if [ "$RUN_PREPARE" -eq 1 ]; then
+  # Same guard as build-local.sh: no implicit --allow-dirty.
+  "$SCRIPT_DIR/prepare-build-context.sh"
+fi
+
 if [ -z "$GIT_TAG" ]; then
-    GIT_TAG=$(cd "$POSTIZ_DIR" && git rev-parse --short=7 HEAD)
+  GIT_TAG="$(git -C "$REPO_ROOT" rev-parse --short=12 HEAD)"
 fi
 
 ACR_IMAGE="${ACR_HOST}/${IMAGE_NAME}:${GIT_TAG}"
 
-if $LOCAL_MODE; then
-  echo "============================================"
-  echo " Postiz Deploy (local image → ACR push)"
-  echo "============================================"
-  echo " Local image:  ${LOCAL_IMAGE}"
-else
-  echo "============================================"
-  echo " Postiz Build & Deploy (ACR Cloud Build)"
-  echo "============================================"
-fi
-echo " ACR:          ${ACR_NAME}"
-echo " ACR Host:     ${ACR_HOST}"
-echo " Image:        ${IMAGE_NAME}:${GIT_TAG}"
-echo " Git Tag:      ${GIT_TAG}"
-echo " Namespace:    ${NAMESPACE}"
+echo "============================================"
+echo " Postiz publish"
+echo "============================================"
+echo " registry : ${ACR_HOST}"
+echo " image    : ${IMAGE_NAME}:${GIT_TAG}"
 echo "============================================"
 
-if $LOCAL_MODE; then
-  # ========================
-  # Push local image to ACR
-  # ========================
-  echo ""
-  echo "[1/2] Pushing local image to ACR..."
+if [ "$LOCAL_MODE" -eq 1 ]; then
+  if [ -z "$LOCAL_IMAGE" ]; then
+    echo "build-postiz: --local needs an image name" >&2
+    exit 2
+  fi
 
   az acr login --name "$ACR_NAME"
 
@@ -83,98 +85,40 @@ if $LOCAL_MODE; then
   docker tag "${LOCAL_IMAGE}" "${ACR_HOST}/${IMAGE_NAME}:latest"
   docker push "${ACR_IMAGE}"
   docker push "${ACR_HOST}/${IMAGE_NAME}:latest"
-
-  echo "  Push complete."
-
 else
-  # ========================
-  # Prepare build context
-  # ========================
-  echo ""
-  echo "[1/3] Preparing build context..."
-
-  cd "$BUILD_DIR"
-
-  # Clean previous artifacts (keep Dockerfile, ecosystem.config.cjs, build script)
-  rm -rf apps libraries package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json 2>/dev/null || true
-
-  # Copy source code for ACR build
-  cp "$POSTIZ_DIR/.npmrc" .
-  cp "$POSTIZ_DIR/package.json" .
-  cp "$POSTIZ_DIR/pnpm-lock.yaml" .
-  cp "$POSTIZ_DIR/pnpm-workspace.yaml" .
-  cp "$POSTIZ_DIR/tsconfig.base.json" .
-
-  # Copy apps source
-  mkdir -p apps/backend apps/orchestrator apps/frontend
-
-  cp -r "$POSTIZ_DIR/apps/backend/src" "$BUILD_DIR/apps/backend/" 2>/dev/null || true
-  cp "$POSTIZ_DIR/apps/backend/package.json" "$BUILD_DIR/apps/backend/" 2>/dev/null || true
-  cp "$POSTIZ_DIR/apps/backend/tsconfig.json" "$BUILD_DIR/apps/backend/" 2>/dev/null || true
-  cp "$POSTIZ_DIR/apps/backend/tsconfig.build.json" "$BUILD_DIR/apps/backend/" 2>/dev/null || true
-  cp "$POSTIZ_DIR/apps/backend/project.json" "$BUILD_DIR/apps/backend/" 2>/dev/null || true
-
-  cp -r "$POSTIZ_DIR/apps/orchestrator/src" "$BUILD_DIR/apps/orchestrator/" 2>/dev/null || true
-  cp "$POSTIZ_DIR/apps/orchestrator/package.json" "$BUILD_DIR/apps/orchestrator/" 2>/dev/null || true
-  cp "$POSTIZ_DIR/apps/orchestrator/tsconfig.json" "$BUILD_DIR/apps/orchestrator/" 2>/dev/null || true
-  cp "$POSTIZ_DIR/apps/orchestrator/tsconfig.build.json" "$BUILD_DIR/apps/orchestrator/" 2>/dev/null || true
-  cp "$POSTIZ_DIR/apps/orchestrator/project.json" "$BUILD_DIR/apps/orchestrator/" 2>/dev/null || true
-
-  cp -r "$POSTIZ_DIR/apps/frontend/src" "$BUILD_DIR/apps/frontend/" 2>/dev/null || true
-  cp -r "$POSTIZ_DIR/apps/frontend/public" "$BUILD_DIR/apps/frontend/" 2>/dev/null || true
-  cp -r "$POSTIZ_DIR/apps/frontend/package.json" "$BUILD_DIR/apps/frontend/" 2>/dev/null || true
-  cp -r "$POSTIZ_DIR/apps/frontend/next.config.js" "$BUILD_DIR/apps/frontend/" 2>/dev/null || true
-  cp -r "$POSTIZ_DIR/apps/frontend/tsconfig.json" "$BUILD_DIR/apps/frontend/" 2>/dev/null || true
-  cp -r "$POSTIZ_DIR/apps/frontend/postcss.config.mjs" "$BUILD_DIR/apps/frontend/" 2>/dev/null || true
-  cp -r "$POSTIZ_DIR/apps/frontend/tailwind.config.cjs" "$BUILD_DIR/apps/frontend/" 2>/dev/null || true
-
-  mkdir -p libraries
-  cp -r "$POSTIZ_DIR/libraries" .
-
-  # Copy Docker support files
-  cp "$POSTIZ_DIR/var/docker/nginx.conf" "$BUILD_DIR/var/docker/"
-  cp "$POSTIZ_DIR/var/docker/ecosystem.config.cjs" "$BUILD_DIR/var/docker/"
-
-  echo "  Build context prepared."
-
-  # ========================
-  # ACR Cloud Build
-  # ========================
-  echo ""
-  echo "[2/3] Building Docker image in ACR (cloud build)..."
+  # The ACR build uses the build context prepared by
+  # prepare-build-context.sh. Prepare first so no stale copy is shipped.
+  if ! "$SCRIPT_DIR/prepare-build-context.sh" --check; then
+    echo "" >&2
+    echo "build-postiz: the build context is out of date; run ./k8s/prepare-build-context.sh first." >&2
+    exit 1
+  fi
 
   az acr login --name "$ACR_NAME"
 
-  az acr build \
-      --registry "$ACR_NAME" \
-      --image "${IMAGE_NAME}:${GIT_TAG}" \
-      --image "${IMAGE_NAME}:latest" \
-      --file "$BUILD_DIR/Dockerfile" \
-      --build-arg NODE_ENV=production \
-      --timeout 3600 \
-      "$BUILD_DIR"
+  # Same public build-configuration allow-list as build-local.sh: the values
+  # are inlined into the browser bundle by `next build`.
+  PUBLIC_BUILD_ARGS=(--build-arg NODE_ENV=production)
+  if [ -f "$SCRIPT_DIR/public-build-config.env" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in ''|'#'*) continue ;; esac
+      key=${line%%=*}
+      value=${line#*=}
+      if printenv "$key" >/dev/null 2>&1; then value="$(printenv "$key")"; fi
+      PUBLIC_BUILD_ARGS+=(--build-arg "$key=$value")
+    done < "$SCRIPT_DIR/public-build-config.env"
+  fi
 
-  echo "  ACR build complete."
+  az acr build \
+    --registry "$ACR_NAME" \
+    --image "${IMAGE_NAME}:${GIT_TAG}" \
+    --image "${IMAGE_NAME}:latest" \
+    --file "$SCRIPT_DIR/Dockerfile" \
+    "${PUBLIC_BUILD_ARGS[@]}" \
+    --timeout 3600 \
+    "$SCRIPT_DIR"
 fi
 
-# ========================
-# Update K8s deployment
-# ========================
 echo ""
-echo "[$(if $LOCAL_MODE; then echo "2/2"; else echo "3/3"; fi)] Updating Kubernetes deployment..."
-
-kubectl set image "deployment/${DEPLOYMENT_NAME}" \
-    "${DEPLOYMENT_NAME}=${ACR_IMAGE}" \
-    -n "${NAMESPACE}"
-
-echo ""
-echo "Waiting for rollout..."
-kubectl rollout status "deployment/${DEPLOYMENT_NAME}" \
-    -n "${NAMESPACE}" \
-    --timeout=300s
-
-echo ""
-echo "============================================"
-echo " Postiz deployed successfully!"
-echo " Image: ${ACR_IMAGE}"
-echo "============================================"
+echo "Published ${ACR_IMAGE}"
+echo "Deploying is a separate action: ./k8s/deploy-postiz.sh --image ${ACR_IMAGE}"

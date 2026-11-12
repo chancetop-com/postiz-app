@@ -1,0 +1,5 @@
+/app/apps/frontend/.next/static/chunks/0hoyu7g9o0s9k.js
+/app/apps/frontend/.next/server/chunks/ssr/_0y3u87eb_j-2e._.js
+/app/apps/frontend/.next/server/chunks/ssr/_1dhcg39aupsmn._.js
+/app/apps/frontend/.next/server/chunks/ssr/_1pmop3wfs4cg_._.js
+/app/apps/frontend/.next/server/chunks/ssr/_17polxx1k7pa0._.js

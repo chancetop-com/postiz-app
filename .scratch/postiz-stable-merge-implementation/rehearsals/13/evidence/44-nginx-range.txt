@@ -1,0 +1,2 @@
+http/1.1 206 partial content
+content-range: bytes 0-0/70

@@ -17,8 +17,14 @@ import { MediaRepository } from '@gitroom/nestjs-libraries/database/prisma/media
 import { NotificationsRepository } from '@gitroom/nestjs-libraries/database/prisma/notifications/notifications.repository';
 import { EmailService } from '@gitroom/nestjs-libraries/services/email.service';
 import { StripeService } from '@gitroom/nestjs-libraries/services/stripe.service';
+import { PaymentService } from '@gitroom/nestjs-libraries/services/payment/payment.service';
+import { PaymentProviderManager } from '@gitroom/nestjs-libraries/services/payment/payment.provider.manager';
+import { RevenueCatProvider } from '@gitroom/nestjs-libraries/services/payment/providers/revenuecat.provider';
 import { ExtractContentService } from '@gitroom/nestjs-libraries/openai/extract.content.service';
 import { OpenaiService } from '@gitroom/nestjs-libraries/openai/openai.service';
+import { DeepgramService } from '@gitroom/nestjs-libraries/deepgram/deepgram.service';
+import { ClippingService } from '@gitroom/nestjs-libraries/database/prisma/clipping/clipping.service';
+import { ClippingRepository } from '@gitroom/nestjs-libraries/database/prisma/clipping/clipping.repository';
 import { AgenciesService } from '@gitroom/nestjs-libraries/database/prisma/agencies/agencies.service';
 import { AgenciesRepository } from '@gitroom/nestjs-libraries/database/prisma/agencies/agencies.repository';
 import { TrackService } from '@gitroom/nestjs-libraries/track/track.service';
@@ -40,6 +46,10 @@ import { OAuthRepository } from '@gitroom/nestjs-libraries/database/prisma/oauth
 import { OAuthService } from '@gitroom/nestjs-libraries/database/prisma/oauth/oauth.service';
 import { AnnouncementsRepository } from '@gitroom/nestjs-libraries/database/prisma/announcements/announcements.repository';
 import { AnnouncementsService } from '@gitroom/nestjs-libraries/database/prisma/announcements/announcements.service';
+import { ErrorsRepository } from '@gitroom/nestjs-libraries/database/prisma/errors/errors.repository';
+import { ErrorsService } from '@gitroom/nestjs-libraries/database/prisma/errors/errors.service';
+import { AdminStatsRepository } from '@gitroom/nestjs-libraries/database/prisma/admin-stats/admin-stats.repository';
+import { AdminStatsService } from '@gitroom/nestjs-libraries/database/prisma/admin-stats/admin-stats.service';
 
 @Global()
 @Module({
@@ -64,6 +74,9 @@ import { AnnouncementsService } from '@gitroom/nestjs-libraries/database/prisma/
     PostsService,
     PostsRepository,
     StripeService,
+    PaymentService,
+    PaymentProviderManager,
+    RevenueCatProvider,
     SignatureRepository,
     AutopostRepository,
     AutopostService,
@@ -76,6 +89,9 @@ import { AnnouncementsService } from '@gitroom/nestjs-libraries/database/prisma/
     RefreshIntegrationService,
     ExtractContentService,
     OpenaiService,
+    DeepgramService,
+    ClippingService,
+    ClippingRepository,
     FalService,
     EmailService,
     TrackService,
@@ -89,6 +105,10 @@ import { AnnouncementsService } from '@gitroom/nestjs-libraries/database/prisma/
     VideoManager,
     AnnouncementsRepository,
     AnnouncementsService,
+    ErrorsRepository,
+    ErrorsService,
+    AdminStatsRepository,
+    AdminStatsService,
   ],
   get exports() {
     return this.providers;

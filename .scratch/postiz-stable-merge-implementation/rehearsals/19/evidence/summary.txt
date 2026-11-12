@@ -1,0 +1,51 @@
+image: postiz-ticket18:candidate
+image id: sha256:c77e3edea504ff786974039a79bab74e61e1027d1c548730e92754dba0a69e6a
+browser: Google Chrome (playwright channel=chrome), desktop 1440x900 + mobile 390x844
+parent origin: http://127.0.0.1:5099; app origin: http://localhost:5066
+sso provider: local stub at http://host.docker.internal:5098/exchange
+passed: 31, failed: 0
+
+PASS the local Temporal server answers on 7233
+PASS the candidate image answers /api/ 200 before the browser run
+PASS the authenticated /api/user/self path answers 200 over real HTTP (exchange=auth-header self=200)
+PASS desktop: parent page is a different origin from the app (http://127.0.0.1:5099/)
+PASS desktop: the app really runs inside a cross-origin iframe
+PASS desktop: /auth/sso?token reaches /sso?auth_code in the iframe (http://localhost:5066/launches)
+PASS desktop: the iframe is never sent to /auth/login (none)
+PASS desktop: the iframe stays in the app instead of the login screen (http://localhost:5066/launches)
+PASS desktop: no login form is rendered in the iframe
+PASS desktop: the stubbed exchange lands on the authenticated shell (http://localhost:5066/launches)
+PASS desktop: the iframe renders content (72 chars)
+PASS desktop: the popup follows the relay redirect (http://localhost:5066/p/relay-landed-19)
+PASS desktop: the popup sessionStorage carries auth (auth-from-parent)
+PASS desktop: the popup sessionStorage carries showorg (org-from-parent)
+PASS desktop: the popup sessionStorage carries impersonate (imp-from-parent)
+PASS desktop: the popup is marked as a channel popup (true)
+PASS desktop: the popup is never sent to /auth/login (http://localhost:5066/channel-relay?redirect=http%3A%2F%2Flocalhost%3A5066%2Fp%2Frelay-landed-19#auth=auth-from-parent&showorg=org-from-parent&impersonate=imp-from-parent | http://localhost:5066/channel-relay?redirect=http%3A%2F%2Flocalhost%3A5066%2Fp%2Frelay-landed-19#auth=auth-from-parent&showorg=org-from-parent&impersonate=imp-from-parent | http://localhost:5066/p/relay-landed-19 | http://localhost:5066/p/relay-landed-19)
+PASS mobile: parent page is a different origin from the app (http://127.0.0.1:5099/)
+PASS mobile: the app really runs inside a cross-origin iframe
+PASS mobile: /auth/sso?token reaches /sso?auth_code in the iframe (http://localhost:5066/launches)
+PASS mobile: the iframe is never sent to /auth/login (none)
+PASS mobile: the iframe stays in the app instead of the login screen (http://localhost:5066/launches)
+PASS mobile: no login form is rendered in the iframe
+PASS mobile: the stubbed exchange lands on the authenticated shell (http://localhost:5066/launches)
+PASS mobile: the iframe renders content (72 chars)
+PASS mobile: the popup follows the relay redirect (http://localhost:5066/p/relay-landed-19)
+PASS mobile: the popup sessionStorage carries auth (auth-from-parent)
+PASS mobile: the popup sessionStorage carries showorg (org-from-parent)
+PASS mobile: the popup sessionStorage carries impersonate (imp-from-parent)
+PASS mobile: the popup is marked as a channel popup (true)
+PASS mobile: the popup is never sent to /auth/login (http://localhost:5066/channel-relay?redirect=http%3A%2F%2Flocalhost%3A5066%2Fp%2Frelay-landed-19#auth=auth-from-parent&showorg=org-from-parent&impersonate=imp-from-parent | http://localhost:5066/p/relay-landed-19 | http://localhost:5066/p/relay-landed-19)
+
+observed navigations:
+- cold-start wait before browser phase: "12s (nginx passive fail_timeout is 10s)"
+- warm-up attempts: ["exchange=auth-header self=200"]
+- desktop iframe navigations: ["http://localhost:5066/sso?auth_code=iframe-sso-token-19","http://localhost:5066/sso?auth_code=iframe-sso-token-19","http://localhost:5066/launches","https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2Flocalhost%3A5066%2Flaunches&title=Postiz%20Calendar&referrer=http%3A%2F%2F127.0.0.1%3A5099%2F&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=clover","https://m.stripe.network/inner.html#url=http%3A%2F%2Flocalhost%3A5066%2Flaunches&title=Postiz%20Calendar&referrer=http%3A%2F%2F127.0.0.1%3A5099%2F&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=clover"]
+- desktop /auth/login navigations: []
+- desktop popup navigations: ["http://localhost:5066/channel-relay?redirect=http%3A%2F%2Flocalhost%3A5066%2Fp%2Frelay-landed-19#auth=auth-from-parent&showorg=org-from-parent&impersonate=imp-from-parent","http://localhost:5066/channel-relay?redirect=http%3A%2F%2Flocalhost%3A5066%2Fp%2Frelay-landed-19#auth=auth-from-parent&showorg=org-from-parent&impersonate=imp-from-parent","http://localhost:5066/p/relay-landed-19","http://localhost:5066/p/relay-landed-19"]
+- mobile iframe navigations: ["http://localhost:5066/sso?auth_code=iframe-sso-token-19","http://localhost:5066/sso?auth_code=iframe-sso-token-19","http://localhost:5066/launches","https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2Flocalhost%3A5066%2Flaunches&title=Postiz%20Calendar&referrer=http%3A%2F%2F127.0.0.1%3A5099%2F&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=clover"]
+- mobile /auth/login navigations: []
+- mobile popup navigations: ["http://localhost:5066/channel-relay?redirect=http%3A%2F%2Flocalhost%3A5066%2Fp%2Frelay-landed-19#auth=auth-from-parent&showorg=org-from-parent&impersonate=imp-from-parent","http://localhost:5066/p/relay-landed-19","http://localhost:5066/p/relay-landed-19"]
+
+not covered here (still external / not local): the deployed merchant parent page,
+the real six-provider OAuth consent screens, Safari and third-party-cookie-restricted browsers.

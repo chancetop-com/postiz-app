@@ -1,0 +1,302 @@
+[harness] database postgresql://postgres:postiz@127.0.0.1:55012/postiz
+[harness] prisma db push complete
+[harness] redis redis://127.0.0.1:55013
+[harness] media origin http://127.0.0.1:65397
+time=2026-11-12T08:46:46.270 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+[harness] temporal (real) 127.0.0.1:65398
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:65398
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:65399/metrics
+[harness] orchestrator on 65412
+
+=== worker-death-unknown-results — The worker is SIGKILLed with three mutations in flight: finalizePost after a heartbeat (details present), postComment after a heartbeat, and postSocialPending before its first heartbeat. Afterwards the outcomes are compared with what the platform and Temporal actually recorded.
+  · finalize heartbeat details before the kill: {"payloads":1,"firstHeartbeatAfterMs":14758}
+  · finalize hung after the platform accepted: {"postId":"post-mwctvdpc-3"}
+  · comment heartbeat details before the kill: {"payloads":1}
+  · publish heartbeat details before the kill: {"details":null}
+  ✓ the publish has no heartbeat details yet
+  ✓ worker process group was killed
+  · worker killed with three mutations in flight: {"finalize":"post-mwctvdpc-3","comment":"post-mwctvqb4-6","pending":"post-mwctw397-9"}
+  · finalize result: {"id":"post-mwctvdpc-3","state":"ERROR","publishDate":"2026-11-12T00:46:52.936Z","releaseId":null,"releaseURL":null,"error":"{\"cause\":{\"failure\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"ImZpbmFsaXplUG9zdDogZW50ZXJlZCI=\"}]}}},\"lastHeartbeatDetails\":\"finalizePost: entered\",\"timeoutType\":\"HEARTBEAT\"},\"failure\":{\"message\":\"Activity task timed out\",\"cause\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"ImZpbmFsaXplUG9zdDogZW50ZXJlZCI=\"}]}}},\"activityFailureInfo\":{\"scheduledEventId\":\"34\",\"startedEventId\":\"35\",\"activityType\":{\"name\":\"finalizePost\"},\"activityId\":\"5\",\"retryState\":\"RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED\"}},\"activityType\":\"finalizePost\",\"activityId\":\"5\",\"retryState\":\"MAXIMUM_ATTEMPTS_REACHED\",\"identity\":\"\"}","deletedAt":null,"image":"[{\"id\":\"media_org-mwctvdnl-1\",\"name\":\"org-mwctvdnl-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctvdnl-1.png\"}]"}
+  · finalize timeout failure: {"eventId":"36","activity":"finalizePost","timeoutType":4,"heartbeatPayloads":1,"failureMessage":"activity Heartbeat timeout"}
+  · finalize attempts scheduled: 1
+  · finalize activity timeline: [{"event":"5","kind":"activityTaskScheduled","activity":"getPost"},{"event":"6","kind":"activityTaskStarted","activity":"getPost"},{"event":"7","kind":"activityTaskCompleted","activity":"getPost"},{"event":"11","kind":"timerStarted"},{"event":"12","kind":"timerFired"},{"event":"16","kind":"activityTaskScheduled","activity":"getPostsList"},{"event":"17","kind":"activityTaskStarted","activity":"getPostsList"},{"event":"18","kind":"activityTaskCompleted","activity":"getPostsList"},{"event":"22","kind":"activityTaskScheduled","activity":"postSocialPending"},{"event":"23","kind":"activityTaskStarted","activity":"postSocialPending"},{"event":"24","kind":"activityTaskCompleted","activity":"postSocialPending"},{"event":"28","kind":"activityTaskScheduled","activity":"checkPostStatus"},{"event":"29","kind":"activityTaskStarted","activity":"checkPostStatus"},{"event":"30","kind":"activityTaskCompleted","activity":"checkPostStatus"},{"event":"34","kind":"activityTaskScheduled","activity":"finalizePost"},{"event":"35","kind":"activityTaskStarted","activity":"finalizePost"},{"event":"36","kind":"activityTaskTimedOut","activity":"finalizePost","timeoutType":4,"heartbeatPayloads":1,"message":"activity Heartbeat timeout"},{"event":"42","kind":"activityTaskScheduled","activity":"changeState"},{"event":"43","kind":"activityTaskStarted","activity":"changeState"},{"event":"44","kind":"activityTaskCompleted","activity":"changeState"},{"event":"48","kind":"activityTaskScheduled","activity":"inAppNotification"},{"event":"49","kind":"activityTaskStarted","activity":"inAppNotification"},{"event":"50","kind":"activityTaskCompleted","activity":"inAppNotification"}]
+  ✓ the timeout is a heartbeat timeout that carried details
+  ✓ finalize-with-details ends as the unconfirmed error state
+  ✓ finalize published exactly once (never retried)
+  ✓ finalize was never run twice
+  ✓ the user was told the post is unconfirmed
+  · finalize execution after the kill: {"status":"COMPLETED","activityScheduled":[{"activity":"getPost","taskQueue":"main"},{"activity":"getPostsList","taskQueue":"main"},{"activity":"postSocialPending","taskQueue":"bluesky"},{"activity":"checkPostStatus","taskQueue":"bluesky"},{"activity":"finalizePost","taskQueue":"bluesky"},{"activity":"changeState","taskQueue":"main"},{"activity":"inAppNotification","taskQueue":"main"}],"eventCount":54}
+  ✓ finalize workflow finished
+  ✓ history records the pending publish as done and the finalize once
+  ⚑ fault accepted-then-worker-death-with-heartbeat: external=unknown knowable=yes (heartbeat details prove the mutation started; Temporal shows one accepted publish) (finalizePost hung after the provider accepted the post; SIGKILL after 17s)
+  · comment timeout failure: {"eventId":"60","activity":"postComment","timeoutType":4,"heartbeatPayloads":1,"failureMessage":"activity Heartbeat timeout"}
+  ✓ the comment timeout also carried heartbeat details
+  · comment result: {"id":"post-mwctvqb4-6","state":"QUEUE","publishDate":"2026-11-12T00:47:09.265Z","releaseId":null,"releaseURL":null,"error":null,"deletedAt":null,"image":"[]"}
+  ✓ the timed-out comment is left QUEUE with no local result
+  ✓ the comment was sent to the platform exactly once
+  · root after the comment timeout: {"id":"post-mwctvqay-5","state":"ERROR","publishDate":"2026-11-12T00:47:09.265Z","releaseId":"stub-pending-87877-2","releaseURL":"https://stub.invalid/stub-pending-87877-2","error":"{\"cause\":{\"failure\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"InBvc3RDb21tZW50OiBlbnRlcmVkIg==\"}]}}},\"lastHeartbeatDetails\":\"postComment: entered\",\"timeoutType\":\"HEARTBEAT\"},\"failure\":{\"message\":\"Activity task timed out\",\"cause\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"InBvc3RDb21tZW50OiBlbnRlcmVkIg==\"}]}}},\"activityFailureInfo\":{\"scheduledEventId\":\"58\",\"startedEventId\":\"59\",\"activityType\":{\"name\":\"postComment\"},\"activityId\":\"9\",\"retryState\":\"RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED\"}},\"activityType\":\"postComment\",\"activityId\":\"9\",\"retryState\":\"MAXIMUM_ATTEMPTS_REACHED\",\"identity\":\"\"}","deletedAt":null,"image":"[{\"id\":\"media_org-mwctvq9z-4\",\"name\":\"org-mwctvq9z-4.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctvq9z-4.png\"}]"}
+  ✓ the root had already been published
+  ✓ the published root is overwritten with the unconfirmed error state
+  ⚑ fault comment-accepted-then-worker-death-with-heartbeat: external=unknown knowable=partly (Temporal proves the root published; the comment outcome is unknown) (postComment hung after the provider accepted the comment; SIGKILL after ~15s)
+  · publishes for the pre-heartbeat kill: [{"at":"2026-11-12T00:47:26.172Z","pendingData":{"step":"accepted","id":"stub-pending-87877-4"}},{"at":"2026-11-12T00:50:26.225Z","pendingData":{"step":"accepted","id":"stub-pending-87973-1"}}]
+  ✓ the accepted publish is repeated because no heartbeat details exist
+  ✓ the two accepts happened in different worker processes
+  · pre-heartbeat publish timeout failure: {"eventId":"24","activity":"postSocialPending","timeoutType":4,"heartbeatPayloads":0,"failureMessage":"activity Heartbeat timeout"}
+  · pre-heartbeat publish timeline: [{"event":"5","kind":"activityTaskScheduled","activity":"getPost"},{"event":"6","kind":"activityTaskStarted","activity":"getPost"},{"event":"7","kind":"activityTaskCompleted","activity":"getPost"},{"event":"11","kind":"timerStarted"},{"event":"12","kind":"timerFired"},{"event":"16","kind":"activityTaskScheduled","activity":"getPostsList"},{"event":"17","kind":"activityTaskStarted","activity":"getPostsList"},{"event":"18","kind":"activityTaskCompleted","activity":"getPostsList"},{"event":"22","kind":"activityTaskScheduled","activity":"postSocialPending"},{"event":"23","kind":"activityTaskStarted","activity":"postSocialPending"},{"event":"24","kind":"activityTaskTimedOut","activity":"postSocialPending","timeoutType":4,"heartbeatPayloads":0,"message":"activity Heartbeat timeout"},{"event":"28","kind":"activityTaskScheduled","activity":"postSocialPending"},{"event":"29","kind":"activityTaskStarted","activity":"postSocialPending"},{"event":"30","kind":"activityTaskCompleted","activity":"postSocialPending"},{"event":"34","kind":"activityTaskScheduled","activity":"checkPostStatus"},{"event":"35","kind":"activityTaskStarted","activity":"checkPostStatus"},{"event":"36","kind":"activityTaskCompleted","activity":"checkPostStatus"},{"event":"40","kind":"activityTaskScheduled","activity":"finalizePost"},{"event":"41","kind":"activityTaskStarted","activity":"finalizePost"},{"event":"42","kind":"activityTaskCompleted","activity":"finalizePost"},{"event":"46","kind":"activityTaskScheduled","activity":"updatePost"},{"event":"47","kind":"activityTaskStarted","activity":"updatePost"},{"event":"48","kind":"activityTaskCompleted","activity":"updatePost"},{"event":"52","kind":"activityTaskScheduled","activity":"inAppNotification"},{"event":"53","kind":"activityTaskStarted","activity":"inAppNotification"},{"event":"54","kind":"activityTaskCompleted","activity":"inAppNotification"},{"event":"58","kind":"activityTaskScheduled","activity":"sendWebhooks"},{"event":"59","kind":"activityTaskStarted","activity":"sendWebhooks"},{"event":"60","kind":"activityTaskCompleted","activity":"sendWebhooks"},{"event":"64","kind":"activityTaskScheduled","activity":"internalPlugs"},{"event":"65","kind":"activityTaskStarted","activity":"internalPlugs"},{"event":"66","kind":"activityTaskCompleted","activity":"internalPlugs"},{"event":"70","kind":"activityTaskScheduled","activity":"globalPlugs"},{"event":"71","kind":"activityTaskStarted","activity":"globalPlugs"},{"event":"72","kind":"activityTaskCompleted","activity":"globalPlugs"}]
+  ✓ the re-published case is a heartbeat timeout with no details
+  ✓ the retry writes one local result
+  ✓ the retry finalized the second accept
+  ⚑ fault accepted-then-worker-death-before-heartbeat: external=unknown knowable=no (postPending accepted then SIGKILL inside the 15s heartbeat interval)
+time=2026-11-12T08:50:26.644 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+[harness] temporal (real) 127.0.0.1:49607
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:49607
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:49608/metrics
+[harness] orchestrator on 49622
+
+=== check-status-timeout-unknown — checkPostStatus hangs into one real start-to-close timeout, then fails fast through the rest of the read-only error budget; the already-accepted post is classified as an unknown publish result, is never republished and never finalized, and the workflow ends.
+  · post after the status-check timeout: {"id":"post-mwcu04cl-12","state":"ERROR","publishDate":"2026-11-12T00:50:34.093Z","releaseId":null,"releaseURL":null,"error":"Could not confirm the post status","deletedAt":null,"image":"[{\"id\":\"media_org-mwcu04br-10\",\"name\":\"org-mwcu04br-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcu04br-10.png\"}]"}
+  ✓ the accepted post ends unconfirmed
+  ✓ the publish was never re-run by the check failure
+  · status-check attempts: {"timedOutChecks":1,"failedChecks":15}
+  ✓ the read-only check was retried more than once
+  ✓ a timed-out check never finalizes
+  · check-timeout execution: {"workflowId":"post_post-mwcu04cl-12","runId":"01a1cd3c-240f-7f2e-a1c9-0742790dc21c","type":"postWorkflowV112","status":"COMPLETED","taskQueue":"main","searchAttributes":{"organizationId":"org_org-mwcu04br-10","postId":"post-mwcu04cl-12","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  ✓ the workflow ended instead of republishing
+  ⚑ fault check-status-timeout-without-heartbeat-details: external=unknown knowable=yes (the publish call count stays one; only the status read is unknown) (checkPostStatus hangs into a 2-minute start-to-close timeout, then fails fast for the rest of the error budget)
+time=2026-11-12T08:55:35.201 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+[harness] temporal (real) 127.0.0.1:50387
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:50387
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:50388/metrics
+[harness] orchestrator on 50401
+
+=== db-writeback-fails-after-accept — The platform accepts and returns a completed result, then the PUBLISHED write-back fails permanently: the post is recorded as unconfirmed instead of being republished, and only one platform call exists.
+  · post after the failed write-back: {"id":"post-mwcu6r8x-15","state":"ERROR","publishDate":"2026-11-12T00:55:43.205Z","releaseId":null,"releaseURL":null,"error":"{\"cause\":{\"failure\":{\"message\":\"injected updatePost write-back failure\",\"source\":\"TypeScriptSDK\",\"stackTrace\":\"ApplicationFailure: injected updatePost write-back failure\\n    at Function.create (<repo>/node_modules/@temporalio/common/src/failure.ts:227:12)\\n    at permanentFailure (<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/17/lib/stub-provider.cjs:72:29)\\n    at PostsService.wrapped (<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/17/lib/stub-provider.cjs:218:11)\\n    at PostActivity.updatePost (<repo>/apps/orchestrator/src/activities/post.activity.ts:152:29)\",\"applicationFailureInfo\":{\"type\":\"harness_permanent_failure\",\"nonRetryable\":true}},\"type\":\"harness_permanent_failure\",\"nonRetryable\":true,\"details\":[]},\"failure\":{\"message\":\"Activity task failed\",\"cause\":{\"message\":\"injected updatePost write-back failure\",\"source\":\"TypeScriptSDK\",\"stackTrace\":\"ApplicationFailure: injected updatePost write-back failure\\n    at Function.create (<repo>/node_modules/@temporalio/common/src/failure.ts:227:12)\\n    at permanentFailure (<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/17/lib/stub-provider.cjs:72:29)\\n    at PostsService.wrapped (<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/17/lib/stub-provider.cjs:218:11)\\n    at PostActivity.updatePost (<repo>/apps/orchestrator/src/activities/post.activity.ts:152:29)\",\"applicationFailureInfo\":{\"type\":\"harness_permanent_failure\",\"nonRetryable\":true}},\"activityFailureInfo\":{\"scheduledEventId\":\"40\",\"startedEventId\":\"41\",\"identity\":\"89160@MacBook-Pro-4.local\",\"activityType\":{\"name\":\"updatePost\"},\"activityId\":\"6\",\"retryState\":\"RETRY_STATE_NON_RETRYABLE_FAILURE\"}},\"activityType\":\"updatePost\",\"activityId\":\"6\",\"retryState\":\"NON_RETRYABLE_FAILURE\",\"identity\":\"89160@MacBook-Pro-4.local\"}","deletedAt":null,"image":"[{\"id\":\"media_org-mwcu6r7k-13\",\"name\":\"org-mwcu6r7k-13.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcu6r7k-13.png\"}]"}
+  ✓ the unconfirmed error is stored
+  ✓ the accepted post was not republished
+  ✓ one finalize only
+  ✓ workflow finished
+  ⚑ fault db-writeback-fails-after-accept: external=unknown knowable=yes (Temporal shows the publish completed; the row says unconfirmed) (PostsService.updatePost throws permanently after the provider completed)
+
+=== total-writeback-loss-is-republished-by-the-sweep — Both the PUBLISHED write and the ERROR write fail, so the row stays QUEUE while the platform holds a published post. The missing-posts sweep then re-publishes the same post: the pre-existing hazard of judging the platform by the local row.
+  · row after both writes failed: {"id":"post-mwcu6sgd-18","state":"QUEUE","publishDate":"2026-11-12T00:50:44.269Z","releaseId":null,"releaseURL":null,"error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwcu6sfx-16\",\"name\":\"org-mwcu6sfx-16.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcu6sfx-16.png\"}]"}
+  ✓ the row is still QUEUE
+  ✓ no local release id
+  · publishes after the sweep: [{"at":"2026-11-12T00:55:45.373Z","pendingData":{"step":"accepted","id":"stub-pending-89160-2"}},{"at":"2026-11-12T00:55:46.937Z","pendingData":{"step":"accepted","id":"stub-pending-89160-3"}}]
+  ✓ the sweep republishes a post the platform already accepted
+  ✓ the second publish is written back
+  ⚑ fault db-total-writeback-loss: external=unknown knowable=no from the database (it said QUEUE); only the platform substitution shows the duplicate (updatePost and changeState both fail after the provider completed)
+
+=== notification-writeback-fails — The post publishes and is written back, then the success notification fails permanently: the workflow still completes with one publish and no duplicate, but the user is never told.
+  · post after the notification failure: {"id":"post-mwcu6uu4-21","state":"PUBLISHED","publishDate":"2026-11-12T00:55:47.856Z","releaseId":"stub-pending-89160-4","releaseURL":"https://stub.invalid/stub-pending-89160-4","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwcu6utg-19\",\"name\":\"org-mwcu6utg-19.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcu6utg-19.png\"}]"}
+  ✓ the release result was written
+  ✓ the publish was not repeated
+  ✓ no notification row exists
+  ✓ no e-mail was sent either
+  ✓ the workflow still completed
+  ⚑ fault notification-writeback-fails: external=complete knowable=yes for the post, no for the user notification (NotificationService.inAppNotification throws permanently after the publish)
+
+=== webhook-writeback-fails — The seeded webhook target is unreachable (127.0.0.1:9); sendWebhooks swallows the failure, the workflow completes and the post is published once.
+  · webhook execution: {"status":"COMPLETED","sendWebhooks":{"activity":"sendWebhooks","taskQueue":"main"}}
+  ✓ the release result was written
+  ✓ one publish only
+  ✓ the webhook activity was scheduled on main and completed
+  ⚑ fault webhook-writeback-fails: external=complete knowable=no for the webhook delivery (no receiver record); yes for the post (webhook URL 127.0.0.1:9 (connection refused) after the publish)
+time=2026-11-12T08:55:50.587 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+[harness] temporal (real) 127.0.0.1:50470
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:50470
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:50472/metrics
+[harness] orchestrator on 50485
+
+=== refresh-fails-no-retry-storm — A provider token refresh fails; the channel is flagged refreshNeeded, the user is notified, and the workflow ends after one refresh call with no repeated attempts.
+  · channel after the failed refresh: {"refreshNeeded":true,"tokenUnchanged":true}
+  ✓ the token is not replaced
+  ✓ the refresh failure is recorded on the channel
+  ✓ exactly one refresh attempt
+  ✓ the loop exits instead of retrying
+  ✓ the user was notified
+  ⚑ fault refresh-fails: external=failed knowable=yes (provider refreshToken throws)
+
+=== mail-all-attempts-fail — The mail provider fails all three sendEmailSync attempts; the activity still reports success, so the per-email workflow completes and the message is silently lost.
+  · mail attempts: 3
+  ✓ exactly three provider attempts
+  ✓ no message was delivered
+  ✓ the workflow still completed
+  ⚑ fault mail-three-attempts-fail: external=failed knowable=no (the local system records success) (mail provider throws on every call)
+
+=== mail-worker-offline-queue — The e-mail workflow is started while every worker is down; nothing is delivered until the candidate returns, then the message is delivered exactly once.
+  ✓ nothing is delivered while the workers are down
+  ✓ delivered exactly once
+  ✓ the workflow completed
+  ⚑ fault mail-offline-queue: external=complete knowable=yes (all workers stopped before the per-email workflow was started)
+
+=== legacy-mail-continue-as-new-non-empty-queue — The legacy send_email singleton processes 30 messages, continues as new while its queue still holds two, and the successor delivers them exactly once with the same workflow id and type.
+  ✓ every message is delivered
+  ✓ no message is delivered twice
+  ✓ the singleton continued as new
+  · successor start input: {"payloadCount":1,"remaining":2}
+  ✓ the successor carries the two remaining messages
+  ✓ same workflow id
+  ✓ same workflow type
+  ✓ the first run stopped after 30 sends
+  ⚑ fault legacy-mail-continue-as-new-non-empty: external=complete knowable=yes (the successor input carries exactly the unprocessed messages) (32 signals; continue-as-new after 30 processed)
+[harness] temporal (skip) 127.0.0.1:50645
+[harness] orchestrator on 50651
+
+=== maintenance-continue-as-new-after-restart — missingPostWorkflow publishes one genuinely stale post, the worker restarts while the workflow is in its hourly loop, and at the 24-loop boundary it continues as new with the same id and type; the stale post is not republished.
+  · stale post after the first sweep: {"id":"post-mwcu87jz-28","state":"PUBLISHED","publishDate":"2026-11-12T00:51:50.495Z","releaseId":"stub-pending-89326-1","releaseURL":"https://stub.invalid/stub-pending-89326-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwcu87j2-26\",\"name\":\"org-mwcu87j2-26.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcu87j2-26.png\"}]"}
+  · worker replaced while the maintenance workflow sleeps: true
+  · maintenance first run: {"eventCount":271,"continuedAsNew":1,"sweeps":24}
+  ✓ continued as new once
+  ✓ workflow id unchanged
+  ✓ workflow type unchanged
+  ✓ the successor runs the immediate sweep first
+  ✓ the stale post is not republished by the successor
+  ⚑ fault maintenance-continue-as-new-after-restart: external=complete knowable=yes (worker restart mid-life; 24-loop continue-as-new)
+time=2026-11-12T08:56:57.869 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+[harness] temporal (real) 127.0.0.1:50719
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:50719
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:50720/metrics
+[harness] orchestrator on 50733
+
+=== compatible-rollback-covers-old-and-new — One candidate bundle runs an old V102 execution and a new V112 execution with unchanged type/id/queue/business ids; a provider-queue execution is skipped until COMPAT_WORKFLOW_QUEUES names its queue; an undecorated activity leaves the workflow stuck instead of half-running.
+  · both generations published: {"old":{"state":"PUBLISHED","releaseId":"stub-post-89358-1"},"new":{"state":"PUBLISHED","releaseId":"stub-pending-89358-2"}}
+  ✓ old type kept
+  ✓ new type kept
+  ✓ old queue kept
+  ✓ new queue kept
+  ✓ old business id kept
+  ✓ new business id kept
+  ✓ old contract used the blocking publish
+  ✓ new contract used pending/finalize
+  ✓ old activity stays on the provider queue
+  ✓ new mutation stays on the provider queue
+  ✓ provider workers are activity-only by default
+  ✓ no activity is scheduled without a workflow worker
+  ✓ nothing was published
+  · provider-queue execution after the opt-in: {"id":"post-mwcu8ibm-37","state":"PUBLISHED","publishDate":"2026-11-12T00:57:04.950Z","releaseId":"stub-post-89388-1","releaseURL":"https://stub.invalid/stub-post-89388-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwcu8iba-35\",\"name\":\"org-mwcu8iba-35.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcu8iba-35.png\"}]"}
+  ✓ the compatible worker publishes it once
+  ✓ provider-queue type unchanged
+  ✓ provider-queue queue unchanged
+  ✓ provider-queue execution completed
+2026-11-12T00:57:17.074Z [INFO] asset workflow-bundle-f7b1c93a6d0af838441b.js 3.49 MiB [emitted] [immutable] (name: main)
+runtime modules 1010 bytes 5 modules
+modules by path ./node_modules/ 965 KiB
+  modules by path ./node_modules/@temporalio/ 332 KiB 55 modules
+  modules by path ./node_modules/nexus-rpc/lib/ 25.6 KiB 17 modules
+  + 4 modules
+modules by path ./apps/orchestrator/dist/ 180 KiB
+  modules by path ./apps/orchestrator/dist/apps/orchestrator/src/workflows/ 178 KiB 23 modules
+  modules by path ./apps/orchestrator/dist/libraries/nestjs-libraries/src/ 1.02 KiB 3 modules
+  modules by path ./apps/orchestrator/dist/apps/orchestrator/src/signals/*.js 452 bytes
+    ./apps/orchestrator/dist/apps/orchestrator/src/signals/email.signal.js 220 bytes [built] [code generated]
+    ./apps/orchestrator/dist/apps/orchestrator/src/signals/send.email.signal.js 232 bytes [built] [code generated]
+optional modules 30 bytes [optional]
+  __temporal_custom_payload_converter (ignored) 15 bytes [optional] [built] [code generated]
+  __temporal_custom_failure_converter (ignored) 15 bytes [optional] [built] [code generated]
+webpack 5.105.4 compiled successfully in 429 ms { sdkComponent: 'worker', taskQueue: 'main' }
+2026-11-12T00:57:17.079Z [INFO] Workflow bundle created { sdkComponent: 'worker', taskQueue: 'main', size: '3.49MB' }
+2026-11-12T00:57:17.211Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:57:17.212Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'main' }
+2026-11-12T00:57:21.564Z [ERROR] Error while processing ActivityTask.start: Activity function refreshToken is not registered on this Worker, available activities: ["getIntegrationsById"] {
+  sdkComponent: 'worker',
+  taskQueue: 'main',
+  isLocal: false,
+  attempt: 1,
+  namespace: 'default',
+  taskToken: 'CiQwMWExY2Q0Mi0wMzA3LTdlNjctOWRiMy1hZTg0ZWMwZDNkYjkSHnJlZnJlc2hfaW50X3JlZnJlc2gtbXdjdThybXUtMxokMDFhMWNkNDItNGU5ZS03OTY2LWExNjQtZDYwN2ViNDc4ZmNkIBYoATIBM0IMcmVmcmVzaFRva2VuSggIARD8hEAYAQ==',
+  workflowId: 'refresh_int_refresh-mwcu8rmu-3',
+  workflowRunId: '01a1cd42-4e9e-7966-a164-d607eb478fcd',
+  workflowType: 'refreshTokenWorkflow',
+  activityId: '3',
+  activityType: 'refreshToken',
+  error: ApplicationFailure: Activity function refreshToken is not registered on this Worker, available activities: ["getIntegrationsById"]
+      at ApplicationFailure.create (/Users/chancetio/Desktop/Web/postiz-worktrees/18/node_modules/@temporalio/common/lib/failure.js:183:16)
+      at /Users/chancetio/Desktop/Web/postiz-worktrees/18/node_modules/@temporalio/worker/lib/worker.js:677:67 {
+    cause: undefined,
+    failure: undefined,
+    type: 'NotFoundError',
+    nonRetryable: false,
+    details: undefined,
+    nextRetryDelay: undefined,
+    category: undefined
+  },
+  task: '{"taskToken":"CiQwMWExY2Q0Mi0wMzA3LTdlNjctOWRiMy1hZTg0ZWMwZDNkYjkSHnJlZnJlc2hfaW50X3JlZnJlc2gtbXdjdThybXUtMxokMDFhMWNkNDItNGU5ZS03OTY2LWExNjQtZDYwN2ViNDc4ZmNkIBYoATIBM0IMcmVmcmVzaFRva2VuSggIARD8hEAYAQ==","start":{"workflowNamespace":"default","workflowType":"refreshTokenWorkflow","workflowExecution":{"workflowId":"refresh_int_refresh-mwcu8rmu-3","runId":"01a1cd42-4e9e-7966-a164-d607eb478fcd"},"activityId":"3","activityType":"refreshToken","input":[{"metadata":{"encoding":"anNvbi9wbGFpbg=="},"data":"eyJpZCI6ImludF9yZWZyZXNoLW13Y3U4cm11LTMiLCJpbnRlcm5hbElkIjoic3R1Yi1pbnRlcm5hbC1yZWZyZXNoLW13Y3U4cm11LTMiLCJvcmdhbml6YXRpb25JZCI6Im9yZ19vcmctbXdjdThybWktMzgiLCJuYW1lIjoiU3ludGhldGljIHJlZnJlc2ggY2hhbm5lbCIsImN1c3RvbU5hbWUiOm51bGwsInBpY3R1cmUiOm51bGwsInByb3ZpZGVySWRlbnRpZmllciI6ImJsdWVza3kiLCJ0eXBlIjoic29jaWFsIiwidG9rZW4iOiJzeW50aGV0aWMtdG9rZW4tcmVmcmVzaC1td2N1OHJtdS0zIiwiZGlzYWJsZWQiOmZhbHNlLCJ0b2tlbkV4cGlyYXRpb24iOiIyMDI2LTExLTEyVDAwOjU3OjIxLjUxOFoiLCJyZWZyZXNoVG9rZW4iOiJzeW50aGV0aWMtcmVmcmVzaC1yZWZyZXNoLW13Y3U4cm11LTMiLCJwcm9maWxlIjpudWxsLCJkZWxldGVkQXQiOm51bGwsImNyZWF0ZWRBdCI6IjIwMjYtMTEtMTJUMDA6NTc6MTYuNTE4WiIsInVwZGF0ZWRBdCI6IjIwMjYtMTEtMTJUMDA6NTc6MTYuNTE4WiIsImluQmV0d2VlblN0ZXBzIjpmYWxzZSwicmVmcmVzaE5lZWRlZCI6ZmFsc2UsInBvc3RpbmdUaW1lcyI6Ilt7XCJ0aW1lXCI6MTIwfSwge1widGltZVwiOjQwMH0sIHtcInRpbWVcIjo3MDB9XSIsImN1c3RvbUluc3RhbmNlRGV0YWlscyI6bnVsbCwiY3VzdG9tZXJJZCI6bnVsbCwicm9vdEludGVybmFsSWQiOm51bGwsImFkZGl0aW9uYWxTZXR0aW5ncyI6IltdIn0="}],"scheduledTime":{"seconds":"1794445041","nanos":561631000},"currentAttemptScheduledTime":{"seconds":"1794445041","nanos":561631000},"startedTime":{"seconds":"1794445041","nanos":561662000},"attempt":1,"scheduleToCloseTimeout":{},"startToCloseTimeout":{"seconds":"600"},"heartbeatTimeout":{},"retryPolicy":{"initialInterval":{"seconds":"120"},"backoffCoefficient":1,"maximumInterval":{"seconds":"12000"},"maximumAttempts":3}}}',
+  taskEncoded: 'CosBCiQwMWExY2Q0Mi0wMzA3LTdlNjctOWRiMy1hZTg0ZWMwZDNkYjkSHnJlZnJlc2hfaW50X3JlZnJlc2gtbXdjdThybXUtMxokMDFhMWNkNDItNGU5ZS03OTY2LWExNjQtZDYwN2ViNDc4ZmNkIBYoATIBM0IMcmVmcmVzaFRva2VuSggIARD8hEAYARqoBwoHZGVmYXVsdBIUcmVmcmVzaFRva2VuV29ya2Zsb3caRgoecmVmcmVzaF9pbnRfcmVmcmVzaC1td2N1OHJtdS0zEiQwMWExY2Q0Mi00ZTllLTc5NjYtYTE2NC1kNjA3ZWI0NzhmY2QiATMqDHJlZnJlc2hUb2tlbjrhBQoWCghlbmNvZGluZxIKanNvbi9wbGFpbhLGBXsiaWQiOiJpbnRfcmVmcmVzaC1td2N1OHJtdS0zIiwiaW50ZXJuYWxJZCI6InN0dWItaW50ZXJuYWwtcmVmcmVzaC1td2N1OHJtdS0zIiwib3JnYW5pemF0aW9uSWQiOiJvcmdfb3JnLW13Y3U4cm1pLTM4IiwibmFtZSI6IlN5bnRoZXRpYyByZWZyZXNoIGNoYW5uZWwiLCJjdXN0b21OYW1lIjpudWxsLCJwaWN0dXJlIjpudWxsLCJwcm92aWRlcklkZW50aWZpZXIiOiJibHVlc2t5IiwidHlwZSI6InNvY2lhbCIsInRva2VuIjoic3ludGhldGljLXRva2VuLXJlZnJlc2gtbXdjdThybXUtMyIsImRpc2FibGVkIjpmYWxzZSwidG9rZW5FeHBpcmF0aW9uIjoiMjAyNi0xMS0xMlQwMDo1NzoyMS41MThaIiwicmVmcmVzaFRva2VuIjoic3ludGhldGljLXJlZnJlc2gtcmVmcmVzaC1td2N1OHJtdS0zIiwicHJvZmlsZSI6bnVsbCwiZGVsZXRlZEF0IjpudWxsLCJjcmVhdGVkQXQiOiIyMDI2LTExLTEyVDAwOjU3OjE2LjUxOFoiLCJ1cGRhdGVkQXQiOiIyMDI2LTExLTEyVDAwOjU3OjE2LjUxOFoiLCJpbkJldHdlZW5TdGVwcyI6ZmFsc2UsInJlZnJlc2hOZWVkZWQiOmZhbHNlLCJwb3N0aW5nVGltZXMiOiJbe1widGltZVwiOjEyMH0sIHtcInRpbWVcIjo0MDB9LCB7XCJ0aW1lXCI6NzAwfV0iLCJjdXN0b21JbnN0YW5jZURldGFpbHMiOm51bGwsImN1c3RvbWVySWQiOm51bGwsInJvb3RJbnRlcm5hbElkIjpudWxsLCJhZGRpdGlvbmFsU2V0dGluZ3MiOiJbXSJ9SgwI8Z3U1wYQmJ7niwJSDAjxndTXBhCYnueLAloMCPGd1NcGELCQ6YsCYAFqAHIDCNgEegCCARQKAgh4EQAAAAAAAPA/GgMI4F0gAw=='
+}
+  · incomplete-worker timeline: [{"event":"11","kind":"timerStarted"},{"event":"12","kind":"timerFired"},{"event":"16","kind":"activityTaskScheduled","activity":"getIntegrationsById"},{"event":"17","kind":"activityTaskStarted","activity":"getIntegrationsById"},{"event":"18","kind":"activityTaskCompleted","activity":"getIntegrationsById"},{"event":"22","kind":"activityTaskScheduled","activity":"refreshToken"}]
+  ✓ the missing activity is scheduled but never starts or completes
+  ✓ the execution stays running
+  ✓ the token was not refreshed
+  ✓ no refresh call was made
+  ✓ the worker names the unregistered activity
+  ⚑ fault activity-method-annotation-missing: external=failed knowable=yes (the worker names the unregistered activity; the execution is still there) (worker registers the compiled bundle without the refreshToken activity)
+2026-11-12T00:57:25.810Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPING' }
+2026-11-12T00:57:25.810Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINING' }
+2026-11-12T00:57:25.814Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:57:25.814Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+time=2026-11-12T08:57:25.882 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+[harness] temporal (real) 127.0.0.1:50837
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:50837
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:50838/metrics
+[harness] orchestrator on 50852
+[harness] backend on 50875
+
+=== sync-failure-and-no-new-writes — A schema sync against an unreachable database fails non-zero and leaves rows, columns, indexes and media untouched; no execution exists, so there is nothing to compensate; the same command then succeeds with the data intact.
+  · snapshot before the failed sync: {"tables":88,"columns":1092,"indexes":281,"businessDigest":"7bb090d649988bae"}
+  · failed sync: {"status":1,"message":"Error: P1001: Can't reach database server at `127.0.0.1:1`\n\nPlease make sure your database server is running at `127.0.0.1:1`.\n"}
+  ✓ the sync exits non-zero
+  ✓ the failed sync changed no rows
+  ✓ the failed sync changed no column or index
+  ✓ the failed sync changed no media file
+  ✓ no new execution was produced
+  ✓ the retried sync keeps the rows
+  ✓ the retried sync keeps the schema
+  ⚑ fault sync-failure-no-new-writes: external=failed knowable=yes (the failed sync is non-zero and every digest still matches) (prisma db push against 127.0.0.1:1, then against the real database)
+
+=== coordinated-db-media-temporal-recovery — A quiesced database dump and media copy are taken, new external effects and new rows are produced, then both are restored together; identifiers, column digests and files are re-compared while Temporal keeps the executions and the platform keeps its side effects.
+  · backup taken: {"databaseBytes":224238,"mediaFiles":16,"businessDigest":"867619115e93a839","integrations":[{"id":"int_org-mwcu97ms-42","tokenDigest":"3ae1bcaef9923c10"},{"id":"int_refresh-mwcu97mz-4","tokenDigest":"7bdfc06403dcb1cc"}]}
+  · new state produced after the backup: {"publishes":1,"notifications":1,"digestWorkflowId":"digest_email_workflow_org_org-mwcu97ms-42","refreshCalls":1,"releaseId":"stub-pending-89552-1","rotatedToken":"<redacted>"}
+  · restored state: {"businessDigest":"867619115e93a839","mediaFiles":16}
+  ✓ the database is identical to the backup digest
+  ✓ the media volume is identical to the backup
+  ✓ the post is back to QUEUE with no release id
+  ✓ the rotated token is rolled back locally
+  ✓ but the platform substitute still shows the refresh happened
+  · Temporal execution after the restore: {"workflowId":"post_post-mwcu97my-44","runId":"01a1cd42-bd3f-7449-929e-23ec0aa9be40","type":"postWorkflowV112","status":"COMPLETED","taskQueue":"main","searchAttributes":{"organizationId":"org_org-mwcu97ms-42","postId":"post-mwcu97my-44","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  ✓ the execution is still there
+  ✓ the execution type is unchanged
+  ✓ the business id search attribute is unchanged
+  ✓ the execution completed
+  ✓ the platform substitute still shows the published post
+  ✓ the notification row is rolled back by the restore
+  ✓ but the digest e-mail execution still exists in Temporal
+  · publishes after the restore and sweep: 2
+  ✓ the sweep republishes the restored QUEUE row
+  ⚑ fault coordinated-db-media-restore: external=unknown knowable=no (the restored row says QUEUE while the platform has a post) (quiesced dump+media snapshot restored after new effects were produced)
+
+=== readiness-process-vs-api — The backend is started against an unreachable Temporal: the process stays alive (so a supervisor reports online) while /api/ never answers; with the real Temporal the same binary becomes ready.
+  · backend without Temporal: {"alive":true,"apiReady":false}
+  ✓ the process is alive
+  ✓ the API never became ready
+  ✓ the same binary becomes ready with Temporal
+  ⚑ fault readiness-process-alive-not-api-ready: external=failed knowable=yes (readiness probe distinguishes the two) (backend pointed at 127.0.0.1:1)
+
+[harness] PASS — 15 scenario(s), results /Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/17/results/latest.json

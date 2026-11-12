@@ -1,0 +1,3 @@
+# Process logs and uploaded fixtures from a local run; evidence/ and results/
+# hold the synthetic observations worth keeping.
+work/

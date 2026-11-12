@@ -1,0 +1,160 @@
+Ticket 15 — scheduled-post continuity rehearsal
+generated: 2026-11-12T00:42:13.295Z
+node: v22.23.4
+result: PASS
+
+## new-post-v112-http — A post scheduled through the public API with an uploaded image starts V112, publishes through the pending/check/finalize path, writes the result back and does not publish twice after a worker restart.
+  · uploaded media: {"id":"0fd46498-481e-4d26-a915-62ab84fae896","name":"70418243a980fc3b5f0144c32aabc910c.png","originalName":null,"path":"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png","thumbnail":null,"alt":null,"status":"ready"}
+  · post id: cmwctprnb0000cbv38ytmlzhh
+  · running execution: {"workflowId":"post_cmwctprnb0000cbv38ytmlzhh","runId":"01a1cd34-c554-7a31-91d7-616337578722","type":"postWorkflowV112","status":"RUNNING","taskQueue":"main","startTime":"2026-11-12T00:42:30.100Z"}
+  · published row: {"id":"cmwctprnb0000cbv38ytmlzhh","state":"PUBLISHED","publishDate":"2026-11-12T00:42:45.053Z","releaseId":"stub-pending-86639-1","releaseURL":"https://stub.invalid/stub-pending-86639-1","error":null,"deletedAt":null,"image":"[{\"id\":\"0fd46498-481e-4d26-a915-62ab84fae896\",\"name\":\"70418243a980fc3b5f0144c32aabc910c.png\",\"originalName\":null,\"path\":\"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png\",\"thumbnail\":null,\"alt\":null,\"status\":\"ready\"}]"}
+  · publish calls: ["postPending"]
+  · payload contract: {"id":"cmwctprnb0000cbv38ytmlzhh","message":"Synthetic scheduled post created through the public API","settings":{"__type":"bluesky"},"media":[{"path":"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png","remote":true,"status":200,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"0fd46498-481e-4d26-a915-62ab84fae896","type":"image"}]}
+  · execution history: {"workflowId":"post_cmwctprnb0000cbv38ytmlzhh","runId":"01a1cd34-c554-7a31-91d7-616337578722","eventCount":70,"eventTypes":["EVENT_TYPE_WORKFLOW_EXECUTION_STARTED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_TIMER_STARTED","EVENT_TYPE_TIMER_FIRED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"],"firstEvent":"EVENT_TYPE_WORKFLOW_EXECUTION_STARTED","lastEvent":"EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED","timers":1,"activityScheduled":[{"activity":"getPost","taskQueue":"main"},{"activity":"getPostsList","taskQueue":"main"},{"activity":"postSocialPending","taskQueue":"bluesky"},{"activity":"checkPostStatus","taskQueue":"bluesky"},{"activity":"finalizePost","taskQueue":"bluesky"},{"activity":"updatePost","taskQueue":"main"},{"activity":"inAppNotification","taskQueue":"main"},{"activity":"sendWebhooks","taskQueue":"main"},{"activity":"internalPlugs","taskQueue":"bluesky"},{"activity":"globalPlugs","taskQueue":"bluesky"}],"childWorkflows":[],"continuedAsNew":0}
+  PASS  upload accepted
+  PASS  post created
+  PASS  new post starts QUEUE
+  PASS  new post keeps the requested publish date
+  PASS  new post keeps the uploaded media reference
+  PASS  new starts use postWorkflowV112
+  PASS  workflow id keeps the post id
+  PASS  new execution polls the main queue
+  PASS  state is PUBLISHED
+  PASS  publishDate is not rewritten
+  PASS  releaseId written
+  PASS  releaseURL written
+  PASS  exactly one publish attempt
+  PASS  new path uses postPending
+  PASS  publish targets the bound channel
+  PASS  publish uses the stored credential
+  PASS  payload message matches the API content
+  PASS  payload carries the uploaded image
+  PASS  provider read the uploaded bytes through the media URL
+  PASS  provider read the whole image
+  PASS  pending post was polled once
+  PASS  finalize ran once
+  PASS  releaseId comes from finalize
+  PASS  publish activities run on the provider queue
+  PASS  database activities run on main
+  PASS  execution completed normally
+  PASS  streak workflow started by the publish
+  PASS  streak workflow type
+  PASS  restart does not republish
+  PASS  restart does not rewrite state
+  PASS  restart does not rewrite releaseId
+
+## legacy-v102-continuity — A V102 execution created by the pre-upgrade code is still sleeping when the candidate worker takes over; it keeps its id, type and history, publishes with the blocking postSocial contract, writes the result back and does not republish after a restart.
+  · legacy bundle sha256: 963d9c32ff4585a54c29a5f090ba1068e6ff1b91cf1557151514ce6e5f94b9ab
+  · candidate bundle sha256: 963d9c32ff4585a54c29a5f090ba1068e6ff1b91cf1557151514ce6e5f94b9ab
+  · legacy run id: 01a1cd35-2bce-7376-bf11-f3eebe93b826
+  · legacy history before hand-over: {"eventCount":11,"lastEvent":"EVENT_TYPE_TIMER_STARTED","timers":1,"activityScheduled":[{"activity":"getPostsList","taskQueue":"main"}]}
+  · legacy worker stopped before publish: true
+  · published row: {"id":"post-mwctqb82-4","state":"PUBLISHED","publishDate":"2026-11-12T00:43:07.442Z","releaseId":"stub-post-86739-1","releaseURL":"https://stub.invalid/stub-post-86739-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctqb79-2\",\"name\":\"org-mwctqb79-2.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqb79-2.png\"}]"}
+  · publish calls: ["post"]
+  · payload contract: {"id":"post-mwctqb82-4","message":"Synthetic post scheduled by the old code","settings":{},"media":[{"path":"<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/15/work/uploads-mwctpeq4/uploads/rehearsal15/org-mwctqb79-2.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwctqb79-2","type":"image"}]}
+  · execution after hand-over: {"workflowId":"post_post-mwctqb82-4","runId":"01a1cd35-2bce-7376-bf11-f3eebe93b826","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"post-mwctqb82-4","organizationId":"org_org-mwctqb79-2","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+58a4978f1c3e76bc2c7b3ba9237d91bd818f3762475d926b8dd8f825b12eeaae","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  · executions for the post: [{"workflowId":"post_post-mwctqb82-4","runId":"01a1cd35-2bce-7376-bf11-f3eebe93b826","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"main","startTime":"2026-11-12T00:42:56.334Z"}]
+  PASS  legacy execution has the old workflow type
+  PASS  old execution publishes exactly once
+  PASS  old publishDate is preserved
+  PASS  releaseId written by the candidate
+  PASS  releaseURL written by the candidate
+  PASS  old payload uses the blocking postSocial contract
+  PASS  old path never calls postPending
+  PASS  payload keeps the stored content
+  PASS  payload carries the old media
+  PASS  provider read the legacy media file from disk
+  PASS  payload keeps the old integration
+  PASS  payload keeps the old credential
+  PASS  workflow id is unchanged
+  PASS  run id is unchanged
+  PASS  workflow type is still postWorkflowV102
+  PASS  old execution completed
+  PASS  history is not rebuilt
+  PASS  old publish activity stayed on the provider queue
+  PASS  exactly one execution exists for the post
+  PASS  no renamed or rebuilt execution
+  PASS  restart does not resend the old post
+  PASS  restart does not rewrite the old row
+  PASS  restart does not rewrite the old date
+
+## reschedule-scheduled-post — Rescheduling a queued post terminates only that post’s running execution and starts a new V112 for the new date; the post publishes once, at the new date, with the same channel and media.
+  · reschedule response: {"id":"cmwctqssn0001cbv3suexv6rm","state":"QUEUE","publishDate":"2026-11-12T00:43:28.751Z","organizationId":"org_org-mwctqsqu-5","integrationId":"int_org-mwctqsqu-5","content":"Synthetic post that will be rescheduled","delay":0,"group":"02c47853-1a04-4874-b359-8c68e7774f53","batchId":"32a7fa37-4f4f-4c01-8357-b0c778a51667","title":null,"description":null,"parentPostId":null,"releaseId":null,"releaseURL":null,"settings":"{\"__type\":\"bluesky\"}","image":"[{\"id\":\"media_org-mwctqsqu-5\",\"name\":\"org-mwctqsqu-5.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqsqu-5.png\",\"organizationId\":\"org_org-mwctqsqu-5\",\"createdAt\":\"2026-11-12T00:43:18.169Z\",\"updatedAt\":\"2026-11-12T00:43:18.169Z\",\"deletedAt\":null,\"fileSize\":70,\"type\":\"image\",\"thumbnail\":null,\"alt\":null,\"thumbnailTimestamp\":null,\"status\":\"ready\",\"processingError\":null}]","submittedForOrderId":null,"submittedForOrganizationId":null,"approvedSubmitForOrder":"NO","creationMethod":"API","lastMessageId":null,"intervalInDays":null,"error":null,"createdAt":"2026-11-12T00:43:18.215Z","updatedAt":"2026-11-12T00:43:18.800Z","deletedAt":null}
+  · old execution: {"workflowId":"post_cmwctqssn0001cbv3suexv6rm","runId":"01a1cd35-815c-78a2-a8ff-87b7b6672e6b","type":"postWorkflowV112","status":"TERMINATED","taskQueue":"main","searchAttributes":{"postId":"cmwctqssn0001cbv3suexv6rm","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"],"organizationId":"org_org-mwctqsqu-5"}}
+  · replacement execution: {"workflowId":"post_cmwctqssn0001cbv3suexv6rm","runId":"01a1cd35-83af-7d69-a98c-9b9678997ec4","type":"postWorkflowV112","status":"RUNNING","taskQueue":"main","startTime":"2026-11-12T00:43:18.831Z"}
+  · published row: {"id":"cmwctqssn0001cbv3suexv6rm","state":"PUBLISHED","publishDate":"2026-11-12T00:43:28.751Z","releaseId":"stub-pending-86762-1","releaseURL":"https://stub.invalid/stub-pending-86762-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctqsqu-5\",\"name\":\"org-mwctqsqu-5.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqsqu-5.png\",\"organizationId\":\"org_org-mwctqsqu-5\",\"createdAt\":\"2026-11-12T00:43:18.169Z\",\"updatedAt\":\"2026-11-12T00:43:18.169Z\",\"deletedAt\":null,\"fileSize\":70,\"type\":\"image\",\"thumbnail\":null,\"alt\":null,\"thumbnailTimestamp\":null,\"status\":\"ready\",\"processingError\":null}]"}
+  PASS  first execution is V112
+  PASS  first execution waits for the original date
+  PASS  reschedule accepted
+  PASS  replacement is V112
+  PASS  replacement keeps the workflow id
+  PASS  replacement has a new run id
+  PASS  database keeps the new publish date
+  PASS  database state is still QUEUE
+  PASS  publishes once
+  PASS  publishes at the new date only
+  PASS  state is PUBLISHED
+  PASS  old execution was terminated, not rewritten
+
+## draft-update-delete — Drafts start no workflow, switching a draft to schedule starts V112, deleting a queued post marks it deleted and terminates its execution without publishing, and an “update” date change of a published post never requeues or republishes it.
+  · deleted execution: {"workflowId":"post_cmwctr13u0002cbv3tls8c3ym","runId":"01a1cd35-b557-77f7-97eb-143869aff9b8","type":"postWorkflowV112","status":"TERMINATED","taskQueue":"main","searchAttributes":{"postId":"cmwctr13u0002cbv3tls8c3ym","organizationId":"org_org-mwctr136-6","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  · updated published row: {"id":"post-mwctr347-8","state":"PUBLISHED","publishDate":"2026-11-11T23:42:31.596Z","releaseId":"stub-existing-release","releaseURL":"https://stub.invalid/existing","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctr136-6\",\"name\":\"org-mwctr136-6.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctr136-6.png\"}]"}
+  PASS  draft created
+  PASS  draft state
+  PASS  draft starts no workflow
+  PASS  draft switched to schedule
+  PASS  switching a draft starts V112
+  PASS  switched draft is QUEUE
+  PASS  delete accepted
+  PASS  delete sets deletedAt
+  PASS  delete keeps the row state
+  PASS  update date accepted
+  PASS  update keeps PUBLISHED state
+  PASS  update keeps releaseId
+  PASS  update is not requeued as a new execution
+  PASS  deleted post never publishes
+  PASS  deleted post records no platform call
+  PASS  update did not republish
+
+## legacy-email-backlog — The pre-upgrade singleton sendEmailWorkflow is created by the old worker, receives signals after hand-over, and the candidate worker drains them through the e-mail boundary exactly once.
+  · legacy email worker stopped before signals: true
+  · emails sent: [{"to":"legacy-one@synthetic.invalid","subject":"Synthetic legacy email one"},{"to":"legacy-two@synthetic.invalid","subject":"Synthetic legacy email two"}]
+  · email execution history: {"eventCount":30,"activityScheduled":[{"activity":"sendEmail","taskQueue":"main"},{"activity":"sendEmail","taskQueue":"main"}]}
+  PASS  both queued emails were sent
+  PASS  old queue order and recipients are preserved
+  PASS  old email activity ran on the main queue
+  PASS  old execution consumed the signals
+  PASS  restart does not resend legacy emails
+
+## missing-post-sweep — The missing-posts sweep still finds a stale QUEUE post and pokes the new V112 path; the post publishes with its original past date and no batch rebuild.
+  · published row: {"id":"post-mwctrrx0-12","state":"PUBLISHED","publishDate":"2026-11-11T19:44:03.732Z","releaseId":"stub-pending-86921-1","releaseURL":"https://stub.invalid/stub-pending-86921-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctrrwf-10\",\"name\":\"org-mwctrrwf-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctrrwf-10.png\"}]"}
+  · sweep history: {"eventCount":11,"activityScheduled":[{"activity":"searchForMissingThreeHoursPosts","taskQueue":"main"}]}
+  · execution for the swept post: {"workflowId":"post_post-mwctrrx0-12","runId":"f4d80062-d8b9-4d98-b3db-6f4f3c5dd892","type":"postWorkflowV112","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"post-mwctrrx0-12","organizationId":"org_org-mwctrrwf-10"}}
+  PASS  sweep publishes the stale post
+  PASS  sweep does not rewrite the old date
+  PASS  sweep publishes exactly once
+  PASS  sweep activity runs on main
+  PASS  sweep starts the new workflow version
+  PASS  sweep keeps the post workflow id
+  PASS  the sweep pokes the execution instead of rebuilding it
+
+## autopost-maintenance — autoPostWorkflow still runs its activity on main, reads the feed, creates a draft through the normal post service and records the source URL; it does not publish anything.
+  · autopost row: {"id":"autopost-mwctrscv-14","lastUrl":"http://feed.invalid/item-1"}
+  · autopost drafts: [{"id":"cmwctrsfb0000cb2he812seo0","state":"DRAFT","content":"Synthetic autopost content\n\nhttp://feed.invalid/item-1"}]
+  PASS  autopost records the feed url
+  PASS  autopost creates exactly one draft
+  PASS  autopost draft is a DRAFT
+  PASS  autopost draft carries the feed text
+  PASS  autopost never publishes to the platform
+  PASS  autopost activity runs on main
+
+## streak-email — streakWorkflow still sets the streak, waits the day, sends the streak-end e-mail through the new sendSingleEmailWorkflow/e-mail-bulk path and clears the streak.
+  · streak e-mails: [{"to":"org-mwctrsro-15@synthetic.invalid","subject":"Streak Ended"}]
+  · per-email workflow starts: [{"at":"2026-11-12T00:44:05.491Z","pid":86921,"method":"newEmailWorkflow","to":"org-mwctrsro-15@synthetic.invalid","subject":"Streak Ended","addTo":"bottom"}]
+  PASS  streak start is written
+  PASS  streak sent one e-mail
+  PASS  streak e-mail subject
+  PASS  streak end clears streakSince
+  PASS  streak workflow completed
+  PASS  streak uses the new per-email workflow path
+  PASS  streak e-mail is queued as bulk

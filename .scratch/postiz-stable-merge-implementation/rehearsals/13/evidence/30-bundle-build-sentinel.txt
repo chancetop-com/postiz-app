@@ -1,0 +1,1 @@
+/app/apps/frontend/.next/static/chunks/0hoyu7g9o0s9k.js

@@ -1,0 +1,62 @@
+toolchain
+  ok   builder base image is node 22.23.4
+  ok   runtime base image is node 22.23.4
+  ok   there are exactly two stages
+  ok   pnpm is not installed from an unpinned global npm install
+  ok   builder pins pnpm 10.6.1
+  ok   builder installs with --frozen-lockfile
+healthcheck
+  ok   HEALTHCHECK hits /api/
+  ok   the HEALTHCHECK command does not hit /api/health
+public build config
+  ok   public build config allow-list exists
+  ok   allow-list is not empty (14 keys)
+  ok   Dockerfile declares ARG NEXT_PUBLIC_BACKEND_URL
+  ok   Dockerfile sets ENV NEXT_PUBLIC_BACKEND_URL before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY
+  ok   Dockerfile sets ENV NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_SSO_PARENT_ORIGINS
+  ok   Dockerfile sets ENV NEXT_PUBLIC_SSO_PARENT_ORIGINS before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_VERSION
+  ok   Dockerfile sets ENV NEXT_PUBLIC_VERSION before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_APP_VERSION
+  ok   Dockerfile sets ENV NEXT_PUBLIC_APP_VERSION before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_POLOTNO
+  ok   Dockerfile sets ENV NEXT_PUBLIC_POLOTNO before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_FACEBOOK_PIXEL
+  ok   Dockerfile sets ENV NEXT_PUBLIC_FACEBOOK_PIXEL before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_DISCORD_SUPPORT
+  ok   Dockerfile sets ENV NEXT_PUBLIC_DISCORD_SUPPORT before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_POSTIZ_OAUTH_LOGO_URL
+  ok   Dockerfile sets ENV NEXT_PUBLIC_POSTIZ_OAUTH_LOGO_URL before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_POSTIZ_OAUTH_DISPLAY_NAME
+  ok   Dockerfile sets ENV NEXT_PUBLIC_POSTIZ_OAUTH_DISPLAY_NAME before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_TRACKING_TRIAL
+  ok   Dockerfile sets ENV NEXT_PUBLIC_TRACKING_TRIAL before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_GTM_ID
+  ok   Dockerfile sets ENV NEXT_PUBLIC_GTM_ID before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_SENTRY_DSN
+  ok   Dockerfile sets ENV NEXT_PUBLIC_SENTRY_DSN before the build
+  ok   Dockerfile declares ARG NEXT_PUBLIC_OVERRIDE_BACKEND_URL
+  ok   Dockerfile sets ENV NEXT_PUBLIC_OVERRIDE_BACKEND_URL before the build
+  ok   allow-list matches the NEXT_PUBLIC_* values the source consumes
+next output
+  ok   next.config.js no longer requests standalone output
+  ok   Dockerfile keeps the complete .next output
+  ok   Dockerfile keeps the frontend public directory
+  ok   Dockerfile keeps the frontend package.json
+  ok   Dockerfile keeps the frontend next.config.js
+pm2 process set
+ok   three apps: backend, frontend, orchestrator
+ok   backend runs the real Nest output path
+ok   orchestrator runs the real Nest output path
+ok   frontend PM2 cwd is explicit
+ok   frontend runs the hoisted Next entry
+ok   frontend starts with next start on 4200
+action separation
+  ok   build-local.sh does not run [docker push]
+  ok   build-local.sh does not run [az acr login]
+  ok   build-local.sh does not run [kubectl]
+  ok   build-local.sh does not run [docker login]
+
+runtime-contract: 54 passed, 0 failed

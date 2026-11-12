@@ -1,0 +1,189 @@
+[harness] database postgresql://postgres:postiz@127.0.0.1:55008/postiz
+[harness] prisma db push complete
+[harness] redis redis://127.0.0.1:55009
+[harness] media origin http://127.0.0.1:64342
+time=2026-11-12T08:42:17.272 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+time=2026-11-12T08:42:17.318 level=ERROR msg="Queue reader unable to retrieve tasks" shard-id=1 address=127.0.0.1:64348 component=transfer-queue-processor queue-reader-id=0 error="shard status unknown"
+time=2026-11-12T08:42:17.318 level=ERROR msg="Queue reader unable to retrieve tasks" shard-id=1 address=127.0.0.1:64348 component=outbound-queue-processor queue-reader-id=0 error="shard status unknown"
+time=2026-11-12T08:42:17.318 level=ERROR msg="Queue reader unable to retrieve tasks" shard-id=1 address=127.0.0.1:64348 component=timer-queue-processor queue-reader-id=0 error="shard status unknown"
+time=2026-11-12T08:42:17.318 level=ERROR msg="Queue reader unable to retrieve tasks" shard-id=1 address=127.0.0.1:64348 component=visibility-queue-processor queue-reader-id=0 error="shard status unknown"
+[harness] temporal (real) 127.0.0.1:64343
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:64343
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:64346/metrics
+[harness] orchestrator on 64359
+[harness] backend on 64393
+
+=== new-post-v112-http — A post scheduled through the public API with an uploaded image starts V112, publishes through the pending/check/finalize path, writes the result back and does not publish twice after a worker restart.
+  ✓ upload accepted
+  · uploaded media: {"id":"0fd46498-481e-4d26-a915-62ab84fae896","name":"70418243a980fc3b5f0144c32aabc910c.png","originalName":null,"path":"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png","thumbnail":null,"alt":null,"status":"ready"}
+  ✓ post created
+  · post id: cmwctprnb0000cbv38ytmlzhh
+  ✓ new post starts QUEUE
+  ✓ new post keeps the requested publish date
+  ✓ new post keeps the uploaded media reference
+  · running execution: {"workflowId":"post_cmwctprnb0000cbv38ytmlzhh","runId":"01a1cd34-c554-7a31-91d7-616337578722","type":"postWorkflowV112","status":"RUNNING","taskQueue":"main","startTime":"2026-11-12T00:42:30.100Z"}
+  ✓ new starts use postWorkflowV112
+  ✓ workflow id keeps the post id
+  ✓ new execution polls the main queue
+  · published row: {"id":"cmwctprnb0000cbv38ytmlzhh","state":"PUBLISHED","publishDate":"2026-11-12T00:42:45.053Z","releaseId":"stub-pending-86639-1","releaseURL":"https://stub.invalid/stub-pending-86639-1","error":null,"deletedAt":null,"image":"[{\"id\":\"0fd46498-481e-4d26-a915-62ab84fae896\",\"name\":\"70418243a980fc3b5f0144c32aabc910c.png\",\"originalName\":null,\"path\":\"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png\",\"thumbnail\":null,\"alt\":null,\"status\":\"ready\"}]"}
+  ✓ state is PUBLISHED
+  ✓ publishDate is not rewritten
+  ✓ releaseId written
+  ✓ releaseURL written
+  · publish calls: ["postPending"]
+  ✓ exactly one publish attempt
+  ✓ new path uses postPending
+  ✓ publish targets the bound channel
+  ✓ publish uses the stored credential
+  · payload contract: {"id":"cmwctprnb0000cbv38ytmlzhh","message":"Synthetic scheduled post created through the public API","settings":{"__type":"bluesky"},"media":[{"path":"http://127.0.0.1:64342/uploads/2026/11/12/70418243a980fc3b5f0144c32aabc910c.png","remote":true,"status":200,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"0fd46498-481e-4d26-a915-62ab84fae896","type":"image"}]}
+  ✓ payload message matches the API content
+  ✓ payload carries the uploaded image
+  ✓ provider read the uploaded bytes through the media URL
+  ✓ provider read the whole image
+  ✓ pending post was polled once
+  ✓ finalize ran once
+  ✓ releaseId comes from finalize
+  · execution history: {"workflowId":"post_cmwctprnb0000cbv38ytmlzhh","runId":"01a1cd34-c554-7a31-91d7-616337578722","eventCount":70,"eventTypes":["EVENT_TYPE_WORKFLOW_EXECUTION_STARTED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_TIMER_STARTED","EVENT_TYPE_TIMER_FIRED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_ACTIVITY_TASK_SCHEDULED","EVENT_TYPE_ACTIVITY_TASK_STARTED","EVENT_TYPE_ACTIVITY_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_TASK_SCHEDULED","EVENT_TYPE_WORKFLOW_TASK_STARTED","EVENT_TYPE_WORKFLOW_TASK_COMPLETED","EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"],"firstEvent":"EVENT_TYPE_WORKFLOW_EXECUTION_STARTED","lastEvent":"EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED","timers":1,"activityScheduled":[{"activity":"getPost","taskQueue":"main"},{"activity":"getPostsList","taskQueue":"main"},{"activity":"postSocialPending","taskQueue":"bluesky"},{"activity":"checkPostStatus","taskQueue":"bluesky"},{"activity":"finalizePost","taskQueue":"bluesky"},{"activity":"updatePost","taskQueue":"main"},{"activity":"inAppNotification","taskQueue":"main"},{"activity":"sendWebhooks","taskQueue":"main"},{"activity":"internalPlugs","taskQueue":"bluesky"},{"activity":"globalPlugs","taskQueue":"bluesky"}],"childWorkflows":[],"continuedAsNew":0}
+  ✓ publish activities run on the provider queue
+  ✓ database activities run on main
+  ✓ execution completed normally
+  ✓ streak workflow started by the publish
+  ✓ streak workflow type
+  ✓ restart does not republish
+  ✓ restart does not rewrite state
+  ✓ restart does not rewrite releaseId
+
+=== legacy-v102-continuity — A V102 execution created by the pre-upgrade code is still sleeping when the candidate worker takes over; it keeps its id, type and history, publishes with the blocking postSocial contract, writes the result back and does not republish after a restart.
+2026-11-12T00:42:56.329Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:42:56.330Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'main' }
+  · legacy bundle sha256: 963d9c32ff4585a54c29a5f090ba1068e6ff1b91cf1557151514ce6e5f94b9ab
+  · candidate bundle sha256: 963d9c32ff4585a54c29a5f090ba1068e6ff1b91cf1557151514ce6e5f94b9ab
+  · legacy run id: 01a1cd35-2bce-7376-bf11-f3eebe93b826
+  · legacy history before hand-over: {"eventCount":11,"lastEvent":"EVENT_TYPE_TIMER_STARTED","timers":1,"activityScheduled":[{"activity":"getPostsList","taskQueue":"main"}]}
+  ✓ legacy execution has the old workflow type
+2026-11-12T00:42:56.854Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPING' }
+2026-11-12T00:42:56.854Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINING' }
+2026-11-12T00:42:56.863Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:42:56.864Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+  · legacy worker stopped before publish: true
+  · published row: {"id":"post-mwctqb82-4","state":"PUBLISHED","publishDate":"2026-11-12T00:43:07.442Z","releaseId":"stub-post-86739-1","releaseURL":"https://stub.invalid/stub-post-86739-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctqb79-2\",\"name\":\"org-mwctqb79-2.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqb79-2.png\"}]"}
+  ✓ old execution publishes exactly once
+  ✓ old publishDate is preserved
+  ✓ releaseId written by the candidate
+  ✓ releaseURL written by the candidate
+  · publish calls: ["post"]
+  ✓ old payload uses the blocking postSocial contract
+  ✓ old path never calls postPending
+  · payload contract: {"id":"post-mwctqb82-4","message":"Synthetic post scheduled by the old code","settings":{},"media":[{"path":"<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/15/work/uploads-mwctpeq4/uploads/rehearsal15/org-mwctqb79-2.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwctqb79-2","type":"image"}]}
+  ✓ payload keeps the stored content
+  ✓ payload carries the old media
+  ✓ provider read the legacy media file from disk
+  ✓ payload keeps the old integration
+  ✓ payload keeps the old credential
+  · execution after hand-over: {"workflowId":"post_post-mwctqb82-4","runId":"01a1cd35-2bce-7376-bf11-f3eebe93b826","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"post-mwctqb82-4","organizationId":"org_org-mwctqb79-2","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+58a4978f1c3e76bc2c7b3ba9237d91bd818f3762475d926b8dd8f825b12eeaae","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  ✓ workflow id is unchanged
+  ✓ run id is unchanged
+  ✓ workflow type is still postWorkflowV102
+  ✓ old execution completed
+  ✓ history is not rebuilt
+  ✓ old publish activity stayed on the provider queue
+  · executions for the post: [{"workflowId":"post_post-mwctqb82-4","runId":"01a1cd35-2bce-7376-bf11-f3eebe93b826","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"main","startTime":"2026-11-12T00:42:56.334Z"}]
+  ✓ exactly one execution exists for the post
+  ✓ no renamed or rebuilt execution
+  ✓ restart does not resend the old post
+  ✓ restart does not rewrite the old row
+  ✓ restart does not rewrite the old date
+
+=== reschedule-scheduled-post — Rescheduling a queued post terminates only that post’s running execution and starts a new V112 for the new date; the post publishes once, at the new date, with the same channel and media.
+  ✓ first execution is V112
+  ✓ first execution waits for the original date
+  ✓ reschedule accepted
+  · reschedule response: {"id":"cmwctqssn0001cbv3suexv6rm","state":"QUEUE","publishDate":"2026-11-12T00:43:28.751Z","organizationId":"org_org-mwctqsqu-5","integrationId":"int_org-mwctqsqu-5","content":"Synthetic post that will be rescheduled","delay":0,"group":"02c47853-1a04-4874-b359-8c68e7774f53","batchId":"32a7fa37-4f4f-4c01-8357-b0c778a51667","title":null,"description":null,"parentPostId":null,"releaseId":null,"releaseURL":null,"settings":"{\"__type\":\"bluesky\"}","image":"[{\"id\":\"media_org-mwctqsqu-5\",\"name\":\"org-mwctqsqu-5.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqsqu-5.png\",\"organizationId\":\"org_org-mwctqsqu-5\",\"createdAt\":\"2026-11-12T00:43:18.169Z\",\"updatedAt\":\"2026-11-12T00:43:18.169Z\",\"deletedAt\":null,\"fileSize\":70,\"type\":\"image\",\"thumbnail\":null,\"alt\":null,\"thumbnailTimestamp\":null,\"status\":\"ready\",\"processingError\":null}]","submittedForOrderId":null,"submittedForOrganizationId":null,"approvedSubmitForOrder":"NO","creationMethod":"API","lastMessageId":null,"intervalInDays":null,"error":null,"createdAt":"2026-11-12T00:43:18.215Z","updatedAt":"2026-11-12T00:43:18.800Z","deletedAt":null}
+  · old execution: {"workflowId":"post_cmwctqssn0001cbv3suexv6rm","runId":"01a1cd35-815c-78a2-a8ff-87b7b6672e6b","type":"postWorkflowV112","status":"TERMINATED","taskQueue":"main","searchAttributes":{"postId":"cmwctqssn0001cbv3suexv6rm","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"],"organizationId":"org_org-mwctqsqu-5"}}
+  · replacement execution: {"workflowId":"post_cmwctqssn0001cbv3suexv6rm","runId":"01a1cd35-83af-7d69-a98c-9b9678997ec4","type":"postWorkflowV112","status":"RUNNING","taskQueue":"main","startTime":"2026-11-12T00:43:18.831Z"}
+  ✓ replacement is V112
+  ✓ replacement keeps the workflow id
+  ✓ replacement has a new run id
+  ✓ database keeps the new publish date
+  ✓ database state is still QUEUE
+  · published row: {"id":"cmwctqssn0001cbv3suexv6rm","state":"PUBLISHED","publishDate":"2026-11-12T00:43:28.751Z","releaseId":"stub-pending-86762-1","releaseURL":"https://stub.invalid/stub-pending-86762-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctqsqu-5\",\"name\":\"org-mwctqsqu-5.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctqsqu-5.png\",\"organizationId\":\"org_org-mwctqsqu-5\",\"createdAt\":\"2026-11-12T00:43:18.169Z\",\"updatedAt\":\"2026-11-12T00:43:18.169Z\",\"deletedAt\":null,\"fileSize\":70,\"type\":\"image\",\"thumbnail\":null,\"alt\":null,\"thumbnailTimestamp\":null,\"status\":\"ready\",\"processingError\":null}]"}
+  ✓ publishes once
+  ✓ publishes at the new date only
+  ✓ state is PUBLISHED
+  ✓ old execution was terminated, not rewritten
+
+=== draft-update-delete — Drafts start no workflow, switching a draft to schedule starts V112, deleting a queued post marks it deleted and terminates its execution without publishing, and an “update” date change of a published post never requeues or republishes it.
+  ✓ draft created
+  ✓ draft state
+  ✓ draft starts no workflow
+  ✓ draft switched to schedule
+  ✓ switching a draft starts V112
+  ✓ switched draft is QUEUE
+  ✓ delete accepted
+  · deleted execution: {"workflowId":"post_cmwctr13u0002cbv3tls8c3ym","runId":"01a1cd35-b557-77f7-97eb-143869aff9b8","type":"postWorkflowV112","status":"TERMINATED","taskQueue":"main","searchAttributes":{"postId":"cmwctr13u0002cbv3tls8c3ym","organizationId":"org_org-mwctr136-6","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  ✓ delete sets deletedAt
+  ✓ delete keeps the row state
+  ✓ update date accepted
+  · updated published row: {"id":"post-mwctr347-8","state":"PUBLISHED","publishDate":"2026-11-11T23:42:31.596Z","releaseId":"stub-existing-release","releaseURL":"https://stub.invalid/existing","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctr136-6\",\"name\":\"org-mwctr136-6.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctr136-6.png\"}]"}
+  ✓ update keeps PUBLISHED state
+  ✓ update keeps releaseId
+  ✓ update is not requeued as a new execution
+  ✓ deleted post never publishes
+  ✓ deleted post records no platform call
+  ✓ update did not republish
+
+=== legacy-email-backlog — The pre-upgrade singleton sendEmailWorkflow is created by the old worker, receives signals after hand-over, and the candidate worker drains them through the e-mail boundary exactly once.
+2026-11-12T00:43:43.447Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:43:43.447Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'main' }
+2026-11-12T00:43:43.452Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPING' }
+2026-11-12T00:43:43.452Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINING' }
+2026-11-12T00:43:43.474Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:43:43.474Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+  · legacy email worker stopped before signals: true
+  · emails sent: [{"to":"legacy-one@synthetic.invalid","subject":"Synthetic legacy email one"},{"to":"legacy-two@synthetic.invalid","subject":"Synthetic legacy email two"}]
+  ✓ both queued emails were sent
+  ✓ old queue order and recipients are preserved
+  · email execution history: {"eventCount":30,"activityScheduled":[{"activity":"sendEmail","taskQueue":"main"},{"activity":"sendEmail","taskQueue":"main"}]}
+  ✓ old email activity ran on the main queue
+  ✓ old execution consumed the signals
+  ✓ restart does not resend legacy emails
+[harness] temporal (skip) 127.0.0.1:64731
+[harness] orchestrator on 64738
+
+=== missing-post-sweep — The missing-posts sweep still finds a stale QUEUE post and pokes the new V112 path; the post publishes with its original past date and no batch rebuild.
+  · published row: {"id":"post-mwctrrx0-12","state":"PUBLISHED","publishDate":"2026-11-11T19:44:03.732Z","releaseId":"stub-pending-86921-1","releaseURL":"https://stub.invalid/stub-pending-86921-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctrrwf-10\",\"name\":\"org-mwctrrwf-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctrrwf-10.png\"}]"}
+  ✓ sweep publishes the stale post
+  ✓ sweep does not rewrite the old date
+  ✓ sweep publishes exactly once
+  · sweep history: {"eventCount":11,"activityScheduled":[{"activity":"searchForMissingThreeHoursPosts","taskQueue":"main"}]}
+  ✓ sweep activity runs on main
+  · execution for the swept post: {"workflowId":"post_post-mwctrrx0-12","runId":"f4d80062-d8b9-4d98-b3db-6f4f3c5dd892","type":"postWorkflowV112","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"post-mwctrrx0-12","organizationId":"org_org-mwctrrwf-10"}}
+  ✓ sweep starts the new workflow version
+  ✓ sweep keeps the post workflow id
+  ✓ the sweep pokes the execution instead of rebuilding it
+
+=== autopost-maintenance — autoPostWorkflow still runs its activity on main, reads the feed, creates a draft through the normal post service and records the source URL; it does not publish anything.
+  · autopost row: {"id":"autopost-mwctrscv-14","lastUrl":"http://feed.invalid/item-1"}
+  ✓ autopost records the feed url
+  · autopost drafts: [{"id":"cmwctrsfb0000cb2he812seo0","state":"DRAFT","content":"Synthetic autopost content\n\nhttp://feed.invalid/item-1"}]
+  ✓ autopost creates exactly one draft
+  ✓ autopost draft is a DRAFT
+  ✓ autopost draft carries the feed text
+  ✓ autopost never publishes to the platform
+  ✓ autopost activity runs on main
+
+=== streak-email — streakWorkflow still sets the streak, waits the day, sends the streak-end e-mail through the new sendSingleEmailWorkflow/e-mail-bulk path and clears the streak.
+  ✓ streak start is written
+  · streak e-mails: [{"to":"org-mwctrsro-15@synthetic.invalid","subject":"Streak Ended"}]
+  ✓ streak sent one e-mail
+  ✓ streak e-mail subject
+  ✓ streak end clears streakSince
+  ✓ streak workflow completed
+  · per-email workflow starts: [{"at":"2026-11-12T00:44:05.491Z","pid":86921,"method":"newEmailWorkflow","to":"org-mwctrsro-15@synthetic.invalid","subject":"Streak Ended","addTo":"bottom"}]
+  ✓ streak uses the new per-email workflow path
+  ✓ streak e-mail is queued as bulk
+
+[harness] PASS — 8 scenario(s), results /Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/15/results/latest.json

@@ -1,0 +1,23 @@
+$ pnpm run build
+
+> gitroom@1.0.0 build /Users/chancetio/Desktop/Web/postiz-app
+> pnpm -r --workspace-concurrency=1 --filter ./apps/frontend --filter ./apps/backend --filter ./apps/orchestrator run build
+
+Scope: 3 of 7 workspace projects
+
+> postiz-frontend@1.0.0 build /Users/chancetio/Desktop/Web/postiz-app/apps/frontend
+> next build
+
+/Users/chancetio/Desktop/Web/postiz-app/apps/frontend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  postiz-frontend@1.0.0 build: `next build`
+spawn ENOENT
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+
+> postiz-backend@1.0.0 build /Users/chancetio/Desktop/Web/postiz-app/apps/backend
+> cross-env NODE_ENV=production nest build
+
+ ELIFECYCLE  Command failed with exit code 1.
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+sh: next: command not found
+
+exit=1

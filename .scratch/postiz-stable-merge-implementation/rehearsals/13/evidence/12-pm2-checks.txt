@@ -1,0 +1,8 @@
+PASS|three processes are defined
+PASS|backend is online
+PASS|frontend is online
+PASS|orchestrator is online
+PASS|backend runs the real Nest output
+PASS|orchestrator runs the real Nest output
+PASS|frontend runs with an explicit cwd
+PASS|frontend runs the hoisted Next entry

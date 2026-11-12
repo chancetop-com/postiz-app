@@ -133,11 +133,11 @@ const InnerWallet = () => {
       return;
     }
     try {
-      const challenge = await (
-        await fetch(
-          `/auth/oauth/WALLET?publicKey=${wallet?.publicKey?.toString()}`
-        )
-      ).text();
+      const response = await fetch(
+        `/auth/oauth/WALLET?publicKey=${wallet?.publicKey?.toString()}`
+      );
+      const state = response.headers.get('oauth-state') || '';
+      const challenge = await response.text();
       const encoded = new TextEncoder().encode(challenge);
       const signed = await wallet?.signMessage?.(encoded)!;
       const info = Buffer.from(
@@ -148,7 +148,7 @@ const InnerWallet = () => {
           publicKey: wallet?.publicKey?.toString(),
         })
       ).toString('base64');
-      window.location.href = `/auth?provider=WALLET&code=${info}`;
+      window.location.href = `/auth?provider=WALLET&code=${encodeURIComponent(info)}&state=${encodeURIComponent(state)}`;
     } catch (err) {
       walletModal.setVisible(false);
       wallet.select(null);
@@ -166,7 +166,9 @@ const InnerWallet = () => {
         })
         .catch(() => {
           wallet.select(null);
-          wallet.disconnect();
+          wallet.disconnect().catch(() => {
+            /** empty */
+          });
         });
     }
     if (buttonState === 'connected') {

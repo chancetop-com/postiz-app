@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'backend',
-      script: './dist/apps/backend/src/main.js',
+      script: './apps/backend/dist/apps/backend/src/main.js',
       exec_mode: 'fork',
       interpreter: 'node',
       interpreter_args: '--experimental-require-module',
@@ -26,7 +26,7 @@ module.exports = {
     },
     {
       name: 'orchestrator',
-      script: './dist/apps/orchestrator/src/main.js',
+      script: './apps/orchestrator/dist/apps/orchestrator/src/main.js',
       exec_mode: 'fork',
       interpreter: 'node',
       interpreter_args: '--experimental-require-module',

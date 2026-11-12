@@ -1,0 +1,12 @@
+prisma                  : 6.5.0
+@prisma/client          : 6.5.0
+Computed binaryTarget   : linux-arm64-openssl-3.0.x
+Operating System        : linux
+Architecture            : arm64
+Node.js                 : v22.23.4
+TypeScript              : 5.5.4
+Query Engine (Node-API) : libquery-engine 173f8d54f8d52e692c7e27e72a88314ec7aeff60 (at node_modules/@prisma/engines/libquery_engine-linux-arm64-openssl-3.0.x.so.node)
+Schema Engine           : schema-engine-cli 173f8d54f8d52e692c7e27e72a88314ec7aeff60 (at node_modules/@prisma/engines/schema-engine-linux-arm64-openssl-3.0.x)
+Schema Wasm             : @prisma/prisma-schema-wasm 6.5.0-73.173f8d54f8d52e692c7e27e72a88314ec7aeff60
+Default Engines Hash    : 173f8d54f8d52e692c7e27e72a88314ec7aeff60
+Studio                  : 0.510.0

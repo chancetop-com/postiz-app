@@ -1,0 +1,27 @@
+[
+  {
+    "check": "build-postiz-syntax",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "check": "docker-build-syntax",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "check": "docker-create-syntax",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "check": "mock-syntax",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "check": "pm2-syntax",
+    "exit": 0,
+    "output": ""
+  }
+]

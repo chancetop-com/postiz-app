@@ -1,0 +1,3 @@
+$ node --check doc/sso-test/mock-sso-server.js
+
+exit=0

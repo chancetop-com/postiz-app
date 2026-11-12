@@ -1,0 +1,18 @@
+
+> gitroom@1.0.0 typecheck /Users/chancetio/Desktop/Web/postiz-worktrees/18
+> pnpm run typecheck:frontend && pnpm run typecheck:backend && pnpm run typecheck:orchestrator
+
+
+> gitroom@1.0.0 typecheck:frontend /Users/chancetio/Desktop/Web/postiz-worktrees/18
+> pnpm --dir apps/frontend exec next typegen && tsc --noEmit --incremental false -p apps/frontend/tsconfig.json
+
+Generating route types...
+✓ Types generated successfully
+
+> gitroom@1.0.0 typecheck:backend /Users/chancetio/Desktop/Web/postiz-worktrees/18
+> tsc --noEmit --incremental false -p apps/backend/tsconfig.build.json
+
+
+> gitroom@1.0.0 typecheck:orchestrator /Users/chancetio/Desktop/Web/postiz-worktrees/18
+> tsc --noEmit --incremental false -p apps/orchestrator/tsconfig.build.json
+

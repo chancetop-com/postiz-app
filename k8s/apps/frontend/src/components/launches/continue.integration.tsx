@@ -6,11 +6,14 @@ import { useRouter } from 'next/navigation';
 import { Redirect } from '@gitroom/frontend/components/layout/redirect';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
-import dayjs from 'dayjs';
 import { continueProviderList } from '@gitroom/frontend/components/new-launch/providers/continue-provider/list';
 import { IntegrationContext } from '@gitroom/frontend/components/launches/helpers/use.integration';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
+import {
+  isChannelPopup,
+  notifyChannelPopupOpener,
+} from '@gitroom/frontend/components/launches/channel.popup';
 
 interface TwoStepState {
   integrationId: string;
@@ -26,9 +29,8 @@ interface SuccessState {
 export const ContinueIntegration: FC<{
   provider: string;
   searchParams: any;
-  logged: boolean;
 }> = (props) => {
-  const { provider, searchParams, logged } = props;
+  const { provider, searchParams } = props;
   const { push } = useRouter();
   const t = useT();
   const fetch = useFetch();
@@ -36,6 +38,7 @@ export const ContinueIntegration: FC<{
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [twoStepState, setTwoStepState] = useState<TwoStepState | null>(null);
+  const [twoStepError, setTwoStepError] = useState<string | null>(null);
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -43,16 +46,9 @@ export const ContinueIntegration: FC<{
   const navigateOrShow = useCallback(
     (path: string, returnURL: string | undefined, successMessage: string) => {
       // Popup mode: opened from an iframe to handle OAuth without navigating the iframe itself.
-      // Send postMessage to parent iframe so it refreshes the channel list, then close popup.
-      if (
-        typeof window !== 'undefined' &&
-        window.sessionStorage.getItem('channel_popup_mode') === 'true'
-      ) {
-        try {
-          if (window.opener && !window.opener.closed) {
-            window.opener.postMessage({ type: 'CHANNEL_UPDATED', provider }, '*');
-          }
-        } catch { /* ignore cross-origin errors */ }
+      // Send postMessage to the opener so it refreshes the channel list, then close popup.
+      if (isChannelPopup()) {
+        notifyChannelPopupOpener(provider, window.opener);
         window.close();
         return;
       }
@@ -61,7 +57,7 @@ export const ContinueIntegration: FC<{
         // If returnURL exists, always redirect to it with the path params
         const params = path.includes('?') ? path.split('?')[1] : '';
         push(params ? `${returnURL}?${params}` : returnURL);
-      } else if (logged) {
+      } else if (window.sessionStorage.getItem('auth')) {
         // If logged in without returnURL, use normal navigation
         push(path);
       } else {
@@ -69,7 +65,7 @@ export const ContinueIntegration: FC<{
         setSuccessState({ message: successMessage });
       }
     },
-    [logged, push]
+    [provider, push]
   );
   const modifiedParams = useMemo(() => {
     if (provider === 'mewe') {
@@ -83,6 +79,15 @@ export const ContinueIntegration: FC<{
       return {
         state: searchParams.oauth_token || '',
         code: searchParams.oauth_verifier || '',
+        refresh: searchParams.refresh || '',
+      };
+    }
+
+    if (provider === 'tiktok-business') {
+      // The TikTok Business API redirects back with `auth_code` instead of `code`
+      return {
+        state: searchParams.state || '',
+        code: searchParams.auth_code || searchParams.code || '',
         refresh: searchParams.refresh || '',
       };
     }
@@ -111,7 +116,7 @@ export const ContinueIntegration: FC<{
 
   useEffect(() => {
     (async () => {
-      const timezone = String(dayjs.tz().utcOffset());
+      const timezone = String(newDayjs().utcOffset());
 
       // Try public endpoint first (handles both public and fallback scenarios)
       let data = await fetch(`/integrations/social-connect/${provider}`, {
@@ -189,7 +194,11 @@ export const ContinueIntegration: FC<{
               jwt: extensionToken,
               backendUrl,
             },
-            () => {}
+            () => {
+              if (chrome.runtime.lastError) {
+                return;
+              }
+            }
           );
         } catch {
           // Silently ignore — extension may not be available
@@ -222,30 +231,49 @@ export const ContinueIntegration: FC<{
       if (!twoStepState) return;
 
       setIsSaving(true);
+      setTwoStepError(null);
 
       try {
         // Use public or authenticated endpoint based on the flow
-        const endpoint = logged
+        const endpoint = window.sessionStorage.getItem('auth')
           ? `/integrations/provider/${twoStepState.integrationId}/connect`
           : `/integrations/public/provider/${twoStepState.integrationId}/connect`;
 
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          body: JSON.stringify({ ...modifiedParams, ...data }),
-        });
+        let response: Response;
+        try {
+          response = await fetch(endpoint, {
+            method: 'POST',
+            body: JSON.stringify({ ...modifiedParams, ...data }),
+          });
+        } catch {
+          // The request never reached the API, so nothing was written either.
+          setTwoStepError(
+            t('failed_to_save_channel', 'Failed to save channel configuration')
+          );
+          return;
+        }
 
         if (
           response.status !== HttpStatusCode.Ok &&
           response.status !== HttpStatusCode.Created
         ) {
           const errorData = await response.json().catch(() => ({}));
-          setErrorMessage(
-            errorData.message || 'Failed to save channel configuration'
+          // Keep the popup on the selection: the binding was not written, so
+          // reporting completion here would show a connection that does not
+          // exist. The chooser stays usable for another attempt.
+          setTwoStepError(
+            errorData.message ||
+              t(
+                'failed_to_save_channel',
+                'Failed to save channel configuration'
+              )
           );
-          setError(true);
           return;
         }
 
+        // Success from here on. A navigation or close failure is the baseline
+        // popup lifecycle problem, not a failed binding, so it must not fall
+        // into the error branch above.
         navigateOrShow(
           `/launches?added=${provider}&msg=Channel Added${
             twoStepState.onboarding ? '&onboarding=true' : ''
@@ -257,7 +285,7 @@ export const ContinueIntegration: FC<{
         setIsSaving(false);
       }
     },
-    [twoStepState, fetch, modifiedParams, provider, navigateOrShow]
+    [twoStepState, fetch, modifiedParams, provider, navigateOrShow, t]
   );
 
   const Provider = useMemo(() => {
@@ -274,6 +302,8 @@ export const ContinueIntegration: FC<{
       'linkedin-page': 'LinkedIn',
       youtube: 'YouTube',
       gmb: 'Google Business',
+      tumblr: 'Tumblr',
+      'tiktok-business': 'TikTok Business',
     };
     return names[provider] || provider;
   }, [provider]);
@@ -363,6 +393,14 @@ export const ContinueIntegration: FC<{
                 },
               }}
             >
+              {twoStepError && (
+                <div
+                  role="alert"
+                  className="text-[14px] text-red-400 bg-red-500/10 border border-red-500/30 rounded-[8px] p-[12px]"
+                >
+                  {twoStepError}
+                </div>
+              )}
               <Provider
                 onSave={onSave}
                 existingId={[]}
@@ -409,7 +447,9 @@ export const ContinueIntegration: FC<{
                 'An error occurred. Please try again.'
               )}
           </div>
-          {logged && <Redirect url="/launches" delay={3000} />}
+          {typeof window !== 'undefined' && window.sessionStorage.getItem('auth') && (
+            <Redirect url="/launches" delay={3000} />
+          )}
         </div>
       </div>
     );

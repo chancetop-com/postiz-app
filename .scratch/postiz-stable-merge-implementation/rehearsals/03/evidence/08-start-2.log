@@ -1,0 +1,16 @@
+[startup-sync] cwd=/app command=pnpm run prisma-db-push
+
+> gitroom@1.0.0 prisma-db-push /app
+> prisma db push --schema ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+
+Prisma schema loaded from libraries/nestjs-libraries/src/database/prisma/schema.prisma
+Datasource "db": PostgreSQL database "postiz", schema "public" at "db:5432"
+
+The database is already in sync with the Prisma schema.
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.5.0) to ./node_modules/@prisma/client in 355ms
+
+[startup-sync] database schema is in sync; starting: sh -c echo APP_STARTED_MARKER
+APP_STARTED_MARKER

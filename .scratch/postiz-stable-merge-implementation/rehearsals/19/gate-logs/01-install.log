@@ -1,0 +1,50 @@
+Scope: all 7 workspace projects
+Lockfile is up to date, resolution step is skipped
+Packages: +4305
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 0, reused 1, downloaded 0, added 0
+Progress: resolved 0, reused 307, downloaded 0, added 0
+Progress: resolved 0, reused 1006, downloaded 0, added 0
+Progress: resolved 0, reused 2071, downloaded 0, added 0
+Progress: resolved 0, reused 3415, downloaded 0, added 15
+Progress: resolved 0, reused 3415, downloaded 0, added 102
+Progress: resolved 0, reused 3415, downloaded 0, added 198
+Progress: resolved 0, reused 3415, downloaded 0, added 365
+Progress: resolved 0, reused 3415, downloaded 0, added 474
+Progress: resolved 0, reused 3415, downloaded 0, added 643
+Progress: resolved 0, reused 3415, downloaded 0, added 781
+Progress: resolved 0, reused 3415, downloaded 0, added 926
+Progress: resolved 0, reused 3415, downloaded 0, added 1066
+Progress: resolved 0, reused 3415, downloaded 0, added 1207
+Progress: resolved 0, reused 3415, downloaded 0, added 1367
+Progress: resolved 0, reused 3415, downloaded 0, added 1631
+Progress: resolved 0, reused 3415, downloaded 0, added 2019
+Progress: resolved 0, reused 3415, downloaded 0, added 2337
+Progress: resolved 0, reused 3415, downloaded 0, added 2666
+Progress: resolved 0, reused 3415, downloaded 0, added 2824
+Progress: resolved 0, reused 3415, downloaded 0, added 2874
+Progress: resolved 0, reused 3415, downloaded 0, added 3082
+Progress: resolved 0, reused 3415, downloaded 0, added 3146
+Progress: resolved 0, reused 3415, downloaded 0, added 3228
+Progress: resolved 0, reused 3415, downloaded 0, added 3310
+Progress: resolved 0, reused 3415, downloaded 0, added 3604
+Progress: resolved 0, reused 3415, downloaded 0, added 3865
+Progress: resolved 0, reused 3415, downloaded 0, added 4093
+Progress: resolved 0, reused 3415, downloaded 0, added 4300
+Progress: resolved 0, reused 3415, downloaded 0, added 4301
+Progress: resolved 0, reused 3415, downloaded 0, added 4305, done
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @parcel/watcher, @prisma/client, @prisma/engines,   ││   @scarf/scarf, @sentry-internal/node-cpu-profiler, @sentry/cli,             ││   @swc/core, bufferutil, canvas, core-js, core-js-pure, esbuild, prisma,     ││   protobufjs, unrs-resolver, utf-8-validate.                                 ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+
+apps/frontend postinstall$ node scripts/fetch-gtm.mjs
+apps/frontend postinstall: [fetch-gtm] NEXT_PUBLIC_GTM_ID not set, skipping
+apps/frontend postinstall: Done
+. postinstall$ pnpm run prisma-generate
+. postinstall: > gitroom@1.0.0 prisma-generate /Users/chancetio/Desktop/Web/postiz-worktrees/19
+. postinstall: > pnpm dlx prisma@6.5.0 generate --schema ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+. postinstall: Prisma schema loaded from libraries/nestjs-libraries/src/database/prisma/schema.prisma
+. postinstall: ✔ Generated Prisma Client (v6.5.0) to ./node_modules/@prisma/client in 335ms
+. postinstall: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+. postinstall: Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+. postinstall: Done
+Done in 32.8s using pnpm v10.6.1

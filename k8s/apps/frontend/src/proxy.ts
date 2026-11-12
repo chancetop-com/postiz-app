@@ -32,11 +32,37 @@ export async function proxy(request: NextRequest) {
     topResponse.headers.set(cookieName, lng);
   }
 
+  // Login providers share callback URLs with channel binding/settings. Route
+  // only login callbacks to the client exchange, which has sessionStorage.
+  const loginState = nextUrl.searchParams.get('state');
+  if (
+    loginState?.startsWith('login-') &&
+    (nextUrl.searchParams.has('code') || nextUrl.searchParams.has('error'))
+  ) {
+    const provider =
+      nextUrl.pathname === '/integrations/social/youtube'
+        ? 'GOOGLE'
+        : nextUrl.pathname === '/settings'
+        ? process.env.IS_GENERAL && process.env.POSTIZ_GENERIC_OAUTH
+          ? 'GENERIC'
+          : 'GITHUB'
+        : null;
+    if (provider) {
+      const callback = new URL('/auth', nextUrl.href);
+      callback.search = nextUrl.search;
+      callback.searchParams.set('provider', provider);
+      return NextResponse.redirect(callback);
+    }
+  }
+
   if (
     nextUrl.pathname.startsWith('/uploads/') ||
     nextUrl.pathname.startsWith('/p/') ||
     nextUrl.pathname.startsWith('/provider/') ||
-    nextUrl.pathname.startsWith('/icons/')
+    nextUrl.pathname.startsWith('/icons/') ||
+    // the consent screen of MCP / OAuth clients handles signed-out visitors
+    // itself (sign in and come back, or connect a self-hosted instance)
+    nextUrl.pathname.startsWith('/oauth/authorize')
   ) {
     return topResponse;
   }

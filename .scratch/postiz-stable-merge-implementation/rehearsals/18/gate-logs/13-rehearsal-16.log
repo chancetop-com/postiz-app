@@ -1,0 +1,278 @@
+[harness] database postgresql://postgres:postiz@127.0.0.1:55010/postiz
+[harness] prisma db push complete
+[harness] redis redis://127.0.0.1:55011
+[harness] media origin http://127.0.0.1:64781
+[harness] temporal (skip) 127.0.0.1:64782
+[harness] orchestrator on 64787
+
+=== legacy-repeat-child-continuity — An existing pre-upgrade V102 repeat execution publishes its first round, survives a worker restart, and then starts its next round as another V102 execution; the old export is still required after round one.
+  · first round: {"id":"post-mwcts0v7-3","state":"PUBLISHED","publishDate":"2026-11-12T00:44:18.330Z","releaseId":"stub-post-87133-1","releaseURL":"https://stub.invalid/stub-post-87133-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwcts0sx-1\",\"name\":\"org-mwcts0sx-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcts0sx-1.png\"}]"}
+  · first-round execution: {"workflowId":"post_post-mwcts0v7-3","runId":"49f6d132-91eb-4075-83fe-e305e22f7334","type":"postWorkflowV102","status":"RUNNING","taskQueue":"main","searchAttributes":{"postId":"post-mwcts0v7-3","organizationId":"org_org-mwcts0sx-1"}}
+  · first-round publish calls: ["post"]
+  ✓ first round used the old workflow type
+  ✓ first round kept the post workflow id
+  ✓ first round ran on main
+  ✓ first round published on the provider queue
+  ✓ first-round publish uses the blocking contract
+  ✓ old publishDate is never rewritten
+  · worker restarted before the next repeat round: true
+  · repeat child workflow id: post_post-mwcts0v7-3_jYTlinxjxn
+  ✓ round two was created as a child
+  ✓ child id keeps the post prefix
+  · second-round execution: {"workflowId":"post_post-mwcts0v7-3_jYTlinxjxn","runId":"908d38ad-aa5d-4654-9188-2e244490d941","type":"postWorkflowV102","status":"RUNNING","taskQueue":"main","searchAttributes":{"postId":"post-mwcts0v7-3"}}
+  ✓ old repeat child is still V102
+  ✓ old repeat child runs on main
+  ✓ old repeat child keeps the business post id
+  ✓ second round publishes with the old contract
+  ✓ second round targeted the same channel
+  ✓ second-round activity stays on the provider queue
+  ✓ two rounds published twice
+  ✓ database still holds the original anchor date
+[harness] temporal (skip) 127.0.0.1:64851
+[harness] orchestrator on 64856
+
+=== new-repeat-child-continuity — A repeating post created through the new scheduling path starts V112, publishes round one, survives a worker restart, and keeps creating V112 repeat children; the business anchor date stays put.
+  · created repeating post: {"postId":"post-mwcts8yy-6","anchor":"2026-11-12T00:44:28.834Z"}
+  ✓ new repeat starts V112
+  ✓ new repeat runs on main
+  ✓ new repeat keeps the business post id
+  ✓ new repeat keeps the organization attribute
+  ✓ round one kept the anchor date
+  ✓ round one uses pending/finalize
+  · V112 repeat child id: post_post-mwcts8yy-6_sYEzQ7cZ0p
+  ✓ new repeat child is V112
+  · second V112 round: {"workflowId":"post_post-mwcts8yy-6_sYEzQ7cZ0p","runId":"dd5047e1-de87-40d8-9ddd-7f4863399272","type":"postWorkflowV112","status":"RUNNING","taskQueue":"main","searchAttributes":{"postId":"post-mwcts8yy-6"}}
+  ✓ second V112 round keeps the post id
+  ✓ second V112 round runs on main
+  ✓ two rounds published twice
+  ✓ the anchor date never moves
+  ✓ finalize ran for both rounds
+[harness] temporal (skip) 127.0.0.1:64904
+[harness] orchestrator on 64908
+
+=== autopost-continue-as-new — autoPostWorkflow runs its first loop for real, creates one draft, then hits the 24-loop continue-as-new boundary and continues with the same workflow id.
+  · autopost first loop: {"lastUrl":"http://feed.invalid/item-1"}
+  ✓ first loop creates one draft
+  ✓ draft stays a DRAFT
+  ✓ draft carries the feed text
+  ✓ autopost never publishes
+  ✓ autopost activity runs on main
+  · autopost continue-as-new history: {"eventCount":271,"continuedAsNew":1}
+  ✓ first run continued as new once
+  · autopost successor: {"workflowId":"autopost-autopost-mwctsgaw-8","runId":"1687e530-ac70-4175-a6b2-6320114a3d96","type":"autoPostWorkflow","status":"RUNNING","taskQueue":"main","searchAttributes":{}}
+  ✓ continue-as-new keeps the workflow id
+  ✓ continue-as-new keeps the workflow type
+  ✓ successor has a new run id
+  ✓ the same feed item is not drafted twice
+  ✓ no platform call came from autopost
+[harness] temporal (skip) 127.0.0.1:64938
+[harness] orchestrator on 64942
+
+=== missing-sweep-continue-as-new — missingPostWorkflow sweeps hourly and, after 24 loops, continues as new with the same workflow id and type.
+  · missing sweep continue-as-new: {"eventCount":271,"continuedAsNew":1,"sweeps":24}
+  ✓ sweep continued as new once
+  ✓ sweep keeps running on main
+  ✓ sweep keeps the workflow id
+  ✓ sweep keeps the workflow type
+[harness] temporal (skip) 127.0.0.1:64966
+[harness] orchestrator on 64971
+
+=== streak-patch-continue-as-new — streakWorkflow applies both patch gates: no legacy reminder at 22h, and at 24h it continues as new into streakWorkflowV2 instead of ending the streak.
+  ✓ streak start is written
+  · streak first run: {"eventCount":37,"continuedAsNew":1,"activities":["setStreak","getUserOrgs","getLastPublishDate"]}
+  ✓ streak continued as new once
+  ✓ streak hand-off runs on main
+  · streak successor: {"workflowId":"streak_org_org-mwctsp1y-9","runId":"875340cf-6f6c-4d8b-be6f-e9c69e886b98","type":"streakWorkflowV2","status":"RUNNING","taskQueue":"main","searchAttributes":{}}
+  ✓ hand-off keeps the workflow id
+  ✓ hand-off switches to streakWorkflowV2
+  ✓ successor has a new run id
+  ✓ hand-off does not end the streak
+  ✓ no e-mail was sent on the patched path
+time=2026-11-12T08:44:47.374 level=WARN msg="Cluster Id in Cluster Metadata config is not a valid uuid. Generating a new Cluster Id" component=metadata-initializer
+[harness] temporal (real) 127.0.0.1:65005
+Temporal CLI 1.10.0 (Server 1.32.2, UI 2.56.1)
+
+Temporal Server:      localhost:65005
+Temporal Persistence: in-memory
+Temporal Metrics:     http://localhost:65006/metrics
+[harness] orchestrator on 65019
+[harness] backend on 65041
+
+=== missing-sweep-compensation — The missing-posts sweep republishes a genuinely stale post once, re-anchors an old repeat anchor to its next occurrence instead of re-sending it, and ignores posts outside the compensation window or on refresh-needed channels.
+  · swept stale post: {"id":"post-mwctswxs-12","state":"PUBLISHED","publishDate":"2026-11-11T19:44:56.895Z","releaseId":"stub-pending-87305-1","releaseURL":"https://stub.invalid/stub-pending-87305-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctswwv-10\",\"name\":\"org-mwctswwv-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctswwv-10.png\"}]"}
+  ✓ genuinely stale post is published
+  ✓ sweep keeps the original past date
+  ✓ sweep publishes it once
+  ✓ sweep uses the new V112 path
+  ✓ sweep activity runs on main
+  · repeat anchor after the sweep: {"id":"post-mwctswxw-14","state":"QUEUE","publishDate":"2026-11-10T23:44:56.900Z","releaseId":null,"releaseURL":null,"error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwctswwv-10\",\"name\":\"org-mwctswwv-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwctswwv-10.png\"}]"}
+  ✓ repeat anchor is not republished
+  ✓ repeat anchor date is untouched in the database
+  ✓ no platform call for the re-anchored repeat post
+  · poked repeat execution: {"workflowId":"post_post-mwctswxw-14","runId":"edae74d0-6c3e-42c4-8777-43cf6869204d","type":"postWorkflowV112","status":"RUNNING","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"],"postId":"post-mwctswxw-14","organizationId":"org_org-mwctswwv-10"}}
+  ✓ sweep pokes V112 for the repeat post
+  ✓ repeat execution waits for the next occurrence
+  ✓ post outside the two-day window is not swept
+  ✓ refresh-needed channel post is not swept
+  ✓ no calls for ignored posts
+
+=== delayed-comments-both-generations — A delayed comment continues under the candidate for an old V102 execution and a new V112 execution: correct account, comment target, minute delay, write-back and completed workflow.
+2026-11-12T00:45:05.492Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:45:05.493Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'main' }
+2026-11-12T00:45:05.494Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'bluesky', state: 'RUNNING' }
+2026-11-12T00:45:05.494Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'bluesky' }
+2026-11-12T00:45:05.495Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'bluesky' }
+  · legacy root published by the old worker: legacy-post-1
+2026-11-12T00:45:07.632Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPING' }
+2026-11-12T00:45:07.633Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINING' }
+2026-11-12T00:45:07.633Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'bluesky', state: 'STOPPING' }
+2026-11-12T00:45:07.633Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'bluesky', state: 'DRAINING' }
+2026-11-12T00:45:07.634Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'bluesky', state: 'DRAINED' }
+2026-11-12T00:45:07.634Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'bluesky', state: 'STOPPED' }
+2026-11-12T00:45:07.635Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'DRAINED' }
+2026-11-12T00:45:07.636Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'STOPPED' }
+  ✓ root+comment created through the public API
+  ✓ public API created the comment row
+  · new thread: {"root":"cmwctt9l50000cbdjbwzlv7dl","comment":"cmwctt9lw0001cbdj5n73tyep"}
+  · legacy comment contract: {"postId":"legacy-post-1","lastPostId":null,"message":"Synthetic legacy delayed comment","at":"2026-11-12T00:46:07.199Z"}
+  ✓ legacy comment targets the root release
+  ✓ legacy first comment has no previous comment
+  ✓ legacy comment uses the bound channel credential
+  ✓ legacy comment uses the bound provider account
+  ✓ legacy comment message is the stored content
+  ✓ legacy comment respects the one-minute delay
+  ✓ legacy comment row is PUBLISHED
+  ✓ legacy comment releaseId is written
+  · new comment contract: {"postId":"stub-pending-87398-1","lastPostId":null,"message":"Synthetic new delayed comment","at":"2026-11-12T00:46:15.351Z"}
+  ✓ new comment targets the root release
+  ✓ new first comment has no previous comment
+  ✓ new comment uses the bound channel credential
+  ✓ new comment uses the bound provider account
+  ✓ new comment message is the stored content
+  ✓ new comment respects the one-minute delay
+  ✓ new comment row is PUBLISHED
+  ✓ new comment releaseId is written
+  · legacy comment execution: {"workflowId":"post_post-mwctt2tk-21","runId":"01a1cd37-2458-7a21-8e28-7543aee5ef4f","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"post-mwctt2tk-21","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+58a4978f1c3e76bc2c7b3ba9237d91bd818f3762475d926b8dd8f825b12eeaae","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"],"organizationId":"org_org-mwctt2ta-19"}}
+  ✓ legacy comment workflow completed
+  ✓ legacy comment activity runs on the provider queue
+  · new comment execution: {"workflowId":"post_cmwctt9l50000cbdjbwzlv7dl","runId":"01a1cd37-4303-7b69-a259-fdb7bae43e20","type":"postWorkflowV112","status":"COMPLETED","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"],"organizationId":"org_org-mwctt2tg-20","postId":"cmwctt9l50000cbdjbwzlv7dl"}}
+  ✓ new comment workflow is V112
+  ✓ new comment activity runs on the provider queue
+  ✓ exactly two comment calls
+
+=== refresh-token-backlog — The existing refreshTokenWorkflow keeps its workflow id, waits for the token expiry and refreshes through the registered refreshToken activity once; the channel is updated and the workflow keeps waiting for the next expiry.
+  · refreshed channel: {"id":"int_refresh-mwctull3-3","token":"synthetic-refreshed-access-87398-1794444378571","refreshToken":"synthetic-refresh-rotated","tokenExpiration":"2026-11-12T01:46:18.571Z","refreshNeeded":false}
+  ✓ refresh keeps the channel id
+  ✓ refresh drops the old access token
+  ✓ refresh rotates the refresh token
+  ✓ refresh clears refreshNeeded
+  ✓ refresh stores the new expiry
+  · refresh boundary calls: ["synthetic-refresh-refresh-mwctull3-3"]
+  ✓ exactly one refresh call
+  ✓ refresh used the stored refresh token
+  · refresh history: {"activities":[{"activity":"getIntegrationsById","taskQueue":"main"},{"activity":"getIntegrationsById","taskQueue":"main"},{"activity":"refreshToken","taskQueue":"main"},{"activity":"getIntegrationsById","taskQueue":"main"}],"timers":2}
+  ✓ refresh activity runs on main
+  ✓ getIntegrationsById runs on main
+  · refresh workflow after the refresh: {"workflowId":"refresh_int_refresh-mwctull3-3","runId":"01a1cd38-35ca-7693-b63c-52872bafa612","type":"refreshTokenWorkflow","status":"RUNNING","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  ✓ refresh workflow is still running for the next expiry
+
+=== email-both-generations — The old sendEmailWorkflow backlog drains through main, and new sendSingleEmailWorkflow runs deliver through the email and email-bulk activity queues; all five messages reach the mail stub once and the per-email workflows complete.
+  · legacy e-mails: ["legacy-top@synthetic.invalid","legacy-bulk-one@synthetic.invalid","legacy-bulk-two@synthetic.invalid"]
+  ✓ legacy backlog delivered three messages
+  ✓ legacy top message is first
+  ✓ legacy e-mail activity runs on main
+  ✓ legacy backlog stays alive for more signals
+  · all e-mails: [{"to":"legacy-top@synthetic.invalid","subject":"Synthetic legacy legacy-top@synthetic.invalid"},{"to":"legacy-bulk-one@synthetic.invalid","subject":"Synthetic legacy legacy-bulk-one@synthetic.invalid"},{"to":"legacy-bulk-two@synthetic.invalid","subject":"Synthetic legacy legacy-bulk-two@synthetic.invalid"},{"to":"new-priority@synthetic.invalid","subject":"Synthetic priority e-mail"},{"to":"new-bulk@synthetic.invalid","subject":"Synthetic bulk e-mail"}]
+  ✓ all five scenario messages reached the mail stub
+  ✓ new priority e-mail delivered
+  ✓ new bulk e-mail delivered
+  · priority e-mail workflow: {"workflowId":"send_email_priority_mwctuqb7","runId":"01a1cd38-4db5-7c5f-877a-2cb8d746b734","type":"sendSingleEmailWorkflow","status":"COMPLETED","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  ✓ priority e-mail workflow completed
+  ✓ priority e-mail uses the email activity queue
+  · bulk e-mail workflow: {"workflowId":"send_email_bulk_mwctuqbc","runId":"01a1cd38-4dbb-7822-af1c-7c1a5a7f1b08","type":"sendSingleEmailWorkflow","status":"COMPLETED","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  ✓ bulk e-mail workflow completed
+  ✓ bulk e-mail uses the email-bulk activity queue
+  ✓ restart does not resend any e-mail
+
+=== provider-queue-workflow-compat — A synthetic old execution whose task queue is the provider queue stays untouched while provider workers are activity-only; after COMPAT_WORKFLOW_QUEUES names that queue, the same compatible bundle consumes it and publishes once.
+  · provider-queue execution without compat: {"status":"RUNNING","events":2,"activities":[]}
+  ✓ provider queue does not consume workflows by default
+  ✓ no activity was scheduled without a workflow worker
+  ✓ the synthetic provider workflow did not publish
+  ✓ the post is still QUEUE
+  · compatible provider worker enabled: COMPAT_WORKFLOW_QUEUES=bluesky
+  · provider-queue publish: {"at":"2026-11-12T00:46:42.492Z","pid":87659,"method":"post","internalId":"stub-internal-org-mwctuydn-24","token":"synthetic-token-org-mwctuydn-24","integrationId":"int_org-mwctuydn-24","organizationId":"org_org-mwctuydn-24","posts":[{"id":"post-mwctuyef-26","message":"Synthetic provider-queue workflow","settings":{},"media":[{"path":"<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/16/work/uploads-mwctrty8/uploads/rehearsal15/org-mwctuydn-24.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwctuydn-24","type":"image"}]}]}
+  ✓ compatible worker publishes once
+  ✓ provider-queue execution keeps the old type
+  · provider-queue execution after compat: {"workflowId":"post_post-mwctuyef-26","runId":"01a1cd38-76b0-76d6-9560-3bdfb90cc7e7","type":"postWorkflowV102","status":"RUNNING","taskQueue":"bluesky","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"],"organizationId":"org_org-mwctuydn-24","postId":"post-mwctuyef-26"}}
+  ✗ provider-queue workflow completed: expected COMPLETED, got RUNNING
+[harness] provider-queue-workflow-compat failed
+Error: provider-queue workflow completed: expected COMPLETED, got RUNNING
+    at expectEqual (file:///Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/16/lib/report.mjs:49:11)
+    at Object.run (file:///Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/16/lib/scenarios.mjs:1086:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/16/run.mjs:201:9
+[harness] orchestrator tail:
+2026-11-12T00:46:39.115Z [INFO] Workflow bundle created { sdkComponent: 'worker', taskQueue: 'main', size: '3.49MB' }
+2026-11-12T00:46:40.441Z [INFO] asset workflow-bundle-f7b1c93a6d0af838441b.js 3.49 MiB [emitted] [immutable] (name: main)
+runtime modules 1010 bytes 5 modules
+modules by path ./node_modules/ 965 KiB
+  modules by path ./node_modules/@temporalio/ 332 KiB 55 modules
+  modules by path ./node_modules/nexus-rpc/lib/ 25.6 KiB 17 modules
+  + 4 modules
+modules by path ./apps/orchestrator/dist/ 180 KiB
+  modules by path ./apps/orchestrator/dist/apps/orchestrator/src/workflows/ 178 KiB 23 modules
+  modules by path ./apps/orchestrator/dist/libraries/nestjs-libraries/src/ 1.02 KiB 3 modules
+  modules by path ./apps/orchestrator/dist/apps/orchestrator/src/signals/*.js 452 bytes
+    ./apps/orchestrator/dist/apps/orchestrator/src/signals/email.signal.js 220 bytes [built] [code generated]
+    ./apps/orchestrator/dist/apps/orchestrator/src/signals/send.email.signal.js 232 bytes [built] [code generated]
+optional modules 30 bytes [optional]
+  __temporal_custom_payload_converter (ignored) 15 bytes [optional] [built] [code generated]
+  __temporal_custom_failure_converter (ignored) 15 bytes [optional] [built] [code generated]
+webpack 5.105.4 compiled successfully in 365 ms { sdkComponent: 'worker', taskQueue: 'bluesky' }
+2026-11-12T00:46:40.445Z [INFO] Workflow bundle created { sdkComponent: 'worker', taskQueue: 'bluesky', size: '3.49MB' }
+2026-11-12T00:46:41.363Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-12T00:46:41.365Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'main' }
+2026-11-12T00:46:41.366Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'bluesky', state: 'RUNNING' }
+2026-11-12T00:46:41.366Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'bluesky' }
+2026-11-12T00:46:41.366Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'email', state: 'RUNNING' }
+2026-11-12T00:46:41.366Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'email' }
+2026-11-12T00:46:41.366Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'email' }
+2026-11-12T00:46:41.367Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'email-bulk', state: 'RUNNING' }
+2026-11-12T00:46:41.367Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'email-bulk' }
+2026-11-12T00:46:41.367Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'email-bulk' }
+[32m[Nest] 87659  - [39m11/12/2026, 8:46:41 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +3099ms[39m
+Orchestrator health check listening on port 65342
+[harness] backend tail:
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integrations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/social/:integration, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/users, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/posts/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/account, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/channels, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/activity, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/credits/reset, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/notifications, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/generate-video, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/video/function, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integrations/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integration-settings/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/missing, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/settings, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/status, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/release-id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/analytics/:integration, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/analytics/post/:postId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integration-trigger/:id, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +182ms[39m
+Backend started successfully on port 65041
+[33m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [33m   WARN[39m [38;5;3m[Configuration issue] [39m[33mMAIN_URL not set. [39m
+[33m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [33m   WARN[39m [38;5;3m[Configuration issue] [39m[33mNEXT_PUBLIC_BACKEND_URL not set. [39m
+[33m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [33m   WARN[39m [38;5;3m[Configuration issue] [39m[33mBACKEND_INTERNAL_URL not set. [39m
+[33m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [33m   WARN[39m [33mConfiguration issues found: 3[39m
+[32m[Nest] 87319  - [39m11/12/2026, 8:44:56 AM [32m    LOG[39m [32m🚀 Backend is running on: http://localhost:65041[39m
+
+[harness] FAIL — 10 scenario(s), results /Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/16/results/latest.json

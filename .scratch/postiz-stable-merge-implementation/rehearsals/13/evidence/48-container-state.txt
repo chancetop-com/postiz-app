@@ -1,0 +1,1 @@
+restartCount=0 oomKilled=false health=starting

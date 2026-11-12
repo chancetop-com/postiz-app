@@ -1,0 +1,32 @@
+image: postiz-ticket18:candidate
+browser: Google Chrome (playwright channel=chrome), desktop 1440x900 + mobile 390x844
+passed: 17, failed: 0
+
+PASS the candidate image answers /api/ 200 before the browser run
+PASS desktop: login page (status=200 url=http://localhost:5055/auth/login)
+PASS desktop: login page raises no uncaught page exception
+PASS desktop: root redirects to login without a session (status=200 url=http://localhost:5055/auth/login)
+PASS desktop: root redirects to login without a session raises no uncaught page exception
+PASS desktop: SSO hand-off keeps the token in the URL (status=200 url=http://localhost:5055/sso?auth_code=smoke-token-18)
+PASS desktop: SSO hand-off keeps the token in the URL raises no uncaught page exception
+PASS desktop: anonymous preview of a missing post falls back (status=200 url=http://localhost:5055/p/smoke-missing)
+PASS desktop: anonymous preview of a missing post falls back raises no uncaught page exception
+PASS mobile: login page (status=200 url=http://localhost:5055/auth/login)
+PASS mobile: login page raises no uncaught page exception
+PASS mobile: root redirects to login without a session (status=200 url=http://localhost:5055/auth/login)
+PASS mobile: root redirects to login without a session raises no uncaught page exception
+PASS mobile: SSO hand-off keeps the token in the URL (status=200 url=http://localhost:5055/sso?auth_code=smoke-token-18)
+PASS mobile: SSO hand-off keeps the token in the URL raises no uncaught page exception
+PASS mobile: anonymous preview of a missing post falls back (status=200 url=http://localhost:5055/p/smoke-missing)
+PASS mobile: anonymous preview of a missing post falls back raises no uncaught page exception
+
+console output (recorded, expected for anonymous visits: 401 /user/self,
+401 Copilot runtime, 400 on the deliberately invalid SSO code):
+- desktop login page: console errors: []
+- desktop root redirects to login without a session: console errors: ["Failed to load resource: the server responded with a status of 401 (Unauthorized)"]
+- desktop SSO hand-off keeps the token in the URL: console errors: ["Failed to load resource: the server responded with a status of 400 (Bad Request)"]
+- desktop anonymous preview of a missing post falls back: console errors: ["Failed to load resource: the server responded with a status of 401 (Unauthorized)","Failed to load resource: the server responded with a status of 401 (Unauthorized)","[CopilotKit] Error (runtime_info_fetch_failed): Error: Runtime info request failed with status 401"]
+- mobile login page: console errors: []
+- mobile root redirects to login without a session: console errors: ["Failed to load resource: the server responded with a status of 401 (Unauthorized)"]
+- mobile SSO hand-off keeps the token in the URL: console errors: ["Failed to load resource: the server responded with a status of 400 (Bad Request)"]
+- mobile anonymous preview of a missing post falls back: console errors: ["Failed to load resource: the server responded with a status of 401 (Unauthorized)","Failed to load resource: the server responded with a status of 401 (Unauthorized)","[CopilotKit] Error (runtime_info_fetch_failed): Error: Runtime info request failed with status 401"]

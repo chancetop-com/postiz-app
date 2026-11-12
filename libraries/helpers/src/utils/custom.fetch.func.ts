@@ -33,6 +33,15 @@ export const customFetch = (
         ? null
         : window.sessionStorage.getItem('impersonate');
 
+    const oauthRoute = url.match(/^\/auth\/oauth\/([^/?]+)(\/exists)?(?:\?|$)/);
+    const oauthStateKey = oauthRoute
+      ? `oauth_state:${oauthRoute[1].toUpperCase()}`
+      : null;
+    const oauthStateToken =
+      oauthStateKey && oauthRoute?.[2] && typeof window !== 'undefined'
+        ? window.sessionStorage.getItem(oauthStateKey)
+        : null;
+
     const fetchRequest = await fetch(params.baseUrl + url, {
       ...(newRequestObject || options),
       headers: {
@@ -55,12 +64,24 @@ export const customFetch = (
         ...(sessionImpersonate
           ? { impersonate: sessionImpersonate }
           : {}),
+        ...(oauthStateToken ? { 'oauth-state-token': oauthStateToken } : {}),
       },
       // @ts-ignore
       ...(!options.next && options.cache !== 'force-cache'
         ? { cache: options.cache || 'no-store' }
         : {}),
     });
+
+    if (oauthStateKey && typeof window !== 'undefined' && fetchRequest.ok) {
+      if (oauthRoute?.[2]) {
+        window.sessionStorage.removeItem(oauthStateKey);
+      } else {
+        const stateToken = fetchRequest.headers.get('oauth-state-token');
+        if (stateToken) {
+          window.sessionStorage.setItem(oauthStateKey, stateToken);
+        }
+      }
+    }
 
     if (
       !params?.afterRequest ||

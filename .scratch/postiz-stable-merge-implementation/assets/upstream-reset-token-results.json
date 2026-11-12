@@ -1,0 +1,102 @@
+[
+  {
+    "version": "fork-before-merge-6fdf7cb5",
+    "resetPayloadKeys": [
+      "id",
+      "expires",
+      "iat"
+    ],
+    "expires": "2020-01-01 08:20:00",
+    "jwtExp": null,
+    "expiredReset": {
+      "passed": false,
+      "status": 403,
+      "error": "Forbidden"
+    },
+    "freshReset": {
+      "passed": false,
+      "status": 403,
+      "error": "Forbidden"
+    },
+    "ordinarySession": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    }
+  },
+  {
+    "version": "current-working-tree",
+    "resetPayloadKeys": [
+      "id",
+      "expires",
+      "iat"
+    ],
+    "expires": "2020-01-01 08:20:00",
+    "jwtExp": null,
+    "expiredReset": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    },
+    "freshReset": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    },
+    "ordinarySession": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    }
+  },
+  {
+    "version": "upstream-release-v2.25.3",
+    "resetPayloadKeys": [
+      "id",
+      "expires",
+      "iat"
+    ],
+    "expires": "2020-01-01 08:20:00",
+    "jwtExp": null,
+    "expiredReset": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    },
+    "freshReset": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    },
+    "ordinarySession": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    }
+  },
+  {
+    "version": "upstream-main-4823080b413b9d3dc625d466939eb43b9657c66c",
+    "resetPayloadKeys": [
+      "id",
+      "expires",
+      "iat"
+    ],
+    "expires": "2020-01-01 08:20:00",
+    "jwtExp": null,
+    "expiredReset": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    },
+    "freshReset": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    },
+    "ordinarySession": {
+      "passed": true,
+      "userId": "synthetic-user",
+      "orgId": "synthetic-org"
+    }
+  }
+]

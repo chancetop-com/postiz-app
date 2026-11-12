@@ -6,7 +6,7 @@ export const Logo = () => {
       src="/logo-postiz.png"
       alt="Logo"
       className="mx-auto"
-      style={{ width: 32, height: 32, marginTop: 20 }}
+      style={{ width: 32, height: 32, minWidth: 32, minHeight: 32, marginTop: 20 }}
     />
   );
 };

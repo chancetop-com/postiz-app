@@ -1,0 +1,182 @@
+--- /Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/03/evidence/18-schema-before-spans-sync.sql	2026-11-12 08:41:34
++++ /Users/chancetio/Desktop/Web/postiz-worktrees/18/.scratch/postiz-stable-merge-implementation/rehearsals/03/evidence/19-schema-after-spans-sync.sql	2026-11-12 08:41:38
+@@ -40,6 +40,20 @@
+ 
+ 
+ --
++-- Name: CreationMethod; Type: TYPE; Schema: public; Owner: -
++--
++
++CREATE TYPE public."CreationMethod" AS ENUM (
++    'UNKNOWN',
++    'WEB',
++    'MCP',
++    'API',
++    'AUTOPOST',
++    'CLI'
++);
++
++
++--
+ -- Name: From; Type: TYPE; Schema: public; Owner: -
+ --
+ 
+@@ -81,7 +95,8 @@
+     'GOOGLE',
+     'FARCASTER',
+     'WALLET',
+-    'GENERIC'
++    'GENERIC',
++    'APPLE'
+ );
+ 
+ 
+@@ -180,10 +195,16 @@
+     content text NOT NULL,
+     "organizationId" text NOT NULL,
+     "postId" text NOT NULL,
+-    "userId" text NOT NULL,
++    "userId" text,
+     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     "updatedAt" timestamp(3) without time zone NOT NULL,
+-    "deletedAt" timestamp(3) without time zone
++    "deletedAt" timestamp(3) without time zone,
++    "anchorEnd" integer,
++    "anchorQuote" text,
++    "anchorStart" integer,
++    "displayName" text,
++    "parentId" text,
++    "resolvedAt" timestamp(3) without time zone
+ );
+ 
+ 
+@@ -285,7 +306,8 @@
+     "customInstanceDetails" text,
+     "customerId" text,
+     "rootInternalId" text,
+-    "additionalSettings" text DEFAULT '[]'::text
++    "additionalSettings" text DEFAULT '[]'::text,
++    "customName" text
+ );
+ 
+ 
+@@ -327,7 +349,9 @@
+     type text DEFAULT 'image'::text NOT NULL,
+     thumbnail text,
+     alt text,
+-    "thumbnailTimestamp" integer
++    "thumbnailTimestamp" integer,
++    "processingError" text,
++    status text DEFAULT 'ready'::text NOT NULL
+ );
+ 
+ 
+@@ -396,16 +420,19 @@
+ 
+ CREATE TABLE public."OAuthApp" (
+     id text NOT NULL,
+-    "organizationId" text NOT NULL,
++    "organizationId" text,
+     name text NOT NULL,
+     description text,
+     "pictureId" text,
+     "redirectUrl" text NOT NULL,
+     "clientId" text NOT NULL,
+-    "clientSecret" text NOT NULL,
++    "clientSecret" text,
+     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     "updatedAt" timestamp(3) without time zone NOT NULL,
+-    "deletedAt" timestamp(3) without time zone
++    "deletedAt" timestamp(3) without time zone,
++    dynamic boolean DEFAULT false NOT NULL,
++    "redirectUris" text,
++    "tokenEndpointAuthMethod" text
+ );
+ 
+ 
+@@ -423,7 +450,10 @@
+     "codeExpiresAt" timestamp(3) without time zone,
+     "revokedAt" timestamp(3) without time zone,
+     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+-    "updatedAt" timestamp(3) without time zone NOT NULL
++    "updatedAt" timestamp(3) without time zone NOT NULL,
++    "codeChallenge" text,
++    "codeChallengeMethod" text,
++    "redirectUri" text
+ );
+ 
+ 
+@@ -471,7 +501,8 @@
+     "updatedAt" timestamp(3) without time zone NOT NULL,
+     "allowTrial" boolean DEFAULT false NOT NULL,
+     "isTrailing" boolean DEFAULT false NOT NULL,
+-    shortlink public."ShortLinkPreference" DEFAULT 'ASK'::public."ShortLinkPreference" NOT NULL
++    shortlink public."ShortLinkPreference" DEFAULT 'ASK'::public."ShortLinkPreference" NOT NULL,
++    "deletedAt" timestamp(3) without time zone
+ );
+ 
+ 
+@@ -548,7 +579,9 @@
+     error text,
+     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     "updatedAt" timestamp(3) without time zone NOT NULL,
+-    "deletedAt" timestamp(3) without time zone
++    "deletedAt" timestamp(3) without time zone,
++    "batchId" text,
++    "creationMethod" public."CreationMethod" DEFAULT 'UNKNOWN'::public."CreationMethod" NOT NULL
+ );
+ 
+ 
+@@ -650,7 +683,8 @@
+     "isLifetime" boolean DEFAULT false NOT NULL,
+     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     "updatedAt" timestamp(3) without time zone NOT NULL,
+-    "deletedAt" timestamp(3) without time zone
++    "deletedAt" timestamp(3) without time zone,
++    provider text DEFAULT 'stripe'::text NOT NULL
+ );
+ 
+ 
+@@ -766,7 +800,9 @@
+     agent text,
+     "sendSuccessEmails" boolean DEFAULT true NOT NULL,
+     "sendFailureEmails" boolean DEFAULT true NOT NULL,
+-    "sendStreakEmails" boolean DEFAULT true NOT NULL
++    "sendStreakEmails" boolean DEFAULT true NOT NULL,
++    "deletedAt" timestamp(3) without time zone,
++    "timezoneName" text
+ );
+ 
+ 
+@@ -2226,14 +2262,6 @@
+ 
+ ALTER TABLE ONLY public."Comments"
+     ADD CONSTRAINT "Comments_postId_fkey" FOREIGN KEY ("postId") REFERENCES public."Post"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+-
+-
+---
+--- Name: Comments Comments_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+---
+-
+-ALTER TABLE ONLY public."Comments"
+-    ADD CONSTRAINT "Comments_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."User"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+ 
+ 
+ --
+@@ -2370,16 +2398,8 @@
+ 
+ ALTER TABLE ONLY public."Notifications"
+     ADD CONSTRAINT "Notifications_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES public."Organization"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+-
+-
+---
+--- Name: OAuthApp OAuthApp_organizationId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+---
+ 
+-ALTER TABLE ONLY public."OAuthApp"
+-    ADD CONSTRAINT "OAuthApp_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES public."Organization"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+ 
+-
+ --
+ -- Name: OAuthApp OAuthApp_pictureId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+ --

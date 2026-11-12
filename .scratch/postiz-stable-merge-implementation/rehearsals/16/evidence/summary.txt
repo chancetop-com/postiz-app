@@ -1,0 +1,186 @@
+Ticket 16 — recurring/maintenance rehearsal
+generated: 2026-11-12T01:02:21.982Z
+node: v22.23.4
+result: PASS
+
+queue consumption:
+  workflow tasks: {"main":15,"bluesky":1}
+  activity tasks: {"main":68,"bluesky":33,"email":1,"email-bulk":1}
+
+## legacy-repeat-child-continuity — An existing pre-upgrade V102 repeat execution publishes its first round, survives a worker restart, and then starts its next round as another V102 execution; the old export is still required after round one.
+  · first round: {"id":"post-mwcufhzd-3","state":"PUBLISHED","publishDate":"2026-11-12T01:02:33.600Z","releaseId":"stub-post-90886-1","releaseURL":"https://stub.invalid/stub-post-90886-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwcufhxc-1\",\"name\":\"org-mwcufhxc-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcufhxc-1.png\"}]"}
+  · first-round execution: {"workflowId":"post_post-mwcufhzd-3","runId":"046b705b-eff7-42ca-8faf-44b6cf385ffc","type":"postWorkflowV102","status":"RUNNING","taskQueue":"main","searchAttributes":{"postId":"post-mwcufhzd-3","organizationId":"org_org-mwcufhxc-1"}}
+  · first-round publish calls: ["post"]
+  · worker restarted before the next repeat round: true
+  · repeat child workflow id: post_post-mwcufhzd-3_4jyE8WfVPw
+  · second-round execution: {"workflowId":"post_post-mwcufhzd-3_4jyE8WfVPw","runId":"368c80dc-3fdc-461c-a7d3-bcd4bc202909","type":"postWorkflowV102","status":"RUNNING","taskQueue":"main","searchAttributes":{"postId":"post-mwcufhzd-3"}}
+  PASS  first round used the old workflow type
+  PASS  first round kept the post workflow id
+  PASS  first round ran on main
+  PASS  first round published on the provider queue
+  PASS  first-round publish uses the blocking contract
+  PASS  old publishDate is never rewritten
+  PASS  round two was created as a child
+  PASS  child id keeps the post prefix
+  PASS  old repeat child is still V102
+  PASS  old repeat child runs on main
+  PASS  old repeat child keeps the business post id
+  PASS  second round publishes with the old contract
+  PASS  second round targeted the same channel
+  PASS  second-round activity stays on the provider queue
+  PASS  two rounds published twice
+  PASS  database still holds the original anchor date
+
+## new-repeat-child-continuity — A repeating post created through the new scheduling path starts V112, publishes round one, survives a worker restart, and keeps creating V112 repeat children; the business anchor date stays put.
+  · created repeating post: {"postId":"post-mwcufpbg-6","anchor":"2026-11-12T01:02:43.108Z"}
+  · V112 repeat child id: post_post-mwcufpbg-6_3Wik6djN0s
+  · second V112 round: {"workflowId":"post_post-mwcufpbg-6_3Wik6djN0s","runId":"2ee89356-3f0e-4c8e-bd57-ab31c1055a6f","type":"postWorkflowV112","status":"RUNNING","taskQueue":"main","searchAttributes":{"postId":"post-mwcufpbg-6"}}
+  PASS  new repeat starts V112
+  PASS  new repeat runs on main
+  PASS  new repeat keeps the business post id
+  PASS  new repeat keeps the organization attribute
+  PASS  round one kept the anchor date
+  PASS  round one uses pending/finalize
+  PASS  new repeat child is V112
+  PASS  second V112 round keeps the post id
+  PASS  second V112 round runs on main
+  PASS  two rounds published twice
+  PASS  the anchor date never moves
+  PASS  finalize ran for both rounds
+
+## autopost-continue-as-new — autoPostWorkflow runs its first loop for real, creates one draft, then hits the 24-loop continue-as-new boundary and continues with the same workflow id.
+  · autopost first loop: {"lastUrl":"http://feed.invalid/item-1"}
+  · autopost continue-as-new history: {"eventCount":271,"continuedAsNew":1}
+  · autopost successor: {"workflowId":"autopost-autopost-mwcufwoj-8","runId":"07245185-4fcd-4c42-9436-6cca1e546f99","type":"autoPostWorkflow","status":"RUNNING","taskQueue":"main","searchAttributes":{}}
+  PASS  first loop creates one draft
+  PASS  draft stays a DRAFT
+  PASS  draft carries the feed text
+  PASS  autopost never publishes
+  PASS  autopost activity runs on main
+  PASS  first run continued as new once
+  PASS  continue-as-new keeps the workflow id
+  PASS  continue-as-new keeps the workflow type
+  PASS  successor has a new run id
+  PASS  the same feed item is not drafted twice
+  PASS  no platform call came from autopost
+
+## missing-sweep-continue-as-new — missingPostWorkflow sweeps hourly and, after 24 loops, continues as new with the same workflow id and type.
+  · missing sweep continue-as-new: {"eventCount":271,"continuedAsNew":1,"sweeps":24}
+  PASS  sweep continued as new once
+  PASS  sweep keeps running on main
+  PASS  sweep keeps the workflow id
+  PASS  sweep keeps the workflow type
+
+## streak-patch-continue-as-new — streakWorkflow applies both patch gates: no legacy reminder at 22h, and at 24h it continues as new into streakWorkflowV2 instead of ending the streak.
+  · streak first run: {"eventCount":37,"continuedAsNew":1,"activities":["setStreak","getUserOrgs","getLastPublishDate"]}
+  · streak successor: {"workflowId":"streak_org_org-mwcug5f4-9","runId":"b8d35eee-d4f9-47aa-a1f8-426e38abcec0","type":"streakWorkflowV2","status":"RUNNING","taskQueue":"main","searchAttributes":{}}
+  PASS  streak start is written
+  PASS  streak continued as new once
+  PASS  streak hand-off runs on main
+  PASS  hand-off keeps the workflow id
+  PASS  hand-off switches to streakWorkflowV2
+  PASS  successor has a new run id
+  PASS  hand-off does not end the streak
+  PASS  no e-mail was sent on the patched path
+
+## missing-sweep-compensation — The missing-posts sweep republishes a genuinely stale post once, re-anchors an old repeat anchor to its next occurrence instead of re-sending it, and ignores posts outside the compensation window or on refresh-needed channels.
+  · swept stale post: {"id":"post-mwcugdbj-12","state":"PUBLISHED","publishDate":"2026-11-11T20:03:11.215Z","releaseId":"stub-pending-90985-1","releaseURL":"https://stub.invalid/stub-pending-90985-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwcugdau-10\",\"name\":\"org-mwcugdau-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcugdau-10.png\"}]"}
+  · repeat anchor after the sweep: {"id":"post-mwcugdbo-14","state":"QUEUE","publishDate":"2026-11-11T00:03:11.220Z","releaseId":null,"releaseURL":null,"error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwcugdau-10\",\"name\":\"org-mwcugdau-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcugdau-10.png\"}]"}
+  · poked repeat execution: {"workflowId":"post_post-mwcugdbo-14","runId":"a73fe740-89ab-44fe-9e51-80d74a6b58c7","type":"postWorkflowV112","status":"RUNNING","taskQueue":"main","searchAttributes":{"postId":"post-mwcugdbo-14","organizationId":"org_org-mwcugdau-10","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  PASS  genuinely stale post is published
+  PASS  sweep keeps the original past date
+  PASS  sweep publishes it once
+  PASS  sweep uses the new V112 path
+  PASS  sweep activity runs on main
+  PASS  repeat anchor is not republished
+  PASS  repeat anchor date is untouched in the database
+  PASS  no platform call for the re-anchored repeat post
+  PASS  sweep pokes V112 for the repeat post
+  PASS  repeat execution waits for the next occurrence
+  PASS  post outside the two-day window is not swept
+  PASS  refresh-needed channel post is not swept
+  PASS  no calls for ignored posts
+
+## delayed-comments-both-generations — A delayed comment continues under the candidate for an old V102 execution and a new V112 execution: correct account, comment target, minute delay, write-back and completed workflow.
+  · legacy root published by the old worker: legacy-post-1
+  · new thread: {"root":"cmwcugowr0000cb7mm74rrjhw","comment":"cmwcugox90001cb7mb0hrxnx6"}
+  · legacy comment contract: {"postId":"legacy-post-1","lastPostId":null,"message":"Synthetic legacy delayed comment","at":"2026-11-12T01:04:21.523Z"}
+  · new comment contract: {"postId":"stub-pending-91031-1","lastPostId":null,"message":"Synthetic new delayed comment","at":"2026-11-12T01:04:28.392Z"}
+  · legacy comment execution: {"workflowId":"post_post-mwcugj8q-21","runId":"01a1cd47-d6a4-7603-bae7-e28aa7cb72ea","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"post-mwcugj8q-21","organizationId":"org_org-mwcugj80-19","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+58a4978f1c3e76bc2c7b3ba9237d91bd818f3762475d926b8dd8f825b12eeaae","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  · new comment execution: {"workflowId":"post_cmwcugowr0000cb7mm74rrjhw","runId":"01a1cd47-f047-75dc-bd3c-3b758d0ebe5f","type":"postWorkflowV112","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"cmwcugowr0000cb7mm74rrjhw","organizationId":"org_org-mwcugj8e-20","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  PASS  root+comment created through the public API
+  PASS  public API created the comment row
+  PASS  legacy comment targets the root release
+  PASS  legacy first comment has no previous comment
+  PASS  legacy comment uses the bound channel credential
+  PASS  legacy comment uses the bound provider account
+  PASS  legacy comment message is the stored content
+  PASS  legacy comment respects the one-minute delay
+  PASS  legacy comment row is PUBLISHED
+  PASS  legacy comment releaseId is written
+  PASS  new comment targets the root release
+  PASS  new first comment has no previous comment
+  PASS  new comment uses the bound channel credential
+  PASS  new comment uses the bound provider account
+  PASS  new comment message is the stored content
+  PASS  new comment respects the one-minute delay
+  PASS  new comment row is PUBLISHED
+  PASS  new comment releaseId is written
+  PASS  legacy comment workflow completed
+  PASS  legacy comment activity runs on the provider queue
+  PASS  new comment workflow is V112
+  PASS  new comment activity runs on the provider queue
+  PASS  exactly two comment calls
+
+## refresh-token-backlog — The existing refreshTokenWorkflow keeps its workflow id, waits for the token expiry and refreshes through the registered refreshToken activity once; the channel is updated and the workflow keeps waiting for the next expiry.
+  · refreshed channel: {"id":"int_refresh-mwcui12r-3","token":"synthetic-refreshed-access-91031-1794445471731","refreshToken":"synthetic-refresh-rotated","tokenExpiration":"2026-11-12T02:04:31.731Z","refreshNeeded":false}
+  · refresh boundary calls: ["synthetic-refresh-refresh-mwcui12r-3"]
+  · refresh history: {"activities":[{"activity":"getIntegrationsById","taskQueue":"main"},{"activity":"getIntegrationsById","taskQueue":"main"},{"activity":"refreshToken","taskQueue":"main"},{"activity":"getIntegrationsById","taskQueue":"main"}],"timers":2}
+  · refresh workflow after the refresh: {"workflowId":"refresh_int_refresh-mwcui12r-3","runId":"01a1cd48-e3f5-7ed0-beb0-071df39ccc21","type":"refreshTokenWorkflow","status":"RUNNING","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  PASS  refresh keeps the channel id
+  PASS  refresh drops the old access token
+  PASS  refresh rotates the refresh token
+  PASS  refresh clears refreshNeeded
+  PASS  refresh stores the new expiry
+  PASS  exactly one refresh call
+  PASS  refresh used the stored refresh token
+  PASS  refresh activity runs on main
+  PASS  getIntegrationsById runs on main
+  PASS  refresh workflow is still running for the next expiry
+
+## email-both-generations — The old sendEmailWorkflow backlog drains through main, and new sendSingleEmailWorkflow runs deliver through the email and email-bulk activity queues; all five messages reach the mail stub once and the per-email workflows complete.
+  · legacy e-mails: ["legacy-top@synthetic.invalid","legacy-bulk-one@synthetic.invalid","legacy-bulk-two@synthetic.invalid"]
+  · all e-mails: [{"to":"legacy-top@synthetic.invalid","subject":"Synthetic legacy legacy-top@synthetic.invalid"},{"to":"legacy-bulk-one@synthetic.invalid","subject":"Synthetic legacy legacy-bulk-one@synthetic.invalid"},{"to":"legacy-bulk-two@synthetic.invalid","subject":"Synthetic legacy legacy-bulk-two@synthetic.invalid"},{"to":"new-priority@synthetic.invalid","subject":"Synthetic priority e-mail"},{"to":"new-bulk@synthetic.invalid","subject":"Synthetic bulk e-mail"}]
+  · priority e-mail workflow: {"workflowId":"send_email_priority_mwcui5sr","runId":"01a1cd48-fbdd-7b5e-b05e-1402dc80315b","type":"sendSingleEmailWorkflow","status":"COMPLETED","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  · bulk e-mail workflow: {"workflowId":"send_email_bulk_mwcui5sx","runId":"01a1cd48-fbe4-7119-8e5f-c21ae8b4ab8c","type":"sendSingleEmailWorkflow","status":"COMPLETED","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"]}}
+  PASS  legacy backlog delivered three messages
+  PASS  legacy top message is first
+  PASS  legacy e-mail activity runs on main
+  PASS  legacy backlog stays alive for more signals
+  PASS  all five scenario messages reached the mail stub
+  PASS  new priority e-mail delivered
+  PASS  new bulk e-mail delivered
+  PASS  priority e-mail workflow completed
+  PASS  priority e-mail uses the email activity queue
+  PASS  bulk e-mail workflow completed
+  PASS  bulk e-mail uses the email-bulk activity queue
+  PASS  restart does not resend any e-mail
+
+## provider-queue-workflow-compat — A synthetic old execution whose task queue is the provider queue stays untouched while provider workers are activity-only; after COMPAT_WORKFLOW_QUEUES names that queue, the same compatible bundle consumes it and publishes once.
+  · provider-queue execution without compat: {"status":"RUNNING","events":2,"activities":[]}
+  · compatible provider worker enabled: COMPAT_WORKFLOW_QUEUES=bluesky
+  · provider-queue publish: {"at":"2026-11-12T01:04:55.567Z","pid":91238,"method":"post","internalId":"stub-internal-org-mwcuidui-24","token":"synthetic-token-org-mwcuidui-24","integrationId":"int_org-mwcuidui-24","organizationId":"org_org-mwcuidui-24","posts":[{"id":"post-mwcuidva-26","message":"Synthetic provider-queue workflow","settings":{},"media":[{"path":"<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/16/work/uploads-mwcufbc8/uploads/rehearsal15/org-mwcuidui-24.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwcuidui-24","type":"image"}]}]}
+  · provider-queue execution after compat: {"workflowId":"post_post-mwcuidva-26","runId":"01a1cd49-24c0-71cc-9312-95b3f02712f4","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"bluesky","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"],"organizationId":"org_org-mwcuidui-24","postId":"post-mwcuidva-26"}}
+  PASS  provider queue does not consume workflows by default
+  PASS  no activity was scheduled without a workflow worker
+  PASS  the synthetic provider workflow did not publish
+  PASS  the post is still QUEUE
+  PASS  compatible worker publishes once
+  PASS  provider-queue execution keeps the old type
+  PASS  provider-queue workflow completed
+  PASS  workflow id is unchanged
+  PASS  workflow type is unchanged
+  PASS  workflow still runs on the provider queue
+  PASS  business post id is unchanged
+  PASS  publishing activity stayed on the provider queue
+  PASS  database activity follows the workflow queue

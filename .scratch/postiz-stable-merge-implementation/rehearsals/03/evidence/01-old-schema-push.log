@@ -1,0 +1,5 @@
+Prisma schema loaded from .scratch/postiz-stable-merge-implementation/rehearsals/03/old-schema.prisma
+Datasource "db": PostgreSQL database "postiz", schema "public" at "127.0.0.1:55432"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 350ms
+

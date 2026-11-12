@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "imageTag": "postiz-ticket18:candidate",
+  "imageId": "sha256:c77e3edea504ff786974039a79bab74e61e1027d1c548730e92754dba0a69e6a",
+  "builtAt": "2026-11-12T00:31:56Z",
+  "published": false,
+  "registryDigest": null,
+  "note": "Local candidate image. No registry digest exists because nothing was pushed; the image ID is local to this Docker daemon.",
+  "target": { "os": "linux", "architecture": "arm64" },
+  "source": {
+    "commit": "bfc012c74b240eff6f0071556ee6ec06d434c9e0",
+    "ref": "codex/ticket-18-final-acceptance",
+    "worktreeState": "clean",
+    "currentHead": "bfc012c74b240eff6f0071556ee6ec06d434c9e0",
+    "contextMatchesHead": true,
+    "buildContextManifest": { "path": "k8s/BUILD_CONTEXT_MANIFEST.json", "sha256": "8f5b55feb820a68a375d687e09ce8575a2474402da8a658c879452ec5da1c751" }
+  },
+  "inputs": {
+    "lockfile": { "path": "pnpm-lock.yaml", "sha256": "caba97c3e0351d85580979737e06f22ca825039605b232b49d51f1e2c2929197" },
+    "workspace": { "path": "pnpm-workspace.yaml", "sha256": "dd5e467db993a169c50c736f05298792773a9fe1d9f85a3f22ba602b30075ab5" },
+    "dockerfile": { "path": "k8s/Dockerfile", "sha256": "a1afb7881180e24eeb6f770e53f59cb2b78c51ff06c9205a16339e3e5df3697d" },
+    "pm2Config": { "path": "var/docker/ecosystem.config.cjs", "sha256": "2318b72b2101386ea1dff00ef6f3c6ca72492bca9fea6676d9230264b03cd5da" },
+    "nginxConfig": { "path": "var/docker/nginx.conf", "sha256": "9c46039178b94de244f85a13746b071bb73cc565cf6e45ede889a79474edc8e6" },
+    "entrypoint": { "path": "var/docker/entrypoint.sh", "sha256": "4f8419ee09de19422d77ffbf2c2b9dfdeb444600e04bae4920234797b2503ef4" },
+    "nextConfig": { "path": "apps/frontend/next.config.js", "sha256": "53e6f50df86a1aee71e4cd443b8928e8d63d27c0b35319d32d4e8c1a39f190a0" },
+    "publicBuildConfig": { "path": "k8s/public-build-config.env", "sha256": "4b3eb53c3b40fb91de1fd166dc2da5da48d37f408f7f162453b4929c0597374f" }
+  },
+  "publicBuildConfig": {
+    "note": "Inlined by next build. The runtime environment cannot change these browser values.",
+    "NEXT_PUBLIC_BACKEND_URL": "/api",
+    "NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY": "/uploads",
+    "NEXT_PUBLIC_SSO_PARENT_ORIGINS": "https://merchant.connexup-dev.net",
+    "NEXT_PUBLIC_VERSION": "ticket18-build-sentinel",
+    "NEXT_PUBLIC_APP_VERSION": "",
+    "NEXT_PUBLIC_POLOTNO": "",
+    "NEXT_PUBLIC_FACEBOOK_PIXEL": "",
+    "NEXT_PUBLIC_DISCORD_SUPPORT": "",
+    "NEXT_PUBLIC_POSTIZ_OAUTH_LOGO_URL": "",
+    "NEXT_PUBLIC_POSTIZ_OAUTH_DISPLAY_NAME": "",
+    "NEXT_PUBLIC_TRACKING_TRIAL": "",
+    "NEXT_PUBLIC_GTM_ID": "",
+    "NEXT_PUBLIC_SENTRY_DSN": "",
+    "NEXT_PUBLIC_OVERRIDE_BACKEND_URL": ""
+  },
+  "toolchain": { "node": "22.23.4", "pnpm": "10.6.1", "prisma": "6.5.0" },
+  "baseImages": [
+    { "image": "node:22.23.4-bookworm", "repoDigest": "node@sha256:7702d8aa4d5910871692af4480eb3ba86f23047a6417a44d857d06c95d060d3f", "id": "sha256:7702d8aa4d5910871692af4480eb3ba86f23047a6417a44d857d06c95d060d3f" },
+    { "image": "node:22.23.4-bookworm-slim", "repoDigest": "node@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d", "id": "sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d" }
+  ],
+  "generatedAssets": [ { "path": "apps/frontend/public/g.js", "status": "not-generated", "reason": "NEXT_PUBLIC_GTM_ID is empty for this profile; no tracking service is added." } ]
+}

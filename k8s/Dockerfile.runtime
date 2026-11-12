@@ -2,13 +2,13 @@
 # Postiz Runtime Image - No Build, Just Package Pre-built Artifacts
 # Artifacts are built locally, this image only packages them.
 # ============================================================
-FROM node:22.20-bookworm-slim AS runtime
+FROM node:22.23.4-bookworm-slim AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx curl \
  && rm -rf /var/lib/apt/lists/*
 
-RUN npm --no-update-notifier --no-fund --global install pm2
+RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
 
 RUN addgroup --system www \
  && adduser --system --ingroup www --home /www --shell /usr/sbin/nologin www \
@@ -24,6 +24,14 @@ COPY apps/orchestrator/dist ./apps/orchestrator/dist
 COPY apps/frontend/.next ./apps/frontend/.next
 COPY package.json ./
 
+# The container syncs the database schema before it starts the app, so the
+# runtime needs the schema, the root scripts and the pinned Prisma CLI that
+# is already part of node_modules above.
+COPY libraries/nestjs-libraries/src/database/prisma/schema.prisma \
+     ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+COPY var/docker/entrypoint.sh ./var/docker/entrypoint.sh
+RUN chmod +x ./var/docker/entrypoint.sh
+
 # Copy nginx config
 COPY var/docker/nginx.conf /etc/nginx/nginx.conf
 
@@ -35,6 +43,8 @@ USER www
 EXPOSE 5000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-  CMD curl -f http://localhost:5000/api/health || exit 1
+  CMD curl -f http://localhost:5000/api/ || exit 1
 
+# The configured entrypoint syncs the database schema before the app starts.
+ENTRYPOINT ["/app/var/docker/entrypoint.sh"]
 CMD ["sh", "-c", "nginx && pm2-runtime ecosystem.config.cjs"]

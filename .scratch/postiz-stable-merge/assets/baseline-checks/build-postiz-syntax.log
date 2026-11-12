@@ -1,0 +1,3 @@
+$ bash -n k8s/build-postiz.sh
+
+exit=0

@@ -43,7 +43,7 @@ const model = new ChatOpenAI({
 
 const dalle = new DallEAPIWrapper({
   apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'gpt-image-1',
+  model: 'chatgpt-image-latest',
 });
 
 const generateContent = z.object({
@@ -103,12 +103,14 @@ export class AutopostService {
   async processCron(active: boolean, orgId: string, id: string) {
     if (active) {
       try {
-        return this._temporalService.client
+        return await this._temporalService.client
           .getRawClient()
           ?.workflow.start('autoPostWorkflow', {
             workflowId: `autopost-${id}`,
             taskQueue: 'main',
             args: [{ id, immediately: true }],
+            // Keep a running workflow, it reads the autopost settings on every run
+            workflowIdConflictPolicy: 'USE_EXISTING',
             typedSearchAttributes: new TypedSearchAttributes([
               {
                 key: organizationId,
@@ -116,7 +118,10 @@ export class AutopostService {
               },
             ]),
           });
-      } catch (err) {}
+      } catch (err) {
+        // Don't fall through and terminate an active autopost
+        return false;
+      }
     }
 
     try {
@@ -303,7 +308,7 @@ export class AutopostService {
           },
         ],
       })),
-    });
+    }, 'AUTOPOST');
   }
 
   async updateUrl(state: WorkflowChannelsState) {

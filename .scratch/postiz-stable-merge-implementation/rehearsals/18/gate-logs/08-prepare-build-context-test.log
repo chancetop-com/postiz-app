@@ -1,0 +1,56 @@
+prepare-build-context: first run
+  ok   exits 0 on a clean tree
+  ok   writes a manifest
+  ok   copies app source
+  ok   copies shared library source
+  ok   preserves context-only Dockerfile
+  ok   preserves context-only dockerignore
+  ok   manifest records the source commit
+  ok   manifest records input digests
+
+prepare-build-context: dirty tree guard
+  ok   refuses a dirty tree without --allow-dirty
+  ok   accepts a dirty tree with --allow-dirty
+  ok   manifest marks the candidate dirty
+  ok   manifest records a worktree digest
+
+prepare-build-context: add / modify / delete
+  ok   added source reaches the context
+  ok   modified source is refreshed
+  ok   deleted source is dropped from the context
+
+prepare-build-context: repeated prepare keeps no stale copies
+  ok   stale app copy removed on re-prepare
+  ok   stale library copy removed on re-prepare
+
+prepare-build-context: exclusions
+  ok   node_modules is excluded
+  ok   build output is excluded
+  ok   environment files are excluded
+
+prepare-build-context: missing required input
+  ok   fails with exit 1 when a required input is missing
+  ok   recovers once the input is back
+
+prepare-build-context: --check
+  ok   --check passes on a synced context
+  ok   --check fails when the context drifted
+  ok   --check never writes
+  ok   --check fails when a generated file drifted
+
+action separation
+  ok   build-local exits 0 with a stubbed docker
+  ok   build-local calls docker build
+  ok   build-local performs no registry login, push or rollout
+  ok   build-local tags the candidate image
+  ok   build-local propagates a docker failure
+  ok   a failed local build still never publishes
+  ok   publish refuses a stale context
+  ok   publish never deploys
+  ok   deploy exits 0 with a stubbed kubectl
+  ok   deploy only runs kubectl set image
+  ok   deploy never builds or publishes
+  ok   deploy requires --image
+
+--------------------------------------------
+passed: 38, failed: 0

@@ -1,0 +1,43 @@
+Auto-merging .env.example
+CONFLICT (content): Merge conflict in .env.example
+CONFLICT (distinct types): CLAUDE.md had different types on each side; renamed one of them so each can be recorded somewhere.
+Auto-merging Dockerfile.dev
+Auto-merging README.md
+Auto-merging apps/backend/src/api/api.module.ts
+CONFLICT (content): Merge conflict in apps/backend/src/api/api.module.ts
+Auto-merging apps/backend/src/api/routes/auth.controller.ts
+Auto-merging apps/backend/src/api/routes/copilot.controller.ts
+Auto-merging apps/backend/src/api/routes/users.controller.ts
+Auto-merging apps/backend/src/main.ts
+Auto-merging apps/backend/src/services/auth/auth.service.ts
+CONFLICT (content): Merge conflict in apps/backend/src/services/auth/auth.service.ts
+Auto-merging apps/frontend/src/app/(app)/(preview)/p/[id]/page.tsx
+Auto-merging apps/frontend/src/app/(app)/auth/layout.tsx
+CONFLICT (content): Merge conflict in apps/frontend/src/app/(app)/auth/layout.tsx
+Auto-merging apps/frontend/src/app/(app)/layout.tsx
+Auto-merging apps/frontend/src/components/agents/agent.chat.tsx
+Auto-merging apps/frontend/src/components/analytics/chart-social.tsx
+CONFLICT (content): Merge conflict in apps/frontend/src/components/analytics/chart-social.tsx
+Auto-merging apps/frontend/src/components/billing/embedded.billing.tsx
+Auto-merging apps/frontend/src/components/launches/add.provider.component.tsx
+Auto-merging apps/frontend/src/components/launches/continue.integration.tsx
+Auto-merging apps/frontend/src/components/launches/launches.component.tsx
+CONFLICT (content): Merge conflict in apps/frontend/src/components/launches/launches.component.tsx
+Auto-merging apps/frontend/src/components/layout/layout.context.tsx
+Auto-merging apps/frontend/src/components/layout/top.menu.tsx
+CONFLICT (content): Merge conflict in apps/frontend/src/components/layout/top.menu.tsx
+Auto-merging apps/frontend/src/components/media/media.component.tsx
+CONFLICT (content): Merge conflict in apps/frontend/src/components/media/media.component.tsx
+Auto-merging apps/frontend/src/components/new-layout/layout.component.tsx
+CONFLICT (content): Merge conflict in apps/frontend/src/components/new-layout/layout.component.tsx
+Auto-merging apps/frontend/src/components/preview/preview.wrapper.tsx
+Auto-merging apps/frontend/src/components/ui/icons/index.tsx
+Auto-merging apps/frontend/src/proxy.ts
+CONFLICT (content): Merge conflict in apps/frontend/src/proxy.ts
+Auto-merging libraries/nestjs-libraries/src/database/prisma/autopost/autopost.service.ts
+Auto-merging libraries/nestjs-libraries/src/database/prisma/media/media.repository.ts
+CONFLICT (content): Merge conflict in libraries/nestjs-libraries/src/database/prisma/media/media.repository.ts
+Auto-merging libraries/react-shared-libraries/src/helpers/uppy.upload.ts
+Auto-merging pnpm-lock.yaml
+CONFLICT (content): Merge conflict in pnpm-lock.yaml
+Automatic merge failed; fix conflicts and then commit the result.

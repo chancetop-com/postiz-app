@@ -1,0 +1,2 @@
+trace-synth-1:span-synth-1a:agent run
+trace-synth-1:span-synth-1b:tool call (retried)

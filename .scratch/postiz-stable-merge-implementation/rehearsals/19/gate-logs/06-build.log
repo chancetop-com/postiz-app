@@ -1,0 +1,80 @@
+
+> gitroom@1.0.0 build /Users/chancetio/Desktop/Web/postiz-worktrees/19
+> pnpm -r --workspace-concurrency=1 --filter ./apps/frontend --filter ./apps/backend --filter ./apps/orchestrator run build
+
+Scope: 3 of 7 workspace projects
+
+> postiz-frontend@1.0.0 build /Users/chancetio/Desktop/Web/postiz-worktrees/19/apps/frontend
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+✓ Running next.config.js took 210ms
+- Experiments (use with caution):
+  · clientTraceMetadata
+  · proxyTimeout: 90000
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 25.0s
+  Running next.config.js provided runAfterProductionCompile ...
+✓ Completed runAfterProductionCompile in 756ms
+  Running TypeScript ...
+  Finished TypeScript in 13.6s ...
+  Collecting page data using 7 workers ...
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+  Generating static pages using 7 workers (0/2) ...
+✓ Generating static pages using 7 workers (2/2) in 127ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /_not-found
+├ ƒ /admin/errors
+├ ƒ /admin/stats
+├ ƒ /agents
+├ ƒ /agents/[id]
+├ ƒ /analytics
+├ ƒ /api/uploads/[[...path]]
+├ ƒ /auth
+├ ƒ /auth/activate
+├ ƒ /auth/activate/[code]
+├ ƒ /auth/forgot
+├ ƒ /auth/forgot/[token]
+├ ƒ /auth/login
+├ ƒ /auth/login-required
+├ ƒ /auth/sso
+├ ƒ /billing
+├ ƒ /billing/lifetime
+├ ƒ /channel-relay
+├ ƒ /err
+├ ƒ /integrations/social/[provider]
+├ ƒ /launches
+├ ƒ /media
+├ ƒ /modal/[style]/[platform]
+├ ƒ /oauth/authorize
+├ ƒ /p/[id]
+├ ƒ /plugs
+├ ƒ /provider/[p]
+├ ƒ /provider/add
+├ ƒ /settings
+├ ƒ /sso
+└ ƒ /third-party
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> postiz-backend@1.0.0 build /Users/chancetio/Desktop/Web/postiz-worktrees/19/apps/backend
+> cross-env NODE_ENV=production nest build
+
+
+> postiz-orchestrator@1.0.0 build /Users/chancetio/Desktop/Web/postiz-worktrees/19/apps/orchestrator
+> cross-env NODE_ENV=production nest build
+

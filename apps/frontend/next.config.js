@@ -3,7 +3,9 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // Plain Next output: the image starts the app with `next start` on 4200,
+  // which needs the complete .next directory (including .next/static) and the
+  // runtime dependencies, not a standalone server bundle.
   experimental: {
     proxyTimeout: 90_000,
   },

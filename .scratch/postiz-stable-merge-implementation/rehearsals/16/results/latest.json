@@ -1,0 +1,1261 @@
+{
+  "ticket": 16,
+  "generatedAt": "2026-11-12T01:02:21.982Z",
+  "node": "v22.23.4",
+  "scenarios": [
+    {
+      "id": "legacy-repeat-child-continuity",
+      "description": "An existing pre-upgrade V102 repeat execution publishes its first round, survives a worker restart, and then starts its next round as another V102 execution; the old export is still required after round one.",
+      "startedAt": "2026-11-12T01:02:30.527Z",
+      "observations": [
+        {
+          "name": "first round",
+          "value": {
+            "id": "post-mwcufhzd-3",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-12T01:02:33.600Z",
+            "releaseId": "stub-post-90886-1",
+            "releaseURL": "https://stub.invalid/stub-post-90886-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwcufhxc-1\",\"name\":\"org-mwcufhxc-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcufhxc-1.png\"}]"
+          }
+        },
+        {
+          "name": "first-round execution",
+          "value": {
+            "workflowId": "post_post-mwcufhzd-3",
+            "runId": "046b705b-eff7-42ca-8faf-44b6cf385ffc",
+            "type": "postWorkflowV102",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwcufhzd-3",
+              "organizationId": "org_org-mwcufhxc-1"
+            }
+          }
+        },
+        {
+          "name": "first-round publish calls",
+          "value": [
+            "post"
+          ]
+        },
+        {
+          "name": "worker restarted before the next repeat round",
+          "value": true
+        },
+        {
+          "name": "repeat child workflow id",
+          "value": "post_post-mwcufhzd-3_4jyE8WfVPw"
+        },
+        {
+          "name": "second-round execution",
+          "value": {
+            "workflowId": "post_post-mwcufhzd-3_4jyE8WfVPw",
+            "runId": "368c80dc-3fdc-461c-a7d3-bcd4bc202909",
+            "type": "postWorkflowV102",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwcufhzd-3"
+            }
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "first round used the old workflow type",
+          "ok": true,
+          "actual": "postWorkflowV102",
+          "expected": "postWorkflowV102"
+        },
+        {
+          "name": "first round kept the post workflow id",
+          "ok": true,
+          "actual": "post_post-mwcufhzd-3",
+          "expected": "post_post-mwcufhzd-3"
+        },
+        {
+          "name": "first round ran on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "first round published on the provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "first-round publish uses the blocking contract",
+          "ok": true,
+          "actual": "post",
+          "expected": "post"
+        },
+        {
+          "name": "old publishDate is never rewritten",
+          "ok": true,
+          "actual": "2026-11-12T01:02:33.600Z",
+          "expected": "2026-11-12T01:02:33.600Z"
+        },
+        {
+          "name": "round two was created as a child",
+          "ok": true,
+          "actual": "postWorkflowV102",
+          "expected": "postWorkflowV102"
+        },
+        {
+          "name": "child id keeps the post prefix",
+          "ok": true,
+          "actual": true,
+          "detail": "post_post-mwcufhzd-3_4jyE8WfVPw"
+        },
+        {
+          "name": "old repeat child is still V102",
+          "ok": true,
+          "actual": "postWorkflowV102",
+          "expected": "postWorkflowV102"
+        },
+        {
+          "name": "old repeat child runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "old repeat child keeps the business post id",
+          "ok": true,
+          "actual": "post-mwcufhzd-3",
+          "expected": "post-mwcufhzd-3"
+        },
+        {
+          "name": "second round publishes with the old contract",
+          "ok": true,
+          "actual": "post",
+          "expected": "post"
+        },
+        {
+          "name": "second round targeted the same channel",
+          "ok": true,
+          "actual": "int_org-mwcufhxc-1",
+          "expected": "int_org-mwcufhxc-1"
+        },
+        {
+          "name": "second-round activity stays on the provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "two rounds published twice",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "database still holds the original anchor date",
+          "ok": true,
+          "actual": "2026-11-12T01:02:33.600Z",
+          "expected": "2026-11-12T01:02:33.600Z"
+        }
+      ]
+    },
+    {
+      "id": "new-repeat-child-continuity",
+      "description": "A repeating post created through the new scheduling path starts V112, publishes round one, survives a worker restart, and keeps creating V112 repeat children; the business anchor date stays put.",
+      "startedAt": "2026-11-12T01:02:40.079Z",
+      "observations": [
+        {
+          "name": "created repeating post",
+          "value": {
+            "postId": "post-mwcufpbg-6",
+            "anchor": "2026-11-12T01:02:43.108Z"
+          }
+        },
+        {
+          "name": "V112 repeat child id",
+          "value": "post_post-mwcufpbg-6_3Wik6djN0s"
+        },
+        {
+          "name": "second V112 round",
+          "value": {
+            "workflowId": "post_post-mwcufpbg-6_3Wik6djN0s",
+            "runId": "2ee89356-3f0e-4c8e-bd57-ab31c1055a6f",
+            "type": "postWorkflowV112",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwcufpbg-6"
+            }
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "new repeat starts V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "new repeat runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "new repeat keeps the business post id",
+          "ok": true,
+          "actual": "post-mwcufpbg-6",
+          "expected": "post-mwcufpbg-6"
+        },
+        {
+          "name": "new repeat keeps the organization attribute",
+          "ok": true,
+          "actual": "org_org-mwcufpao-4",
+          "expected": "org_org-mwcufpao-4"
+        },
+        {
+          "name": "round one kept the anchor date",
+          "ok": true,
+          "actual": "2026-11-12T01:02:43.108Z",
+          "expected": "2026-11-12T01:02:43.108Z"
+        },
+        {
+          "name": "round one uses pending/finalize",
+          "ok": true,
+          "actual": "postPending",
+          "expected": "postPending"
+        },
+        {
+          "name": "new repeat child is V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "second V112 round keeps the post id",
+          "ok": true,
+          "actual": "post-mwcufpbg-6",
+          "expected": "post-mwcufpbg-6"
+        },
+        {
+          "name": "second V112 round runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "two rounds published twice",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "the anchor date never moves",
+          "ok": true,
+          "actual": "2026-11-12T01:02:43.108Z",
+          "expected": "2026-11-12T01:02:43.108Z"
+        },
+        {
+          "name": "finalize ran for both rounds",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        }
+      ]
+    },
+    {
+      "id": "autopost-continue-as-new",
+      "description": "autoPostWorkflow runs its first loop for real, creates one draft, then hits the 24-loop continue-as-new boundary and continues with the same workflow id.",
+      "startedAt": "2026-11-12T01:02:49.625Z",
+      "observations": [
+        {
+          "name": "autopost first loop",
+          "value": {
+            "lastUrl": "http://feed.invalid/item-1"
+          }
+        },
+        {
+          "name": "autopost continue-as-new history",
+          "value": {
+            "eventCount": 271,
+            "continuedAsNew": 1
+          }
+        },
+        {
+          "name": "autopost successor",
+          "value": {
+            "workflowId": "autopost-autopost-mwcufwoj-8",
+            "runId": "07245185-4fcd-4c42-9436-6cca1e546f99",
+            "type": "autoPostWorkflow",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {}
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "first loop creates one draft",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "draft stays a DRAFT",
+          "ok": true,
+          "actual": "DRAFT",
+          "expected": "DRAFT"
+        },
+        {
+          "name": "draft carries the feed text",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "autopost never publishes",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "autopost activity runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "first run continued as new once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "continue-as-new keeps the workflow id",
+          "ok": true,
+          "actual": "autopost-autopost-mwcufwoj-8",
+          "expected": "autopost-autopost-mwcufwoj-8"
+        },
+        {
+          "name": "continue-as-new keeps the workflow type",
+          "ok": true,
+          "actual": "autoPostWorkflow",
+          "expected": "autoPostWorkflow"
+        },
+        {
+          "name": "successor has a new run id",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "the same feed item is not drafted twice",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "no platform call came from autopost",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "missing-sweep-continue-as-new",
+      "description": "missingPostWorkflow sweeps hourly and, after 24 loops, continues as new with the same workflow id and type.",
+      "startedAt": "2026-11-12T01:02:55.570Z",
+      "observations": [
+        {
+          "name": "missing sweep continue-as-new",
+          "value": {
+            "eventCount": 271,
+            "continuedAsNew": 1,
+            "sweeps": 24
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "sweep continued as new once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "sweep keeps running on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "sweep keeps the workflow id",
+          "ok": true,
+          "actual": "missing-post-workflow",
+          "expected": "missing-post-workflow"
+        },
+        {
+          "name": "sweep keeps the workflow type",
+          "ok": true,
+          "actual": "missingPostWorkflow",
+          "expected": "missingPostWorkflow"
+        }
+      ]
+    },
+    {
+      "id": "streak-patch-continue-as-new",
+      "description": "streakWorkflow applies both patch gates: no legacy reminder at 22h, and at 24h it continues as new into streakWorkflowV2 instead of ending the streak.",
+      "startedAt": "2026-11-12T01:03:00.976Z",
+      "observations": [
+        {
+          "name": "streak first run",
+          "value": {
+            "eventCount": 37,
+            "continuedAsNew": 1,
+            "activities": [
+              "setStreak",
+              "getUserOrgs",
+              "getLastPublishDate"
+            ]
+          }
+        },
+        {
+          "name": "streak successor",
+          "value": {
+            "workflowId": "streak_org_org-mwcug5f4-9",
+            "runId": "b8d35eee-d4f9-47aa-a1f8-426e38abcec0",
+            "type": "streakWorkflowV2",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {}
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "streak start is written",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "streak continued as new once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "streak hand-off runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "hand-off keeps the workflow id",
+          "ok": true,
+          "actual": "streak_org_org-mwcug5f4-9",
+          "expected": "streak_org_org-mwcug5f4-9"
+        },
+        {
+          "name": "hand-off switches to streakWorkflowV2",
+          "ok": true,
+          "actual": "streakWorkflowV2",
+          "expected": "streakWorkflowV2"
+        },
+        {
+          "name": "successor has a new run id",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "hand-off does not end the streak",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "no e-mail was sent on the patched path",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "missing-sweep-compensation",
+      "description": "The missing-posts sweep republishes a genuinely stale post once, re-anchors an old repeat anchor to its next occurrence instead of re-sending it, and ignores posts outside the compensation window or on refresh-needed channels.",
+      "startedAt": "2026-11-12T01:03:11.189Z",
+      "observations": [
+        {
+          "name": "swept stale post",
+          "value": {
+            "id": "post-mwcugdbj-12",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-11T20:03:11.215Z",
+            "releaseId": "stub-pending-90985-1",
+            "releaseURL": "https://stub.invalid/stub-pending-90985-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwcugdau-10\",\"name\":\"org-mwcugdau-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcugdau-10.png\"}]"
+          }
+        },
+        {
+          "name": "repeat anchor after the sweep",
+          "value": {
+            "id": "post-mwcugdbo-14",
+            "state": "QUEUE",
+            "publishDate": "2026-11-11T00:03:11.220Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwcugdau-10\",\"name\":\"org-mwcugdau-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal15/org-mwcugdau-10.png\"}]"
+          }
+        },
+        {
+          "name": "poked repeat execution",
+          "value": {
+            "workflowId": "post_post-mwcugdbo-14",
+            "runId": "a73fe740-89ab-44fe-9e51-80d74a6b58c7",
+            "type": "postWorkflowV112",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwcugdbo-14",
+              "organizationId": "org_org-mwcugdau-10",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ]
+            }
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "genuinely stale post is published",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "sweep keeps the original past date",
+          "ok": true,
+          "actual": "2026-11-11T20:03:11.215Z",
+          "expected": "2026-11-11T20:03:11.215Z"
+        },
+        {
+          "name": "sweep publishes it once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "sweep uses the new V112 path",
+          "ok": true,
+          "actual": "postPending",
+          "expected": "postPending"
+        },
+        {
+          "name": "sweep activity runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "repeat anchor is not republished",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "repeat anchor date is untouched in the database",
+          "ok": true,
+          "actual": "2026-11-11T00:03:11.220Z",
+          "expected": "2026-11-11T00:03:11.220Z"
+        },
+        {
+          "name": "no platform call for the re-anchored repeat post",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "sweep pokes V112 for the repeat post",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "repeat execution waits for the next occurrence",
+          "ok": true,
+          "actual": true,
+          "detail": "1"
+        },
+        {
+          "name": "post outside the two-day window is not swept",
+          "ok": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "name": "refresh-needed channel post is not swept",
+          "ok": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "name": "no calls for ignored posts",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        }
+      ]
+    },
+    {
+      "id": "delayed-comments-both-generations",
+      "description": "A delayed comment continues under the candidate for an old V102 execution and a new V112 execution: correct account, comment target, minute delay, write-back and completed workflow.",
+      "startedAt": "2026-11-12T01:03:18.863Z",
+      "observations": [
+        {
+          "name": "legacy root published by the old worker",
+          "value": "legacy-post-1"
+        },
+        {
+          "name": "new thread",
+          "value": {
+            "root": "cmwcugowr0000cb7mm74rrjhw",
+            "comment": "cmwcugox90001cb7mb0hrxnx6"
+          }
+        },
+        {
+          "name": "legacy comment contract",
+          "value": {
+            "postId": "legacy-post-1",
+            "lastPostId": null,
+            "message": "Synthetic legacy delayed comment",
+            "at": "2026-11-12T01:04:21.523Z"
+          }
+        },
+        {
+          "name": "new comment contract",
+          "value": {
+            "postId": "stub-pending-91031-1",
+            "lastPostId": null,
+            "message": "Synthetic new delayed comment",
+            "at": "2026-11-12T01:04:28.392Z"
+          }
+        },
+        {
+          "name": "legacy comment execution",
+          "value": {
+            "workflowId": "post_post-mwcugj8q-21",
+            "runId": "01a1cd47-d6a4-7603-bae7-e28aa7cb72ea",
+            "type": "postWorkflowV102",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwcugj8q-21",
+              "organizationId": "org_org-mwcugj80-19",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+58a4978f1c3e76bc2c7b3ba9237d91bd818f3762475d926b8dd8f825b12eeaae",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ]
+            }
+          }
+        },
+        {
+          "name": "new comment execution",
+          "value": {
+            "workflowId": "post_cmwcugowr0000cb7mm74rrjhw",
+            "runId": "01a1cd47-f047-75dc-bd3c-3b758d0ebe5f",
+            "type": "postWorkflowV112",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "cmwcugowr0000cb7mm74rrjhw",
+              "organizationId": "org_org-mwcugj8e-20",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ]
+            }
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "root+comment created through the public API",
+          "ok": true,
+          "actual": true,
+          "detail": "[{\"postId\":\"cmwcugowr0000cb7mm74rrjhw\",\"integration\":\"int_org-mwcugj8e-20\"}]"
+        },
+        {
+          "name": "public API created the comment row",
+          "ok": true,
+          "actual": true,
+          "detail": "cmwcugowr0000cb7mm74rrjhw"
+        },
+        {
+          "name": "legacy comment targets the root release",
+          "ok": true,
+          "actual": "legacy-post-1",
+          "expected": "legacy-post-1"
+        },
+        {
+          "name": "legacy first comment has no previous comment",
+          "ok": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "name": "legacy comment uses the bound channel credential",
+          "ok": true,
+          "actual": "synthetic-token-org-mwcugj80-19",
+          "expected": "synthetic-token-org-mwcugj80-19"
+        },
+        {
+          "name": "legacy comment uses the bound provider account",
+          "ok": true,
+          "actual": "stub-internal-org-mwcugj80-19",
+          "expected": "stub-internal-org-mwcugj80-19"
+        },
+        {
+          "name": "legacy comment message is the stored content",
+          "ok": true,
+          "actual": "Synthetic legacy delayed comment",
+          "expected": "Synthetic legacy delayed comment"
+        },
+        {
+          "name": "legacy comment respects the one-minute delay",
+          "ok": true,
+          "actual": true,
+          "detail": "62627ms"
+        },
+        {
+          "name": "legacy comment row is PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "legacy comment releaseId is written",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"id\":\"post-mwcugj8s-22\",\"state\":\"PUBLISHED\",\"publishDate\":\"2026-11-12T01:03:21.390Z\",\"releaseId\":\"stub-comment-91031-2\",\"releaseURL\":\"https://stub.invalid/stub-comment-91031-2\",\"error\":null,\"deletedAt\":null,\"image\":\"[]\"}"
+        },
+        {
+          "name": "new comment targets the root release",
+          "ok": true,
+          "actual": "stub-pending-91031-1",
+          "expected": "stub-pending-91031-1"
+        },
+        {
+          "name": "new first comment has no previous comment",
+          "ok": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "name": "new comment uses the bound channel credential",
+          "ok": true,
+          "actual": "synthetic-token-org-mwcugj8e-20",
+          "expected": "synthetic-token-org-mwcugj8e-20"
+        },
+        {
+          "name": "new comment uses the bound provider account",
+          "ok": true,
+          "actual": "stub-internal-org-mwcugj8e-20",
+          "expected": "stub-internal-org-mwcugj8e-20"
+        },
+        {
+          "name": "new comment message is the stored content",
+          "ok": true,
+          "actual": "Synthetic new delayed comment",
+          "expected": "Synthetic new delayed comment"
+        },
+        {
+          "name": "new comment respects the one-minute delay",
+          "ok": true,
+          "actual": true,
+          "detail": "69496ms"
+        },
+        {
+          "name": "new comment row is PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "new comment releaseId is written",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"id\":\"cmwcugox90001cb7mb0hrxnx6\",\"state\":\"PUBLISHED\",\"publishDate\":\"2026-11-12T01:03:28.152Z\",\"releaseId\":\"stub-comment-91031-3\",\"releaseURL\":\"https://stub.invalid/stub-comment-91031-3\",\"error\":null,\"deletedAt\":null,\"image\":\"[]\"}"
+        },
+        {
+          "name": "legacy comment workflow completed",
+          "ok": true,
+          "actual": "COMPLETED",
+          "expected": "COMPLETED"
+        },
+        {
+          "name": "legacy comment activity runs on the provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "new comment workflow is V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "new comment activity runs on the provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "exactly two comment calls",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        }
+      ]
+    },
+    {
+      "id": "refresh-token-backlog",
+      "description": "The existing refreshTokenWorkflow keeps its workflow id, waits for the token expiry and refreshes through the registered refreshToken activity once; the channel is updated and the workflow keeps waiting for the next expiry.",
+      "startedAt": "2026-11-12T01:04:28.647Z",
+      "observations": [
+        {
+          "name": "refreshed channel",
+          "value": {
+            "id": "int_refresh-mwcui12r-3",
+            "token": "synthetic-refreshed-access-91031-1794445471731",
+            "refreshToken": "synthetic-refresh-rotated",
+            "tokenExpiration": "2026-11-12T02:04:31.731Z",
+            "refreshNeeded": false
+          }
+        },
+        {
+          "name": "refresh boundary calls",
+          "value": [
+            "synthetic-refresh-refresh-mwcui12r-3"
+          ]
+        },
+        {
+          "name": "refresh history",
+          "value": {
+            "activities": [
+              {
+                "activity": "getIntegrationsById",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "getIntegrationsById",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "refreshToken",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "getIntegrationsById",
+                "taskQueue": "main"
+              }
+            ],
+            "timers": 2
+          }
+        },
+        {
+          "name": "refresh workflow after the refresh",
+          "value": {
+            "workflowId": "refresh_int_refresh-mwcui12r-3",
+            "runId": "01a1cd48-e3f5-7ed0-beb0-071df39ccc21",
+            "type": "refreshTokenWorkflow",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ]
+            }
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "refresh keeps the channel id",
+          "ok": true,
+          "actual": "int_refresh-mwcui12r-3",
+          "expected": "int_refresh-mwcui12r-3"
+        },
+        {
+          "name": "refresh drops the old access token",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "refresh rotates the refresh token",
+          "ok": true,
+          "actual": "synthetic-refresh-rotated",
+          "expected": "synthetic-refresh-rotated"
+        },
+        {
+          "name": "refresh clears refreshNeeded",
+          "ok": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "name": "refresh stores the new expiry",
+          "ok": true,
+          "actual": true,
+          "detail": "Thu Nov 12 2026 10:04:31 GMT+0800 (China Standard Time)"
+        },
+        {
+          "name": "exactly one refresh call",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "refresh used the stored refresh token",
+          "ok": true,
+          "actual": "synthetic-refresh-refresh-mwcui12r-3",
+          "expected": "synthetic-refresh-refresh-mwcui12r-3"
+        },
+        {
+          "name": "refresh activity runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "getIntegrationsById runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "refresh workflow is still running for the next expiry",
+          "ok": true,
+          "actual": "RUNNING",
+          "expected": "RUNNING"
+        }
+      ]
+    },
+    {
+      "id": "email-both-generations",
+      "description": "The old sendEmailWorkflow backlog drains through main, and new sendSingleEmailWorkflow runs deliver through the email and email-bulk activity queues; all five messages reach the mail stub once and the per-email workflows complete.",
+      "startedAt": "2026-11-12T01:04:32.232Z",
+      "observations": [
+        {
+          "name": "legacy e-mails",
+          "value": [
+            "legacy-top@synthetic.invalid",
+            "legacy-bulk-one@synthetic.invalid",
+            "legacy-bulk-two@synthetic.invalid"
+          ]
+        },
+        {
+          "name": "all e-mails",
+          "value": [
+            {
+              "to": "legacy-top@synthetic.invalid",
+              "subject": "Synthetic legacy legacy-top@synthetic.invalid"
+            },
+            {
+              "to": "legacy-bulk-one@synthetic.invalid",
+              "subject": "Synthetic legacy legacy-bulk-one@synthetic.invalid"
+            },
+            {
+              "to": "legacy-bulk-two@synthetic.invalid",
+              "subject": "Synthetic legacy legacy-bulk-two@synthetic.invalid"
+            },
+            {
+              "to": "new-priority@synthetic.invalid",
+              "subject": "Synthetic priority e-mail"
+            },
+            {
+              "to": "new-bulk@synthetic.invalid",
+              "subject": "Synthetic bulk e-mail"
+            }
+          ]
+        },
+        {
+          "name": "priority e-mail workflow",
+          "value": {
+            "workflowId": "send_email_priority_mwcui5sr",
+            "runId": "01a1cd48-fbdd-7b5e-b05e-1402dc80315b",
+            "type": "sendSingleEmailWorkflow",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ]
+            }
+          }
+        },
+        {
+          "name": "bulk e-mail workflow",
+          "value": {
+            "workflowId": "send_email_bulk_mwcui5sx",
+            "runId": "01a1cd48-fbe4-7119-8e5f-c21ae8b4ab8c",
+            "type": "sendSingleEmailWorkflow",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ]
+            }
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "legacy backlog delivered three messages",
+          "ok": true,
+          "actual": 3,
+          "expected": 3
+        },
+        {
+          "name": "legacy top message is first",
+          "ok": true,
+          "actual": "legacy-top@synthetic.invalid",
+          "expected": "legacy-top@synthetic.invalid"
+        },
+        {
+          "name": "legacy e-mail activity runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "legacy backlog stays alive for more signals",
+          "ok": true,
+          "actual": "RUNNING",
+          "expected": "RUNNING"
+        },
+        {
+          "name": "all five scenario messages reached the mail stub",
+          "ok": true,
+          "actual": 5,
+          "expected": 5
+        },
+        {
+          "name": "new priority e-mail delivered",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "new bulk e-mail delivered",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "priority e-mail workflow completed",
+          "ok": true,
+          "actual": "COMPLETED",
+          "expected": "COMPLETED"
+        },
+        {
+          "name": "priority e-mail uses the email activity queue",
+          "ok": true,
+          "actual": "email",
+          "expected": "email"
+        },
+        {
+          "name": "bulk e-mail workflow completed",
+          "ok": true,
+          "actual": "COMPLETED",
+          "expected": "COMPLETED"
+        },
+        {
+          "name": "bulk e-mail uses the email-bulk activity queue",
+          "ok": true,
+          "actual": "email-bulk",
+          "expected": "email-bulk"
+        },
+        {
+          "name": "restart does not resend any e-mail",
+          "ok": true,
+          "actual": 5,
+          "expected": 5
+        }
+      ]
+    },
+    {
+      "id": "provider-queue-workflow-compat",
+      "description": "A synthetic old execution whose task queue is the provider queue stays untouched while provider workers are activity-only; after COMPAT_WORKFLOW_QUEUES names that queue, the same compatible bundle consumes it and publishes once.",
+      "startedAt": "2026-11-12T01:04:45.209Z",
+      "observations": [
+        {
+          "name": "provider-queue execution without compat",
+          "value": {
+            "status": "RUNNING",
+            "events": 2,
+            "activities": []
+          }
+        },
+        {
+          "name": "compatible provider worker enabled",
+          "value": "COMPAT_WORKFLOW_QUEUES=bluesky"
+        },
+        {
+          "name": "provider-queue publish",
+          "value": {
+            "at": "2026-11-12T01:04:55.567Z",
+            "pid": 91238,
+            "method": "post",
+            "internalId": "stub-internal-org-mwcuidui-24",
+            "token": "synthetic-token-org-mwcuidui-24",
+            "integrationId": "int_org-mwcuidui-24",
+            "organizationId": "org_org-mwcuidui-24",
+            "posts": [
+              {
+                "id": "post-mwcuidva-26",
+                "message": "Synthetic provider-queue workflow",
+                "settings": {},
+                "media": [
+                  {
+                    "path": "<repo>/.scratch/postiz-stable-merge-implementation/rehearsals/16/work/uploads-mwcufbc8/uploads/rehearsal15/org-mwcuidui-24.png",
+                    "readable": true,
+                    "bytes": 70,
+                    "sha256": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+                    "id": "media_org-mwcuidui-24",
+                    "type": "image"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "provider-queue execution after compat",
+          "value": {
+            "workflowId": "post_post-mwcuidva-26",
+            "runId": "01a1cd49-24c0-71cc-9312-95b3f02712f4",
+            "type": "postWorkflowV102",
+            "status": "COMPLETED",
+            "taskQueue": "bluesky",
+            "searchAttributes": {
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+3937eae44b787cbf0f4ad707e580873f41aa3b3761cec65edc872211e4cedda7"
+              ],
+              "organizationId": "org_org-mwcuidui-24",
+              "postId": "post-mwcuidva-26"
+            }
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "provider queue does not consume workflows by default",
+          "ok": true,
+          "actual": "RUNNING",
+          "expected": "RUNNING"
+        },
+        {
+          "name": "no activity was scheduled without a workflow worker",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "the synthetic provider workflow did not publish",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "the post is still QUEUE",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "compatible worker publishes once",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "provider-queue execution keeps the old type",
+          "ok": true,
+          "actual": "post",
+          "expected": "post"
+        },
+        {
+          "name": "provider-queue workflow completed",
+          "ok": true,
+          "actual": "COMPLETED",
+          "expected": "COMPLETED"
+        },
+        {
+          "name": "workflow id is unchanged",
+          "ok": true,
+          "actual": "post_post-mwcuidva-26",
+          "expected": "post_post-mwcuidva-26"
+        },
+        {
+          "name": "workflow type is unchanged",
+          "ok": true,
+          "actual": "postWorkflowV102",
+          "expected": "postWorkflowV102"
+        },
+        {
+          "name": "workflow still runs on the provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "business post id is unchanged",
+          "ok": true,
+          "actual": "post-mwcuidva-26",
+          "expected": "post-mwcuidva-26"
+        },
+        {
+          "name": "publishing activity stayed on the provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "database activity follows the workflow queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "queues": {
+    "workflows": {
+      "main": 15,
+      "bluesky": 1
+    },
+    "activities": {
+      "main": 68,
+      "bluesky": 33,
+      "email": 1,
+      "email-bulk": 1
+    }
+  },
+  "finishedAt": "2026-11-12T01:04:55.779Z",
+  "ok": true
+}
