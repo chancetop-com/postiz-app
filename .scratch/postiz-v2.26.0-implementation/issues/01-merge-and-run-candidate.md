@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Source:** [升级规格](../../postiz-v2.26.0-wayfinder/spec.md) · [版本与冲突对照](../../postiz-v2.26.0-wayfinder/assets/release-delta.md)
 
