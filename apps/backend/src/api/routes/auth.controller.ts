@@ -39,6 +39,19 @@ export class AuthController {
     private _attributionService: AttributionService
   ) {}
 
+  /**
+   * The signed invitation token can arrive in the tab-scoped `org-invite`
+   * request header (sessionStorage) or in the historical httpOnly `org`
+   * cookie. Both carry the same signed payload; the AuthService verifies the
+   * signature, role and expiry before any org id is trusted.
+   */
+  private getOrgInvite(req: Request) {
+    const header = req.headers?.['org-invite'];
+    return this._authService.getOrgFromCookie(
+      (Array.isArray(header) ? header[0] : header) || req?.cookies?.org
+    );
+  }
+
   @Get('/can-register')
   async canRegister() {
     return {
@@ -63,9 +76,7 @@ export class AuthController {
     @UserAgent() userAgent: string
   ) {
     try {
-      const getOrgFromCookie = this._authService.getOrgFromCookie(
-        req?.cookies?.org
-      );
+      const getOrgFromCookie = this.getOrgInvite(req);
 
       const { jwt, addedOrg } = await this._authService.routeAuth(
         body.provider,
@@ -109,9 +120,7 @@ export class AuthController {
     @UserAgent() userAgent: string
   ) {
     try {
-      const getOrgFromCookie = this._authService.getOrgFromCookie(
-        req?.cookies?.org
-      );
+      const getOrgFromCookie = this.getOrgInvite(req);
 
       const { jwt, addedOrg } = await this._authService.routeAuth(
         body.provider,
@@ -283,11 +292,9 @@ export class AuthController {
     }
 
     // Existing-user OAuth login: this path doesn't run routeAuth, so read the
-    // org invite cookie and join the org here too (when the invite is valid).
-    // See register/login for the same logic.
-    const getOrgFromCookie = this._authService.getOrgFromCookie(
-      req?.cookies?.org
-    );
+    // signed invite (tab header or historical cookie) and join the org here
+    // too (when the invite is valid). See register/login for the same logic.
+    const getOrgFromCookie = this.getOrgInvite(req);
 
     const { jwt, token, addedOrg } = await this._authService.checkExists(
       provider,

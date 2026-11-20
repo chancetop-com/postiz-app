@@ -25,6 +25,10 @@ import { WalletUiProvider } from '@gitroom/frontend/components/auth/providers/pl
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import useCookie from 'react-use-cookie';
 import { useAttribution } from '@gitroom/frontend/components/auth/attribution.component';
+import {
+  clearOrgInvite,
+  orgInviteHeaders,
+} from '@gitroom/frontend/components/auth/org.invite';
 const WalletProvider = dynamic(
   () => import('@gitroom/frontend/components/auth/providers/wallet.provider'),
   {
@@ -54,6 +58,7 @@ export function Register() {
     try {
       const response = await fetch(`/auth/oauth/${provider || 'LOCAL'}/exists`, {
         method: 'POST',
+        headers: orgInviteHeaders(),
         body: JSON.stringify({
           code,
           state,
@@ -64,8 +69,12 @@ export function Register() {
       }
       const { token } = await response.json();
       if (token) {
+        // New account: keep the invite for the registration form.
         setCode(token);
         setShow(true);
+      } else {
+        // Existing account: the exchange already accepted the invite.
+        clearOrgInvite();
       }
     } catch {
       setError('Sign-in could not be completed. Please sign in again.');
@@ -145,6 +154,7 @@ export function RegisterAfter({
     setLoading(true);
     await fetchData('/auth/register', {
       method: 'POST',
+      headers: orgInviteHeaders(),
       body: JSON.stringify({
         ...data,
         datafast_visitor_id,
@@ -154,6 +164,7 @@ export function RegisterAfter({
       .then(async (response) => {
         setLoading(false);
         if (response.status === 200) {
+          clearOrgInvite();
           fireEvents('register');
           return track(TrackEnum.CompleteRegistration).then(() => {
             if (response.headers.get('activate') === 'true') {

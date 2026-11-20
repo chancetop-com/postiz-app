@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getCookieUrlFromDomain } from '@gitroom/helpers/subdomain/subdomain.management';
-import { internalFetch } from '@gitroom/helpers/utils/internal.fetch';
 import acceptLanguage from 'accept-language';
 import {
   cookieName,
@@ -101,25 +100,23 @@ export async function proxy(request: NextRequest) {
 
   const org = nextUrl.searchParams.get('org');
 
-  try {
-    if (org && !nextUrl.pathname.startsWith('/auth')) {
-      const { id } = await (
-        await internalFetch('/user/join-org', {
-          body: JSON.stringify({ org }),
-          method: 'POST',
-        })
-      ).json();
-      const redirect = NextResponse.redirect(
-        new URL(`/?added=true`, nextUrl.href)
-      );
-      if (id) {
-        redirect.cookies.set('showorg', id, {
-          expires: new Date(Date.now() + 15 * 60 * 1000),
-        });
-      }
-      return redirect;
-    }
+  if (org && !nextUrl.pathname.startsWith('/auth')) {
+    // Invitation links used to be redeemed here with the `auth`/`showorg`
+    // cookies. This fork keeps the session in the current tab's
+    // sessionStorage, which a server-side proxy cannot read, so the signed
+    // invite is handed to the session-aware login page instead. The page
+    // stores it in sessionStorage for this tab only and sends it as the
+    // `org-invite` header after a password/OAuth sign-in, or immediately when
+    // the tab already has a session. The server still verifies its signature
+    // and expiry; no org id from the browser is trusted.
+    const login = new URL('/auth/login', nextUrl.href);
+    nextUrl.searchParams.forEach((value, key) => {
+      login.searchParams.set(key, value);
+    });
+    return NextResponse.redirect(login);
+  }
 
+  try {
     if (nextUrl.pathname === '/') {
       return NextResponse.redirect(
         new URL(

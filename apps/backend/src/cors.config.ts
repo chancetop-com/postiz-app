@@ -16,6 +16,7 @@ export const getCorsOptions = (): CorsOptions => ({
     'showorg',
     'impersonate',
     'oauth-state-token',
+    'org-invite',
     'x-postiz-org',
     'x-postiz-include-deleted',
     'x-copilotkit-runtime-client-gql-version',

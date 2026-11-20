@@ -399,6 +399,19 @@ describe('tab session and request identity over HTTP', () => {
     expect((await response.json()).orgId).toBe('org-b');
   });
 
+  it('lets the tab header win over a stale shared cookie', async () => {
+    seedSecondOrg();
+    const auth = authHeader();
+
+    const response = await self({
+      auth,
+      showorg: 'org-b',
+      cookie: `auth=${auth}; showorg=org-merchant-acme`,
+    });
+
+    expect((await response.json()).orgId).toBe('org-b');
+  });
+
   it('answers an invalid identity with 401, a logout header and an expired cookie', async () => {
     const response = await self({ auth: 'not-a-session' });
 
