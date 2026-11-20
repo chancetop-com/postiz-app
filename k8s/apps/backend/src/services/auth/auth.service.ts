@@ -158,7 +158,10 @@ export class AuthService {
     }
 
     if (user.inviteId && user.inviteId === invite.id) {
-      return { organizationId: invite.orgId };
+      return this._organizationService.activeInviteMembership(
+        user.id,
+        invite.orgId
+      );
     }
 
     return false;
@@ -351,16 +354,24 @@ export class AuthService {
       // now. The membership was usually recorded before the activation gate;
       // `acceptInvite` then recognises the same invitation via `inviteId` so
       // this tab still receives showorg for the invited organisation.
-      const addedOrg = await this.acceptInvite(
-        getUserAgain,
-        this.asOrgInvite(invite)
-      );
+      const selection =
+        !invite && getUserAgain.inviteId
+          ? await this._organizationService.activationInvitation(
+              getUserAgain.id,
+              getUserAgain.inviteId
+            )
+          : {
+              addedOrg: await this.acceptInvite(
+                getUserAgain,
+                this.asOrgInvite(invite)
+              ),
+            };
 
       await this._userService.activateUser(user.id);
       user.activated = true;
       this._track('register', user.email, tracking).catch((err) => {});
       await NewsletterService.register(user.email);
-      return { jwt: await this.signJwt(user as any), addedOrg };
+      return { jwt: await this.signJwt(user as any), ...selection };
     }
 
     return false;

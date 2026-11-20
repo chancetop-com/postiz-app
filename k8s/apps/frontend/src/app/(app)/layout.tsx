@@ -45,7 +45,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </head>
       <ChangeDirClient />
       <body
-        className={clsx(jakartaSans.className, 'light text-primary !bg-primary')}
+        className={clsx(
+          jakartaSans.className,
+          'light text-primary !bg-primary'
+        )}
       >
         <VariableContextComponent
           storageProvider={
@@ -103,7 +106,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <Plausible
               domain={!!process.env.IS_GENERAL ? 'postiz.com' : 'gitroom.com'}
             >
-              <LayoutContext>
+              <LayoutContext
+                hasLegacySession={!!cookieStore.get('auth')?.value}
+              >
                 <UtmSaver />
                 {children}
               </LayoutContext>

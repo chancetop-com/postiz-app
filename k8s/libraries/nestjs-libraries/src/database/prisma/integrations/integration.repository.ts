@@ -1,5 +1,5 @@
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { createHash } from 'crypto';
 import dayjs from 'dayjs';
 import { Integration, Prisma } from '@prisma/client';
@@ -13,11 +13,17 @@ import {
   integrationEncryptedFields,
 } from '@gitroom/nestjs-libraries/services/encryption.service';
 
+export interface ConnectLinkBinding {
+  migration?: Pick<Integration, 'id' | 'internalId' | 'providerIdentifier'>;
+  rootInternalId?: string;
+  channelLimit?: number;
+}
+
 @Injectable()
 export class IntegrationRepository {
   private storage = UploadFactory.createStorage();
   constructor(
-    private _integration: PrismaRepository<'integration'>,
+    private _integration: PrismaRepository<'integration' | '$transaction'>,
     private _posts: PrismaRepository<'post'>,
     private _plugs: PrismaRepository<'plugs'>,
     private _exisingPlugData: PrismaRepository<'exisingPlugData'>,
@@ -370,7 +376,8 @@ export class IntegrationRepository {
     isBetweenSteps = false,
     refresh?: string,
     timezone?: number,
-    customInstanceDetails?: string
+    customInstanceDetails?: string,
+    binding?: ConnectLinkBinding
   ) {
     token = await this._encryptionService.encrypt(token);
     refreshToken = await this._encryptionService.encrypt(refreshToken);
@@ -383,91 +390,193 @@ export class IntegrationRepository {
           ]),
         }
       : {};
-    const upsert = await this._integration.model.integration.upsert({
-      where: {
-        organizationId_internalId: {
-          internalId,
-          organizationId: org,
-        },
-      },
-      create: {
-        type: type as any,
-        name,
-        providerIdentifier: provider,
-        token,
-        profile: username,
-        ...(picture ? { picture } : {}),
-        inBetweenSteps: isBetweenSteps,
-        refreshToken,
-        ...(expiresIn
-          ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
-          : {}),
-        internalId,
-        ...postTimes,
-        organizationId: org,
-        refreshNeeded: false,
-        rootInternalId: internalId,
-        ...(customInstanceDetails ? { customInstanceDetails } : {}),
-        additionalSettings: additionalSettings
-          ? JSON.stringify(additionalSettings)
-          : '[]',
-      },
-      update: {
-        ...(additionalSettings
-          ? { additionalSettings: JSON.stringify(additionalSettings) }
-          : {}),
-        ...(customInstanceDetails ? { customInstanceDetails } : {}),
-        type: type as any,
-        ...(!refresh
-          ? {
-              inBetweenSteps: isBetweenSteps,
-            }
-          : {}),
-        ...(picture ? { picture } : {}),
-        profile: username,
-        providerIdentifier: provider,
-        token,
-        // never wipe a stored refresh token with an empty one
-        ...(refreshToken ? { refreshToken } : {}),
-        ...(expiresIn
-          ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
-          : {}),
-        internalId,
-        organizationId: org,
-        deletedAt: null,
-        refreshNeeded: false,
-      },
-    });
-
-    if (oneTimeToken) {
-      const rootId =
-        (
-          await this._integration.model.integration.findFirst({
-            where: {
-              organizationId: org,
-              internalId: internalId,
-            },
-          })
-        )?.rootInternalId || internalId;
-
-      await this._integration.model.integration.updateMany({
+    const credentialProviders = ['linkedin', 'linkedin-page'].includes(provider)
+      ? ['linkedin', 'linkedin-page']
+      : [provider];
+    const write = async (db: Pick<Prisma.TransactionClient, 'integration'>) => {
+      const upsert = await db.integration.upsert({
         where: {
-          id: {
-            not: upsert.id,
+          organizationId_internalId: {
+            internalId,
+            organizationId: org,
           },
-          rootInternalId: rootId,
         },
-        data: {
+        create: {
+          type: type as any,
+          name,
+          providerIdentifier: provider,
           token,
+          profile: username,
+          ...(picture ? { picture } : {}),
+          inBetweenSteps: isBetweenSteps,
           refreshToken,
-          refreshNeeded: false,
           ...(expiresIn
             ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
             : {}),
+          internalId,
+          ...postTimes,
+          organizationId: org,
+          refreshNeeded: false,
+          rootInternalId: binding?.rootInternalId ?? internalId,
+          ...(customInstanceDetails ? { customInstanceDetails } : {}),
+          additionalSettings: additionalSettings
+            ? JSON.stringify(additionalSettings)
+            : '[]',
+        },
+        update: {
+          ...(binding?.rootInternalId
+            ? { rootInternalId: binding.rootInternalId }
+            : {}),
+          ...(additionalSettings
+            ? { additionalSettings: JSON.stringify(additionalSettings) }
+            : {}),
+          ...(customInstanceDetails ? { customInstanceDetails } : {}),
+          type: type as any,
+          ...(!refresh
+            ? {
+                inBetweenSteps: isBetweenSteps,
+              }
+            : {}),
+          ...(picture ? { picture } : {}),
+          profile: username,
+          providerIdentifier: provider,
+          token,
+          // never wipe a stored refresh token with an empty one
+          ...(refreshToken ? { refreshToken } : {}),
+          ...(expiresIn
+            ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
+            : {}),
+          internalId,
+          organizationId: org,
+          deletedAt: null,
+          refreshNeeded: false,
         },
       });
-    }
 
+      if (oneTimeToken) {
+        const rootId = upsert.rootInternalId || internalId;
+
+        await db.integration.updateMany({
+          where: {
+            id: {
+              not: upsert.id,
+            },
+            rootInternalId: rootId,
+            providerIdentifier: { in: credentialProviders },
+            organizationId: org,
+            deletedAt: null,
+          },
+          data: {
+            token,
+            ...(refreshToken ? { refreshToken } : {}),
+            refreshNeeded: false,
+            ...(expiresIn
+              ? { tokenExpiration: new Date(Date.now() + expiresIn * 1000) }
+              : {}),
+          },
+        });
+      }
+
+      return upsert;
+    };
+
+    const limit = binding?.channelLimit;
+    const upsert = !binding
+      ? await write(this._integration.model)
+      : await this._integration.model.$transaction(async (tx) => {
+          const organization = await tx.$queryRaw<
+            { id: string }[]
+          >`SELECT id FROM "Organization" WHERE id = ${org} AND "deletedAt" IS NULL FOR UPDATE`;
+          if (!organization.length)
+            throw new HttpException('Organization not found', 404);
+          const scope = { organizationId: org, deletedAt: null };
+          if (binding.migration) {
+            const source = await tx.integration.findFirst({
+              where: { ...scope, ...binding.migration },
+            });
+            if (!source)
+              throw new HttpException(
+                'The channel changed during authorization. Please reconnect it.',
+                409
+              );
+            await tx.integration.updateMany({
+              where: {
+                organizationId: org,
+                internalId,
+                deletedAt: { not: null },
+              },
+              data: { internalId: makeId(10) },
+            });
+            await tx.integration.update({
+              where: { id: source.id },
+              data: {
+                internalId,
+                providerIdentifier: provider,
+                rootInternalId:
+                  source.rootInternalId === source.internalId
+                    ? internalId
+                    : source.rootInternalId,
+              },
+            });
+          }
+          const existing = await tx.integration.findFirst({
+            where: { ...scope, internalId },
+            select: {
+              refreshNeeded: true,
+              rootInternalId: true,
+              providerIdentifier: true,
+            },
+          });
+          if (existing && existing.providerIdentifier !== provider) {
+            throw new HttpException(
+              'A channel on a different platform already uses this identifier',
+              409
+            );
+          }
+          if (limit !== undefined) {
+            const restored = oneTimeToken
+              ? await tx.integration.count({
+                  where: {
+                    ...scope,
+                    providerIdentifier: { in: credentialProviders },
+                    rootInternalId:
+                      binding.rootInternalId ??
+                      existing?.rootInternalId ??
+                      internalId,
+                    internalId: { not: internalId },
+                    refreshNeeded: true,
+                  },
+                })
+              : 0;
+            const added =
+              (existing && !existing.refreshNeeded ? 0 : 1) + restored;
+            if (
+              added &&
+              (await tx.integration.count({
+                where: { ...scope, refreshNeeded: false },
+              })) +
+                added >
+                limit
+            ) {
+              throw new HttpException(
+                'This workspace has reached its channel limit',
+                400
+              );
+            }
+          }
+          // A removed page retains its historical posts and credentials.
+          if (binding.rootInternalId) {
+            await tx.integration.updateMany({
+              where: {
+                organizationId: org,
+                internalId,
+                deletedAt: { not: null },
+              },
+              data: { internalId: makeId(10) },
+            });
+          }
+          return write(tx);
+        });
     return this.decryptTokens(upsert);
   }
 

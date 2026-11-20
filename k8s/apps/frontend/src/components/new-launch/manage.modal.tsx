@@ -387,6 +387,17 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
   const schedule = useCallback(
     (type: 'draft' | 'now' | 'schedule' | 'update') => async () => {
       let republish = false;
+      let selectedIds: Set<string> | undefined;
+      const editorChannels = selectedIntegrations.map(
+        ({ integration }) =>
+          existingPosts.find((p) => p.integration === integration.id) || {
+            ...existingData,
+            integration: integration.id,
+            posts: [],
+          }
+      );
+      const chooseChannels =
+        !!existingData.integration && editorChannels.length > 1;
       // the channels saved as another type, the rest are saved as `type`
       const saveAs: Record<string, 'draft' | 'schedule' | 'update'> = {};
       const saveTypeOf = (id: string) => saveAs[id] || type;
@@ -411,43 +422,37 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
         !!repeater || !!existingData?.posts?.[0]?.intervalInDays;
 
       // a post with other channels asks which of them the save applies to
-      if (existingData.siblings?.length && type !== 'update') {
+      if (chooseChannels) {
         // the opened channel is a draft, the save schedules it
         const scheduling = existingData?.posts?.[0]?.state === 'DRAFT';
-        const rows = existingPosts.map((p) => {
+        const rows = editorChannels.map((p) => {
           const state = p.posts?.[0]?.state;
           // the save leaves the channel in its state
           const same = asItIs(p) === type;
           // the channel went out, or is going out right now
           const out = published.includes(p) && !waiting(p);
           // a channel that went out goes out again
-          const again = type !== 'draft' && out;
+          const again = (type === 'schedule' || type === 'now') && out;
           // a channel whose date already passed goes out right away
           const late = type === 'schedule' && !out && passed(p);
           // a published channel stays published on a draft
-          const locked = same || (type === 'draft' && state === 'PUBLISHED');
+          const locked = type === 'draft' && state === 'PUBLISHED';
           return {
             ...channelRow(p),
-            // a channel with nothing to choose says what it stays
             ...(locked
-              ? {
-                  status:
-                    state === 'PUBLISHED'
-                      ? t('channel_stays_published', 'Stays published')
-                      : state === 'DRAFT'
-                      ? t('channel_stays_draft', 'Stays a draft')
-                      : t('channel_stays_scheduled', 'Stays scheduled'),
-                }
+              ? { status: t('channel_stays_published', 'Stays published') }
               : {}),
             locked,
             // a channel that would go out right away starts ticked only when
             // it failed, or is the draft in view
             checked:
-              same ||
-              (!out &&
-                (!late ||
-                  state === 'ERROR' ||
-                  (state === 'DRAFT' && p === channel))),
+              !locked &&
+              (same ||
+                type === 'update' ||
+                (!out &&
+                  (!late ||
+                    state === 'ERROR' ||
+                    (state === 'DRAFT' && p === channel)))),
             effect:
               again && type === 'schedule' && state === 'PUBLISHED' && passed(p)
                 ? {
@@ -523,12 +528,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                             'update_post_choose_channels',
                             'Choose the channels to post or reschedule.'
                           )}
-                      <div className="mt-[10px] text-[14px]">
-                        {t(
-                          'unticked_channels_saved_note',
-                          'Unticked channels keep their status, but your edits are still saved to them.'
-                        )}
-                      </div>
+
                       {isRecurring &&
                         type !== 'draft' &&
                         !!published.length && (
@@ -541,13 +541,14 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                         )}
                     </>
                   }
+                  needsChannel
                   channels={rows}
                   confirmLabel={(ids) => {
                     // the ticked channels the save moves to another state
-                    const moving = existingPosts.filter(
+                    const moving = editorChannels.filter(
                       (p) => ids.includes(p.integration) && asItIs(p) !== type
                     );
-                    if (!moving.length) {
+                    if (type === 'update' || !moving.length) {
                       return t(
                         'just_update_post_details',
                         'Just update the post details'
@@ -583,19 +584,18 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
           ticked = answer;
         }
 
-        for (const p of existingPosts) {
-          if (!ticked.includes(p.integration)) {
-            saveAs[p.integration] = asItIs(p);
-          }
-        }
+        if (!ticked.length) return;
+        selectedIds = new Set(ticked);
 
         republish =
-          type !== 'draft' &&
+          (type === 'now' || type === 'schedule') &&
           published.some((p) => ticked.includes(p.integration));
       }
 
       // the single channel that would go out again, or right away
-      const republishing = existingData.siblings?.length ? [] : published;
+      const republishing = chooseChannels
+        ? []
+        : published.filter((p) => editorChannels.includes(p));
 
       if ((type === 'now' || type === 'schedule') && republishing.length) {
         // the post still waits for its saved date, only the editor's date passed
@@ -700,7 +700,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
       // Pull the local values to build the payload, but rely on the server
       // (`/posts/valid`) for the actual validation — checkValidity now lives
       // server-side so it can't be bypassed.
-      const allValues = await ref.current.getAllValues();
+      const allValues = await ref.current.getAllValues(selectedIds);
 
       const integrationById = (id: string) =>
         selectedIntegrations.find((p) => p.integration.id === id);

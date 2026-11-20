@@ -8,6 +8,7 @@ import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/s
 import { SubscriptionRepository } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.repository';
 import { NotificationService } from '@gitroom/nestjs-libraries/database/prisma/notifications/notification.service';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
+import { ConnectLinkRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/connect.link.repository';
 import { IntegrationRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.repository';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
 import { PostsRepository } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.repository';
@@ -75,6 +76,7 @@ import { AdminStatsService } from '@gitroom/nestjs-libraries/database/prisma/adm
     WebhooksService,
     IntegrationService,
     IntegrationRepository,
+    ConnectLinkRepository,
     PostsService,
     PostsRepository,
     StripeService,

@@ -1,5 +1,6 @@
 'use client';
 
+import { selectedChannels } from '../selected.channels';
 import DevtoProvider from '@gitroom/frontend/components/new-launch/providers/devto/devto.provider';
 import XProvider from '@gitroom/frontend/components/new-launch/providers/x/x.provider';
 import LinkedinProvider from '@gitroom/frontend/components/new-launch/providers/linkedin/linkedin.provider';
@@ -203,9 +204,11 @@ export const ShowAllProviders = forwardRef((props, ref) => {
         selectedIntegrations.map(async (p) => await p.ref?.current.isValid())
       );
     },
-    getAllValues: async () => {
+    getAllValues: async (ids?: ReadonlySet<string>) => {
       return Promise.all(
-        selectedIntegrations.map(async (p) => await p.ref?.current.getValues())
+        selectedChannels(selectedIntegrations, ids).map((p) =>
+          p.ref?.current.getValues()
+        )
       );
     },
     triggerAll: () => {

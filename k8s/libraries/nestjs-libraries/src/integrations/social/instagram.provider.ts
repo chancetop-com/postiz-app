@@ -421,8 +421,9 @@ export class InstagramProvider
     if (body.indexOf('too little or too many attachments') > -1) {
       return {
         type: 'bad-body' as const,
-        value: 'Instagram carousel should have between 2 and 20 media attachments',
-      }
+        value:
+          'Instagram carousel should have between 2 and 20 media attachments',
+      };
     }
 
     if (body.indexOf('2207027') > -1) {
@@ -436,7 +437,7 @@ export class InstagramProvider
       return {
         type: 'bad-body' as const,
         value:
-          "One of the collaborators could not be tagged, please check the username is correct, the account is public, and that it allows collaborator invites",
+          'One of the collaborators could not be tagged, please check the username is correct, the account is public, and that it allows collaborator invites',
       };
     }
 
@@ -704,44 +705,16 @@ export class InstagramProvider
     return status_code;
   }
 
-  // After a rejected media_publish: the id of the media Instagram created from
-  // the container if it reports it as published, '' if it did not publish.
-  private async igPublishedMediaId(
-    containerId: string,
-    igId: string,
-    checkToken: string,
-    type: string
-  ): Promise<string> {
-    try {
-      const status = await this.igContainerStatus(
-        containerId,
-        checkToken,
-        type
-      );
-      const { data } =
-        status === 'PUBLISHED'
-          ? await (
-              await this.fetch(
-                `https://${type}/${META_GRAPH_API_VERSION}/${igId}/media?fields=id&limit=1&access_token=${checkToken}`,
-                undefined,
-                '',
-                0,
-                true
-              )
-            ).json()
-          : { data: [] };
-      const mediaId = data?.[0]?.id || '';
-      console.log(
-        `Instagram blocked media_publish for container ${containerId}: status ${status}, media ${mediaId || 'none'}`
-      );
-      return mediaId;
-    } catch (e) {
-      console.error(
-        `Instagram blocked media_publish for container ${containerId}: status probe failed`,
-        e
-      );
-      return '';
-    }
+  private publishedWithoutMediaId(confirmed = true): never {
+    throw new BadBody(
+      this.identifier,
+      'PUBLISHED',
+      '{}',
+      confirmed
+        ? 'Instagram reports this post was published, but its media ID could not be confirmed. Check the account before posting again.'
+        : 'Instagram did not return a media ID. Check the account before posting again.',
+      'unconfirmed'
+    );
   }
 
   // The post is live, the permalink is only cosmetic: never fail (and risk
@@ -933,11 +906,7 @@ export class InstagramProvider
       // a previous finalizePost published but died before reporting: the post
       // is live, never publish again
       if (status === 'PUBLISHED') {
-        return {
-          status: 'completed',
-          postId: pendingData.carouselId,
-          releaseURL: `https://www.instagram.com/${integration.profile}`,
-        };
+        this.publishedWithoutMediaId();
       }
 
       return { status: 'ready', pendingData };
@@ -958,11 +927,7 @@ export class InstagramProvider
         // a previous finalizePost died mid-way: a single post is fully live,
         // stories are resumed by finalizePost (it skips published containers)
         if (pendingData.postType === 'single') {
-          return {
-            status: 'completed',
-            postId: containerId,
-            releaseURL: `https://www.instagram.com/${integration.profile}`,
-          };
+          this.publishedWithoutMediaId();
         }
       }
     }
@@ -997,6 +962,7 @@ export class InstagramProvider
           pendingData.type
         );
         if (status === 'PUBLISHED') {
+          lastMediaId = '';
           continue;
         }
 
@@ -1008,20 +974,20 @@ export class InstagramProvider
             }
           )
         ).json();
+        if (!mediaId) this.publishedWithoutMediaId(false);
         lastMediaId = mediaId;
       }
 
+      if (!lastMediaId) this.publishedWithoutMediaId();
       return {
         status: 'completed',
-        postId: lastMediaId || pendingData.containers.at(-1)!,
-        releaseURL: !lastMediaId
-          ? `https://www.instagram.com/${integration.profile}`
-          : await this.igPermalink(
-              lastMediaId,
-              checkToken,
-              pendingData.type,
-              integration
-            ),
+        postId: lastMediaId,
+        releaseURL: await this.igPermalink(
+          lastMediaId,
+          checkToken,
+          pendingData.type,
+          integration
+        ),
       };
     }
 
@@ -1077,17 +1043,16 @@ export class InstagramProvider
         throw err;
       }
 
-      mediaId = await this.igPublishedMediaId(
+      const status = await this.igContainerStatus(
         creationId!,
-        igId,
         checkToken,
         pendingData.type
-      );
-      if (!mediaId) {
-        throw err;
-      }
+      ).catch(() => undefined);
+      if (status === 'PUBLISHED') this.publishedWithoutMediaId();
+      throw err;
     }
 
+    if (!mediaId) this.publishedWithoutMediaId(false);
     return {
       status: 'completed',
       postId: mediaId,

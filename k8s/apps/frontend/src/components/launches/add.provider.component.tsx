@@ -638,9 +638,16 @@ export const AddProviderComponent: FC<{
           // then redirects to the OAuth URL. After the channel is added the
           // popup reports completion to this window so the list can refresh.
           // Ordinary browser windows keep navigating in place.
-          if (
-            openChannelOAuth(url) === 'popup'
-          ) {
+          const result = openChannelOAuth(url);
+          if (result === 'blocked') {
+            toaster.show(
+              t(
+                'channel_popup_blocked',
+                'Allow pop-ups for this site and try again.'
+              ),
+              'warning'
+            );
+          } else if (result === 'popup') {
             modal.closeAll();
           }
         };

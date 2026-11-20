@@ -1040,7 +1040,7 @@ export const SwitchUser = () => {
 export const Impersonate = () => {
   const fetch = useFetch();
   const [name, setName] = useState('');
-  const { isSecured, billingEnabled } = useVariables();
+  const { billingEnabled, isSecured } = useVariables();
   const user = useUser();
   const load = useCallback(async () => {
     if (!name) {
@@ -1056,14 +1056,11 @@ export const Impersonate = () => {
       window.sessionStorage.removeItem('impersonate');
     }
     setCookie('impersonate', '', -10);
-    if (isSecured) {
-      await fetch(`/user/impersonate`, {
-        method: 'POST',
-        body: JSON.stringify({
-          id: '',
-        }),
-      });
-    }
+    await fetch('/user/impersonate', {
+      method: 'POST',
+      credentials: isSecured ? 'include' : 'same-origin',
+      body: JSON.stringify({ id: '' }),
+    });
     window.location.reload();
   }, [fetch, isSecured]);
   const t = useT();

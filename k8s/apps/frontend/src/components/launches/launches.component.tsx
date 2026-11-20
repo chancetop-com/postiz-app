@@ -623,7 +623,15 @@ export const LaunchesComponent = () => {
             }
           )
         ).json();
-        openChannelOAuth(url);
+        if (openChannelOAuth(url) === 'blocked') {
+          toast.show(
+            t(
+              'channel_popup_blocked',
+              'Allow pop-ups for this site and try again.'
+            ),
+            'warning'
+          );
+        }
       },
     []
   );

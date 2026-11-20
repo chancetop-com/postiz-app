@@ -136,10 +136,11 @@ export function rangeReadFailure(response: {
 }
 
 export class BadBody extends ApplicationFailure {
-  constructor(identifier: string, json: string, body: BodyInit, message = '') {
+  constructor(identifier: string, json: string, body: BodyInit, message = '', outcome?: 'unconfirmed') {
     super(truncateForTemporal(message, MAX_FAILURE_MESSAGE), 'bad_body', true, [
       {
         identifier,
+        ...(outcome && { outcome }),
         json: truncateForTemporal(json, MAX_FAILURE_FIELD),
         body: truncateForTemporal(body, MAX_FAILURE_FIELD),
       },

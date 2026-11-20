@@ -151,6 +151,17 @@ export class UsersController {
       throw new HttpException('Unauthorized', 400);
     }
 
+    if (!id) {
+      response.clearCookie('impersonate', {
+        domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
+        path: '/',
+        ...(!process.env.NOT_SECURED && {
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none' as const,
+        }),
+      });
+    }
     response.header('impersonate', id);
   }
 

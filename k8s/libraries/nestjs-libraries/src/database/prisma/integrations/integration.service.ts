@@ -5,10 +5,15 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { IntegrationRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.repository';
+import {
+  IntegrationRepository,
+  ConnectLinkBinding,
+} from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.repository';
+import { ConnectLinkRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/connect.link.repository';
 import { IntegrationManager } from '@gitroom/nestjs-libraries/integrations/integration.manager';
 import {
   AnalyticsData,
+  AuthTokenDetails,
   SocialProvider,
 } from '@gitroom/nestjs-libraries/integrations/social/social.integrations.interface';
 import { Integration, Organization } from '@prisma/client';
@@ -36,6 +41,26 @@ import {
 } from '@gitroom/nestjs-libraries/services/encryption.service';
 import { isReusableRefreshCredential } from '@gitroom/nestjs-libraries/integrations/refresh.credential';
 
+interface ConnectPage {
+  id: string;
+  name: string;
+  username?: string;
+  pageId?: string;
+  locationName?: string;
+  accountName?: string;
+  picture?: string | { data: { url: string } };
+  address?: string;
+  subscriberCount?: string;
+}
+
+interface PendingConnectSelection {
+  token: string;
+  auth: AuthTokenDetails;
+  pages: ConnectPage[];
+  timezone: number;
+  authorizedAt: number;
+}
+
 dayjs.extend(utc);
 
 @Injectable()
@@ -49,7 +74,8 @@ export class IntegrationService {
     @Inject(forwardRef(() => RefreshIntegrationService))
     private _refreshIntegrationService: RefreshIntegrationService,
     private _temporalService: TemporalService,
-    private _encryptionService: EncryptionService
+    private _encryptionService: EncryptionService,
+    private readonly connectLinks: ConnectLinkRepository
   ) {}
 
   async changeActiveCron(orgId: string) {
@@ -119,7 +145,8 @@ export class IntegrationService {
     isBetweenSteps = false,
     refresh?: string,
     timezone?: number,
-    customInstanceDetails?: string
+    customInstanceDetails?: string,
+    binding?: ConnectLinkBinding
   ) {
     const uploadedPicture = picture
       ? picture?.indexOf('imagedelivery.net') > -1
@@ -130,6 +157,13 @@ export class IntegrationService {
           })
       : undefined;
 
+    const migration =
+      binding && !binding.rootInternalId
+        ? await this.findMigrationOnConnect(org, provider, {
+            id: internalId,
+            username: username || '',
+          })
+        : undefined;
     return this._integrationRepository.createOrUpdateIntegration(
       additionalSettings,
       oneTimeToken,
@@ -146,7 +180,17 @@ export class IntegrationService {
       isBetweenSteps,
       refresh,
       timezone,
-      customInstanceDetails
+      customInstanceDetails,
+      migration
+        ? {
+            ...binding,
+            migration: {
+              id: migration.id,
+              internalId: migration.internalId,
+              providerIdentifier: migration.providerIdentifier,
+            },
+          }
+        : binding
     );
   }
 
@@ -280,6 +324,27 @@ export class IntegrationService {
     newProvider: string,
     auth: { id: string; username: string }
   ) {
+    const existing = await this.findMigrationOnConnect(org, newProvider, auth);
+    if (!existing) {
+      return;
+    }
+
+    return this._integrationRepository.migrateIntegration(
+      org,
+      existing.id,
+      auth.id,
+      newProvider,
+      existing.rootInternalId === existing.internalId
+        ? auth.id
+        : existing.rootInternalId
+    );
+  }
+
+  private async findMigrationOnConnect(
+    org: string,
+    newProvider: string,
+    auth: { id: string; username: string }
+  ) {
     const sources = this._integrationManager.getMigrationSources(newProvider);
     if (
       !sources.length ||
@@ -296,28 +361,12 @@ export class IntegrationService {
       return;
     }
 
-    const existing = (
-      await this._integrationRepository.getIntegrationsList(org)
-    ).find(
+    return (await this._integrationRepository.getIntegrationsList(org)).find(
       (p) =>
         sources.includes(p.providerIdentifier) &&
         this._integrationManager
           .getSocialIntegration(p.providerIdentifier)
           .migrationMatch(auth, p)
-    );
-
-    if (!existing) {
-      return;
-    }
-
-    return this._integrationRepository.migrateIntegration(
-      org,
-      existing.id,
-      auth.id,
-      newProvider,
-      existing.rootInternalId === existing.internalId
-        ? auth.id
-        : existing.rootInternalId
     );
   }
 
@@ -519,7 +568,10 @@ export class IntegrationService {
         .includes(integration) ||
       this._integrationManager.isHiddenProvider(integration)
     ) {
-      throw new HttpException('Integration not allowed', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Integration not allowed',
+        HttpStatus.BAD_REQUEST
+      );
     }
 
     if (
@@ -534,19 +586,14 @@ export class IntegrationService {
     }
 
     const token = randomBytes(32).toString('hex');
-    await ioRedis.set(
-      `connectLink:${token}`,
-      JSON.stringify({
-        org,
-        integration,
-        redirectUrl,
-        redirectTo: redirectUrl
-          ? this.connectLinkRedirectHost(redirectUrl)
-          : undefined,
-      }),
-      'EX',
-      3600
-    );
+    await this.connectLinks.storeLink(token, {
+      org,
+      integration,
+      redirectUrl,
+      redirectTo: redirectUrl
+        ? this.connectLinkRedirectHost(redirectUrl)
+        : undefined,
+    });
 
     return { url: `${process.env.FRONTEND_URL}/integrations/connect/${token}` };
   }
@@ -571,32 +618,33 @@ export class IntegrationService {
     );
   }
 
-  private async loadConnectLink(token: string) {
-    const link = JSON.parse(
-      (await ioRedis.get(`connectLink:${token}`)) || 'null'
-    ) as {
-      org: string;
-      integration: string;
-      redirectUrl?: string;
-      redirectTo?: string;
-    } | null;
-    if (!link) {
-      throw new HttpException(
-        'This connection link expired, please ask for a new one',
-        HttpStatus.NOT_FOUND
-      );
+  claimConnectAuthorization(state: string, provider: string) {
+    return this.connectLinks.claimAuthorization(state, provider);
+  }
+
+  rememberDashboardSelection(state: string, id: string, org: string) {
+    return this.connectLinks.storeSelection(state, id, org);
+  }
+
+  async completeDashboardSelection(state: string, id: string, body: unknown) {
+    const organization = await this.connectLinks.readSelection(state, id);
+    await this.connectLinks.consumeSelection(state, id);
+    try {
+      return await this.saveProviderPage(organization, id, body);
+    } catch (err) {
+      await this.connectLinks.storeSelection(state, id, organization);
+      throw err;
     }
-    return link;
   }
 
   // The organization the channel is added to, the controller checks its plan
   async getConnectLinkOrganization(token: string) {
-    return (await this.loadConnectLink(token)).org;
+    return (await this.connectLinks.loadLink(token)).org;
   }
 
   // What the page shows: the platform, and where the person ends up afterwards
   async getConnectLink(token: string) {
-    const { integration, redirectTo } = await this.loadConnectLink(token);
+    const { integration, redirectTo } = await this.connectLinks.loadLink(token);
     const provider = this._integrationManager.getSocialIntegration(integration);
     return {
       identifier: provider.identifier,
@@ -609,17 +657,13 @@ export class IntegrationService {
   // dashboard, the platform sends them back to /integrations/social/:provider.
   // The link stays valid until it expires, so they can come back and try again
   async startConnectLink(token: string) {
-    const { org, integration, redirectUrl } = await this.loadConnectLink(token);
+    const { integration } = await this.connectLinks.loadLink(token);
     const provider = this._integrationManager.getSocialIntegration(integration);
 
     try {
       const { codeVerifier, state, url } = await provider.generateAuthUrl();
 
-      await ioRedis.set(`organization:${state}`, org, 'EX', 3600);
-      await ioRedis.set(`login:${state}`, codeVerifier, 'EX', 3600);
-      if (redirectUrl) {
-        await ioRedis.set(`redirect:${state}`, redirectUrl, 'EX', 3600);
-      }
+      await this.connectLinks.startAuthorization(state, token, codeVerifier);
 
       return { url };
     } catch (err) {
@@ -628,6 +672,133 @@ export class IntegrationService {
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+
+  async listConnectPages(provider: SocialProvider, accessToken: string) {
+    const load =
+      'pages' in provider
+        ? provider.pages
+        : 'companies' in provider
+        ? provider.companies
+        : undefined;
+    if (typeof load !== 'function')
+      throw new HttpException('Page selection is unavailable', 400);
+    const listed: ConnectPage[] = await load.call(provider, accessToken);
+    return listed.map(
+      ({
+        id,
+        name,
+        username,
+        pageId,
+        locationName,
+        accountName,
+        picture,
+        address,
+        subscriberCount,
+      }) => ({
+        id,
+        name,
+        username,
+        pageId,
+        locationName,
+        accountName,
+        picture,
+        address,
+        subscriberCount,
+      })
+    );
+  }
+
+  async stageConnectLinkPages(
+    token: string,
+    state: string,
+    provider: SocialProvider,
+    auth: AuthTokenDetails,
+    timezone: number
+  ) {
+    const pages = await this.listConnectPages(provider, auth.accessToken);
+    if (!pages.length)
+      throw new HttpException(
+        'No manageable pages were returned by the provider',
+        400
+      );
+    const id = 'selection-' + randomBytes(24).toString('hex');
+    const selection: PendingConnectSelection = {
+      token,
+      auth,
+      pages,
+      timezone,
+      authorizedAt: Date.now(),
+    };
+    const value = await this._encryptionService.encrypt(
+      JSON.stringify(selection)
+    );
+    await this.connectLinks.storeSelection(state, id, value);
+    return { id, inBetweenSteps: true, publicSelection: true, pages };
+  }
+
+  async completeConnectLinkPage(
+    state: string,
+    id: string,
+    selectedId: string,
+    getLimit: (org: string) => Promise<number | undefined>
+  ) {
+    const value = await this.connectLinks.readSelection(state, id);
+    const pending: PendingConnectSelection = JSON.parse(
+      await this._encryptionService.decrypt(value)
+    );
+    const link = await this.connectLinks.loadLink(pending.token);
+    const provider = this._integrationManager.getSocialIntegration(
+      link.integration
+    );
+    const page = pending.pages.find((item) => String(item.id) === selectedId);
+    if (!page || !provider.fetchPageInformation)
+      throw new HttpException('Select an available page', 400);
+
+    // Only pass the page metadata originally returned by this provider.
+    const info = await provider.fetchPageInformation(pending.auth.accessToken, {
+      ...page,
+      page: page.id,
+    });
+    if (!info.id || !info.access_token)
+      throw new HttpException('Could not confirm this page', 400);
+    const channelLimit = await getLimit(link.org);
+    await this.connectLinks.consumeSelection(state, id);
+    const { auth, authorizedAt, timezone } = pending;
+    try {
+      const bound = await this.createOrUpdateIntegration(
+        auth.additionalSettings,
+        !!provider.oneTimeToken,
+        link.org,
+        info.name,
+        info.picture,
+        'social',
+        String(info.id),
+        link.integration,
+        info.access_token,
+        auth.refreshToken,
+        auth.expiresIn
+          ? Math.max(
+              1,
+              auth.expiresIn - Math.floor((Date.now() - authorizedAt) / 1000)
+            )
+          : undefined,
+        info.username,
+        false,
+        undefined,
+        timezone,
+        undefined,
+        { rootInternalId: String(auth.id), channelLimit }
+      );
+      this._refreshIntegrationService
+        .startRefreshWorkflow(link.org, bound.id, provider)
+        .catch(console.error);
+    } catch (err) {
+      // The original consent link still bounds the lifetime of a retry.
+      await this.connectLinks.storeSelection(state, id, value);
+      throw err;
+    }
+    return { success: true };
   }
 
   async checkAnalytics(
