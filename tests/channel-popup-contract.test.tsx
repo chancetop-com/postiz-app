@@ -7,6 +7,7 @@ import {
   channelUpdatedMessage,
   isChannelUpdatedMessage,
   notifyChannelPopupOpener,
+  openChannelOAuth,
   subscribeToChannelUpdates,
 } from '@gitroom/frontend/components/launches/channel.popup';
 
@@ -127,5 +128,71 @@ describe('refreshing from the message', () => {
       new MessageEvent('message', { data: { type: 'CHANNEL_UPDATED' } })
     );
     expect(refresh).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('opening a channel OAuth from the dashboard', () => {
+  const stubLocation = () => {
+    const location = { href: 'http://localhost:4200/launches', hash: '' };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).location;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).location = location;
+    return location;
+  };
+
+  const openSpy = () => {
+    const opened: any[] = [];
+    vi.spyOn(window, 'open').mockImplementation(((...args: any[]) => {
+      opened.push(args);
+      return { closed: false } as any;
+    }) as any);
+    return opened;
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.sessionStorage.clear();
+  });
+
+  it('navigates the current window in a standalone window', () => {
+    const location = stubLocation();
+    const opened = openSpy();
+
+    const mode = openChannelOAuth('https://provider.example/oauth', {
+      embedded: false,
+    });
+
+    expect(mode).toBe('window');
+    expect(location.href).toBe('https://provider.example/oauth');
+    expect(opened).toHaveLength(0);
+  });
+
+  it('opens the relay popup with the tab session inside the iframe', () => {
+    const location = stubLocation();
+    const opened = openSpy();
+    window.sessionStorage.setItem('auth', 'jwt-a');
+    window.sessionStorage.setItem('showorg', 'org-a');
+    window.sessionStorage.setItem('impersonate', 'imp-a');
+
+    const mode = openChannelOAuth('https://provider.example/oauth?x=1', {
+      embedded: true,
+    });
+
+    expect(mode).toBe('popup');
+    expect(location.href).toBe('http://localhost:4200/launches');
+    expect(opened).toHaveLength(1);
+    expect(opened[0][1]).toBe('_blank');
+    expect(opened[0][2]).toBe('popup,width=600,height=700');
+
+    const url = new URL(opened[0][0], 'http://localhost:4200');
+    expect(url.pathname).toBe(CHANNEL_RELAY_PATH);
+    expect(url.searchParams.get('redirect')).toBe(
+      'https://provider.example/oauth?x=1'
+    );
+    const hash = new URLSearchParams(url.hash.slice(1));
+    expect(hash.get('auth')).toBe('jwt-a');
+    expect(hash.get('showorg')).toBe('org-a');
+    expect(hash.get('impersonate')).toBe('imp-a');
   });
 });

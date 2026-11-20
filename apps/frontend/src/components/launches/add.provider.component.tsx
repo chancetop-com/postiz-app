@@ -17,8 +17,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { web3List } from '@gitroom/frontend/components/launches/web3/web3.list';
 import { isAllowedAddChannel } from '@gitroom/frontend/components/launches/allowed.channels';
 import {
-  buildChannelRelayUrl,
   isEmbeddedInIframe,
+  openChannelOAuth,
 } from '@gitroom/frontend/components/launches/channel.popup';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import clsx from 'clsx';
@@ -641,18 +641,12 @@ export const AddProviderComponent: FC<{
           // then redirects to the OAuth URL. After the channel is added the
           // popup reports completion to this window so the list can refresh.
           // Ordinary browser windows keep navigating in place.
-          if (isEmbeddedInIframe()) {
-            const relayUrl = buildChannelRelayUrl(url, {
-              auth: window.sessionStorage.getItem('auth'),
-              showorg: window.sessionStorage.getItem('showorg'),
-              impersonate: window.sessionStorage.getItem('impersonate'),
-            });
-            window.open(relayUrl, '_blank', 'popup,width=600,height=700');
+          if (
+            openChannelOAuth(url, { embedded: isEmbeddedInIframe() }) ===
+            'popup'
+          ) {
             modal.closeAll();
-            return;
           }
-
-          window.location.href = url;
         };
         if (isWeb3) {
           openWeb3();

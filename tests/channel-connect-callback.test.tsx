@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
 /**
  * Ticket 07: the OAuth callback page.
@@ -183,6 +183,133 @@ describe('the callback inside the popup', () => {
     expect(await findByText('Configure Your Channel')).toBeTruthy();
     expect(windowOpener.postMessage).not.toHaveBeenCalled();
     expect(close).not.toHaveBeenCalled();
+  });
+});
+
+describe('the two-step callback keeps the link destination', () => {
+  const api = (routes: {
+    pages: any[];
+    returnURL?: string;
+    authenticated?: number;
+    public?: number;
+  }) => {
+    const calls: Array<{ url: string; body: any }> = [];
+    const fetchMock = vi.fn(async (url: string, init: any = {}) => {
+      calls.push({ url, body: init.body ? JSON.parse(init.body) : undefined });
+      if (url.includes('social-connect')) {
+        return new Response(
+          JSON.stringify({
+            id: 'integration-1',
+            inBetweenSteps: true,
+            pages: routes.pages,
+            ...(routes.returnURL ? { returnURL: routes.returnURL } : {}),
+          }),
+          { status: 200 }
+        );
+      }
+      if (url === '/integrations/provider/integration-1/connect') {
+        return new Response(
+          JSON.stringify(
+            routes.authenticated === 404
+              ? { message: 'Integration not found' }
+              : { success: true }
+          ),
+          { status: routes.authenticated || 200 }
+        );
+      }
+      if (url === '/integrations/public/provider/integration-1/connect') {
+        return new Response(
+          JSON.stringify(
+            routes.public === 500
+              ? { message: 'Page not found in your accounts' }
+              : { success: true }
+          ),
+          { status: routes.public || 200 }
+        );
+      }
+      throw new Error(`unexpected request ${url}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return calls;
+  };
+
+  it('keeps the query string of a custom return address after a two-step save', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-b');
+    window.sessionStorage.setItem('showorg', 'org-b');
+    const returnURL = 'https://merchant.example/done?keep=1&lang=en';
+    const calls = api({
+      pages: [
+        {
+          id: 'page-2',
+          name: 'Brand page',
+          picture: { data: { url: 'https://cdn.test/page-2.png' } },
+        },
+      ],
+      returnURL,
+      authenticated: 404,
+    });
+
+    const { findByText, getByText } = renderContinue('facebook');
+
+    fireEvent.click(await findByText('Brand page'));
+    fireEvent.click(getByText('Save'));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        `${returnURL}&added=facebook&msg=Channel Added`
+      )
+    );
+    expect(calls.map((call) => call.url)).toEqual([
+      '/integrations/social-connect/facebook',
+      '/integrations/provider/integration-1/connect',
+      '/integrations/public/provider/integration-1/connect',
+    ]);
+  });
+
+  it('shows the two-step result inline for an anonymous recipient without a return address', async () => {
+    window.sessionStorage.removeItem('auth');
+    api({
+      pages: [
+        {
+          id: 'page-2',
+          name: 'Brand page',
+          picture: { data: { url: 'https://cdn.test/page-2.png' } },
+        },
+      ],
+    });
+
+    const view = renderContinue('facebook');
+
+    fireEvent.click(await view.findByText('Brand page'));
+    fireEvent.click(view.getByText('Save'));
+
+    expect(await view.findByText('Channel Added')).toBeTruthy();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('sends a signed-in recipient without a return address to the calendar', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-a');
+    window.sessionStorage.setItem('showorg', 'org-a');
+    api({
+      pages: [
+        {
+          id: 'page-2',
+          name: 'Brand page',
+          picture: { data: { url: 'https://cdn.test/page-2.png' } },
+        },
+      ],
+    });
+
+    const view = renderContinue('facebook');
+
+    fireEvent.click(await view.findByText('Brand page'));
+    fireEvent.click(view.getByText('Save'));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        '/launches?added=facebook&msg=Channel Added'
+      )
+    );
   });
 });
 

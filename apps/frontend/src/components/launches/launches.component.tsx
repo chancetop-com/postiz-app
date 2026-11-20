@@ -45,7 +45,11 @@ import { HubspotInstalled } from '@gitroom/frontend/components/launches/hubspot.
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { Input } from '@gitroom/react/form/input';
 import { Button } from '@gitroom/react/form/button';
-import { subscribeToChannelUpdates } from '@gitroom/frontend/components/launches/channel.popup';
+import {
+  isEmbeddedInIframe,
+  openChannelOAuth,
+  subscribeToChannelUpdates,
+} from '@gitroom/frontend/components/launches/channel.popup';
 
 export const SVGLine = () => {
   return (
@@ -620,7 +624,7 @@ export const LaunchesComponent = () => {
             }
           )
         ).json();
-        window.location.href = url;
+        openChannelOAuth(url, { embedded: isEmbeddedInIframe() });
       },
     []
   );
