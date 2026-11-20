@@ -404,7 +404,7 @@ export class OrganizationRepository {
     });
   }
 
-  async activeInviteMembership(userId: string, organizationId: string) {
+  async getActiveMembership(userId: string, organizationId: string) {
     const membership = await this._userOrg.model.userOrganization.findFirst({
       where: {
         userId,
@@ -424,7 +424,7 @@ export class OrganizationRepository {
       });
     if (receipt?.organizationId) {
       return {
-        addedOrg: await this.activeInviteMembership(
+        addedOrg: await this.getActiveMembership(
           userId,
           receipt.organizationId
         ),

@@ -158,7 +158,7 @@ export class AuthService {
     }
 
     if (user.inviteId && user.inviteId === invite.id) {
-      return this._organizationService.activeInviteMembership(
+      return this._organizationService.getActiveMembership(
         user.id,
         invite.orgId
       );
