@@ -259,9 +259,27 @@ describe('no OpenAI key', () => {
     expect(body.statusCode).toBe(402);
     expect(body.url).toBe('http://localhost:4200/billing');
     expect(body.error).toBeUndefined();
+    // a plain member cannot manage billing from the UI
+    expect(body.canManageBillingUi).toBe(false);
     expect(runtime.nodeOptions).toHaveLength(0);
     expect(mastraService.mastra).not.toHaveBeenCalled();
     expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('marks the same 402 as billable to an admin of the organization', async () => {
+    process.env.STRIPE_PUBLISHABLE_KEY = 'pk_test_ticket_12';
+    org.users[0].role = 'ADMIN';
+
+    try {
+      const response = await copilot('/copilot/agent');
+      const body = await response.json();
+
+      expect(response.status).toBe(402);
+      expect(body.canManageBillingUi).toBe(true);
+      expect(runtime.nodeOptions).toHaveLength(0);
+    } finally {
+      org.users[0].role = 'USER';
+    }
   });
 });
 
