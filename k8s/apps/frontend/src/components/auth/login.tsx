@@ -1,13 +1,21 @@
 'use client';
 
 import { useForm, SubmitHandler, FormProvider } from 'react-hook-form';
+import { useLegacySession } from '@gitroom/frontend/components/layout/layout.context';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import Link from 'next/link';
 import { Button } from '@gitroom/react/form/button';
 import { Input } from '@gitroom/react/form/input';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { classValidatorResolver } from '@hookform/resolvers/class-validator';
 import { LoginUserDto } from '@gitroom/nestjs-libraries/dtos/auth/login.user.dto';
+import {
+  clearOrgInvite,
+  orgInviteHeaders,
+  readOrgInvite,
+  saveOrgInvite,
+} from '@gitroom/frontend/components/auth/org.invite';
 import { GithubProvider } from '@gitroom/frontend/components/auth/providers/github.provider';
 import { OauthProvider } from '@gitroom/frontend/components/auth/providers/oauth.provider';
 import { GoogleProvider } from '@gitroom/frontend/components/auth/providers/google.provider';
@@ -16,6 +24,7 @@ import { useVariables } from '@gitroom/react/helpers/variable.context';
 import { FarcasterProvider } from '@gitroom/frontend/components/auth/providers/farcaster.provider';
 import WalletProvider from '@gitroom/frontend/components/auth/providers/wallet.provider';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { useReturnUrl } from '@gitroom/frontend/app/(app)/auth/return.url.component';
 type Inputs = {
   email: string;
   password: string;
@@ -23,9 +32,17 @@ type Inputs = {
   provider: 'LOCAL';
 };
 export function Login() {
+  const hasLegacySession = useLegacySession();
   const t = useT();
+  const searchParams = useSearchParams();
+  const inviteFromUrl = searchParams?.get('org') || null;
+  const [pendingInvite, setPendingInvite] = useState<string | null>(() =>
+    readOrgInvite()
+  );
+  const invite = inviteFromUrl || pendingInvite;
   const [loading, setLoading] = useState(false);
   const [notActivated, setNotActivated] = useState(false);
+  const acceptingInvite = useRef(false);
   const {
     isGeneral,
     neynarClientId,
@@ -33,6 +50,50 @@ export function Login() {
     billingEnabled,
     genericOauth,
   } = useVariables();
+  const { getAndClear } = useReturnUrl();
+  const fetchData = useFetch();
+
+  // Keep the signed invite in this tab only. It survives the password form
+  // and the external OAuth round trip without a shared cookie.
+  useEffect(() => {
+    if (inviteFromUrl) {
+      saveOrgInvite(inviteFromUrl);
+    }
+  }, [inviteFromUrl]);
+
+  // A tab that already has a session can accept immediately. The proxy cannot
+  // do this because the session lives in sessionStorage.
+  useEffect(() => {
+    if (!invite || typeof window === 'undefined') {
+      return;
+    }
+    if (
+      (!window.sessionStorage.getItem('auth') && !hasLegacySession) ||
+      acceptingInvite.current
+    ) {
+      return;
+    }
+
+    acceptingInvite.current = true;
+    (async () => {
+      try {
+        const response = await fetchData('/user/join-org', {
+          method: 'POST',
+          body: JSON.stringify({ org: invite }),
+        });
+        if (!response.ok) {
+          acceptingInvite.current = false;
+          return;
+        }
+        clearOrgInvite();
+        setPendingInvite(null);
+        window.location.href =
+          getAndClear() || (isGeneral ? '/launches' : '/analytics');
+      } catch {
+        acceptingInvite.current = false;
+      }
+    })();
+  }, [invite, fetchData, isGeneral, getAndClear, hasLegacySession]);
   const resolver = useMemo(() => {
     return classValidatorResolver(LoginUserDto);
   }, []);
@@ -43,17 +104,21 @@ export function Login() {
       provider: 'LOCAL',
     },
   });
-  const fetchData = useFetch();
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setLoading(true);
     setNotActivated(false);
     const login = await fetchData('/auth/login', {
       method: 'POST',
+      headers: orgInviteHeaders(),
       body: JSON.stringify({
         ...data,
         provider: 'LOCAL',
       }),
     });
+    if (login.status === 200) {
+      clearOrgInvite();
+      setPendingInvite(null);
+    }
     if (login.status === 400) {
       const errorMessage = await login.text();
       if (errorMessage === 'User is not activated') {

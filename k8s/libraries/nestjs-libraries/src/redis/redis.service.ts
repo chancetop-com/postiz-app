@@ -4,18 +4,24 @@ import { Redis } from 'ioredis';
 class MockRedis {
   private data: Map<string, any> = new Map();
 
+  private expires = new Map<string, number>();
+
   async get(key: string) {
+    if ((this.expires.get(key) ?? Infinity) <= Date.now()) await this.del(key);
     return this.data.get(key);
   }
 
-  async set(key: string, value: any) {
+  async set(key: string, value: any, mode?: string, ttl?: number) {
+    this.expires.delete(key);
+    if (mode === 'EX' && ttl !== undefined)
+      this.expires.set(key, Date.now() + ttl * 1000);
     this.data.set(key, value);
     return 'OK';
   }
 
   async del(key: string) {
-    this.data.delete(key);
-    return 1;
+    this.expires.delete(key);
+    return this.data.delete(key) ? 1 : 0;
   }
 
   async rpush(key: string, value: any) {

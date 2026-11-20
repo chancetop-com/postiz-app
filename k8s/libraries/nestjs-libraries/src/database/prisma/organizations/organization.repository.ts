@@ -1,5 +1,5 @@
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
-import { Role, ShortLinkPreference, SubscriptionTier } from '@prisma/client';
+import { Prisma, Role, ShortLinkPreference, SubscriptionTier } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
 import { CreateOrgUserDto } from '@gitroom/nestjs-libraries/dtos/auth/create.org.user.dto';
@@ -11,7 +11,7 @@ export class OrganizationRepository {
   constructor(
     private _organization: PrismaRepository<'organization'>,
     private _userOrg: PrismaRepository<'userOrganization'>,
-    private _user: PrismaRepository<'user'>
+    private _user: PrismaRepository<'user' | 'acceptedOrganizationInvite'>
   ) {}
 
   createMaxUser(id: string, name: string, saasName: string, email: string) {
@@ -404,6 +404,48 @@ export class OrganizationRepository {
     });
   }
 
+  async getActiveMembership(userId: string, organizationId: string) {
+    const membership = await this._userOrg.model.userOrganization.findFirst({
+      where: {
+        userId,
+        organizationId,
+        disabled: false,
+        organization: { deletedAt: null },
+      },
+      select: { organizationId: true },
+    });
+    return membership || false;
+  }
+
+  async activationInvitation(userId: string, inviteId: string) {
+    const receipt =
+      await this._user.model.acceptedOrganizationInvite.findUnique({
+        where: { userId_inviteId: { userId, inviteId } },
+      });
+    if (receipt?.organizationId) {
+      return {
+        addedOrg: await this.getActiveMembership(
+          userId,
+          receipt.organizationId
+        ),
+      };
+    }
+    // Older invitations stored only an opaque ID. When several memberships
+    // survive, let the recipient identify their workspace after activation.
+    const memberships = await this._userOrg.model.userOrganization.findMany({
+      where: { userId, disabled: false, organization: { deletedAt: null } },
+      select: { organization: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return {
+      addedOrg: false as const,
+      organizations:
+        memberships.length > 1
+          ? memberships.map(({ organization }) => organization)
+          : undefined,
+    };
+  }
+
   async addUserToOrg(
     userId: string,
     id: string,
@@ -416,7 +458,23 @@ export class OrganizationRepository {
       },
     });
 
-    if (checkIfInviteExists) {
+    const receipt =
+      await this._user.model.acceptedOrganizationInvite.findUnique({
+        where: { userId_inviteId: { userId, inviteId: id } },
+      });
+    if (checkIfInviteExists || receipt) {
+      return false;
+    }
+
+    const checkIfMemberExists =
+      await this._userOrg.model.userOrganization.findFirst({
+        where: {
+          userId,
+          organizationId: orgId,
+        },
+      });
+
+    if (checkIfMemberExists) {
       return false;
     }
 
@@ -424,6 +482,7 @@ export class OrganizationRepository {
       await this._organization.model.organization.findFirst({
         where: {
           id: orgId,
+          deletedAt: null,
         },
         select: {
           subscription: true,
@@ -431,31 +490,47 @@ export class OrganizationRepository {
       });
 
     if (
-      process.env.STRIPE_PUBLISHABLE_KEY &&
-      checkForSubscription?.subscription?.subscriptionTier ===
-        SubscriptionTier.STANDARD
+      !checkForSubscription ||
+      (process.env.STRIPE_PUBLISHABLE_KEY &&
+        checkForSubscription.subscription?.subscriptionTier ===
+          SubscriptionTier.STANDARD)
     ) {
       return false;
     }
 
-    const create = await this._userOrg.model.userOrganization.create({
-      data: {
-        role,
-        userId,
-        organizationId: orgId,
-      },
+    const user = await this._user.model.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { inviteId: true },
     });
+    try {
+      await this._user.model.user.update({
+        where: { id: userId },
+        data: {
+          inviteId: id,
+          organizations: { create: { role, organizationId: orgId } },
+          acceptedInvites: {
+            create: { inviteId: id, organizationId: orgId },
+            ...(user.inviteId
+              ? {
+                  createMany: {
+                    data: [{ inviteId: user.inviteId }],
+                    skipDuplicates: true,
+                  },
+                }
+              : {}),
+          },
+        },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      )
+        return false;
+      throw err;
+    }
 
-    await this._user.model.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        inviteId: id,
-      },
-    });
-
-    return create;
+    return { organizationId: orgId };
   }
 
   async createOrgAndUser(
@@ -529,29 +604,70 @@ export class OrganizationRepository {
   }
 
   async getLastPublishDate(organizationId: string) {
-    const org = await this._organization.model.organization.findUnique({
-      where: {
-        id: organizationId,
-      },
-      select: {
-        post: {
-          where: {
-            state: 'PUBLISHED',
-          },
-          orderBy: {
-            publishDate: 'desc',
-          },
-          take: 1,
-          select: {
-            publishDate: true,
+    // Still publishing, or about to: a post scheduled exactly a day after the
+    // previous one must not end the streak
+    const lookahead = Date.now() + 5 * 60 * 1000;
+    const [org, recurring] = await Promise.all([
+      this._organization.model.organization.findUnique({
+        where: {
+          id: organizationId,
+        },
+        select: {
+          post: {
+            where: {
+              deletedAt: null,
+              parentPostId: null,
+              intervalInDays: null,
+              OR: [
+                { state: 'PUBLISHED' },
+                { state: 'QUEUE', publishDate: { lte: new Date(lookahead) } },
+              ],
+            },
+            orderBy: {
+              publishDate: 'desc',
+            },
+            take: 1,
+            select: {
+              publishDate: true,
+            },
           },
         },
-      },
-    });
+      }),
+      // Recurring posts keep their first publishDate and are republished on
+      // the interval grid, count their latest occurrence instead
+      this._organization.model.organization.findUnique({
+        where: {
+          id: organizationId,
+        },
+        select: {
+          post: {
+            where: {
+              deletedAt: null,
+              parentPostId: null,
+              intervalInDays: { not: null },
+              state: { in: ['PUBLISHED', 'QUEUE'] },
+              publishDate: { lte: new Date(lookahead) },
+            },
+            select: {
+              publishDate: true,
+              intervalInDays: true,
+            },
+          },
+        },
+      }),
+    ]);
 
-    const publishDate = org?.post?.[0]?.publishDate;
+    const dates = [
+      ...(org?.post || []).map((p) => p.publishDate.getTime()),
+      ...(recurring?.post || []).map((p) => {
+        const first = p.publishDate.getTime();
+        const interval = p.intervalInDays * 24 * 60 * 60 * 1000;
+        return first + Math.floor((lookahead - first) / interval) * interval;
+      }),
+    ];
+
     // Never in the future, the streak workflow sleeps until a day after it
-    return publishDate ? Math.min(publishDate.getTime(), Date.now()) : null;
+    return dates.length ? Math.min(Math.max(...dates), Date.now()) : null;
   }
 
   async getTeam(orgId: string) {

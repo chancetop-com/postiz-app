@@ -1,0 +1,15 @@
+size.database_bytes	182771047
+size.post_table_bytes	128106496
+size.post_heap_bytes	50069504
+size.notifications_table_bytes	25812992
+size.errors_table_bytes	16146432
+size.user_table_bytes	163840
+rows.post	200007
+rows.notifications	80003
+rows.errors	50001
+rows.user	3
+rows.organization	2
+rows.user_organization	4
+rows.integration	5
+rows.media	4
+server.version	PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit

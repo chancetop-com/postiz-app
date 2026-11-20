@@ -90,7 +90,7 @@ export class UsersController {
       throw new HttpForbiddenException();
     }
 
-    const impersonate = req.cookies.impersonate || req.headers.impersonate;
+    const impersonate = req.headers.impersonate || req.cookies.impersonate;
     // @ts-ignore
     return {
       ...user,
@@ -151,6 +151,17 @@ export class UsersController {
       throw new HttpException('Unauthorized', 400);
     }
 
+    if (!id) {
+      response.clearCookie('impersonate', {
+        domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
+        path: '/',
+        ...(!process.env.NOT_SECURED && {
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none' as const,
+        }),
+      });
+    }
     response.header('impersonate', id);
   }
 
@@ -261,12 +272,16 @@ export class UsersController {
       return response.status(200).json({ id: null });
     }
 
-    const addedOrg = await this._orgService.addUserToOrg(
-      user.id,
-      getOrgFromCookie.id,
-      getOrgFromCookie.orgId,
-      getOrgFromCookie.role
-    );
+    const addedOrg = await this._authService.joinOrg(user, org);
+
+    // The session lives in this tab's sessionStorage, so the switch is a
+    // response header (read by LayoutContext) rather than a shared cookie.
+    // Only a genuine membership (or the same invitation already accepted by
+    // this account) emits it; another invitation for an existing member does
+    // not.
+    if (typeof addedOrg !== 'boolean' && addedOrg?.organizationId) {
+      response.header('showorg', addedOrg.organizationId);
+    }
 
     response.status(200).json({
       id: typeof addedOrg !== 'boolean' ? addedOrg.organizationId : null,
@@ -286,11 +301,15 @@ export class UsersController {
   }
 
   @Post('/change-org')
-  changeOrg(
+  async changeOrg(
+    @GetUserFromRequest() user: User,
     @Body('id') id: string,
     @Res({ passthrough: true }) response: Response
   ) {
-    response.header('showorg', id);
+    if (typeof id !== 'string' || !id) throw new HttpException('Select a workspace', 400);
+    const membership = await this._orgService.getActiveMembership(user.id, id);
+    if (!membership) throw new HttpException('Workspace membership is no longer active', 404);
+    response.header('showorg', membership.organizationId);
     response.status(200).send();
   }
 
@@ -305,7 +324,7 @@ export class UsersController {
     @Req() req: Request,
     @Res({ passthrough: true }) response: Response
   ) {
-    const impersonate = req.cookies.impersonate || req.headers.impersonate;
+    const impersonate = req.headers.impersonate || req.cookies.impersonate;
     if (impersonate) {
       throw new HttpException(
         'Account cannot be deleted while impersonating',

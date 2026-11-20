@@ -1,0 +1,17 @@
+  NamespaceInfo.Name                    default
+  NamespaceInfo.Id                      4222875a-1689-4b09-bd6e-b7d03185d37c
+  NamespaceInfo.Description             Default namespace for Temporal Server.
+  NamespaceInfo.OwnerEmail               
+  NamespaceInfo.State                   Registered
+  NamespaceInfo.Data                    map[]
+  Config.WorkflowExecutionRetentionTtl  24h0m0s
+  ReplicationConfig.ActiveClusterName   active
+  ReplicationConfig.Clusters            [{"clusterName":"active"}]
+  Config.HistoryArchivalState           Disabled
+  Config.VisibilityArchivalState        Disabled
+  IsGlobalNamespace                     false
+  FailoverVersion                       0
+  FailoverHistory                       []
+  Config.HistoryArchivalUri              
+  Config.VisibilityArchivalUri           
+  Config.CustomSearchAttributeAliases   map[]

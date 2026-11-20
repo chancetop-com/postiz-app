@@ -24,6 +24,11 @@ vi.mock('@gitroom/react/helpers/variable.context', () => ({
 vi.mock('@gitroom/react/translation/get.transation.service.client', () => ({
   useT: () => (key: string, fallback?: string) => fallback || key,
 }));
+vi.mock('@gitroom/frontend/components/layout/redirect', () => ({
+  Redirect: ({ url }: { url: string }) => (
+    <div data-testid="redirect">{url}</div>
+  ),
+}));
 
 import { ContinueIntegration } from '@gitroom/frontend/components/launches/continue.integration';
 
@@ -124,13 +129,11 @@ const api = (routes: {
   return { calls, fetchMock };
 };
 
-const renderContinue = (provider: string) =>
-  render(
-    <ContinueIntegration
-      provider={provider}
-      searchParams={{ code: 'code-1', state: 'state-1' }}
-    />
-  );
+const renderContinue = (
+  provider: string,
+  searchParams: Record<string, string> = { code: 'code-1', state: 'state-1' }
+) =>
+  render(<ContinueIntegration provider={provider} searchParams={searchParams} />);
 
 const saveCalls = (calls: Call[]) =>
   calls.filter((call) => call.url.includes('/provider/'));
@@ -368,26 +371,193 @@ describe('a successful save is the only thing that reports completion', () => {
   );
 });
 
-describe('the single-account providers keep their direct save', () => {
-  it('does not show a chooser when the provider finished in one step', async () => {
-    window.sessionStorage.setItem('channel_popup_mode', 'true');
-    const windowOpener = opener();
-    const close = closeSpy();
-    const { calls } = api({
-      callback: () => respond(200, { id: 'integration-1' }),
+/**
+ * A two-step link can be completed from a tab that is signed into another
+ * organization (or anonymously). The chooser always belongs to the
+ * organization stored under the OAuth state, so the save must reach it even
+ * when the current tab first tries its own organization.
+ */
+describe('the two-step save keeps the link organization', () => {
+  const routed = (routes: {
+    callback: Response;
+    authenticated?: (url: string) => Response;
+    public?: (url: string) => Response;
+  }) => {
+    const calls: Call[] = [];
+    const fetchMock = vi.fn(async (url: string, init: any = {}) => {
+      calls.push({
+        url,
+        body: init.body ? JSON.parse(init.body) : undefined,
+        headers: (init.headers || {}) as Record<string, string>,
+      });
+      if (url.includes('social-connect')) {
+        return routes.callback;
+      }
+      if (url === '/integrations/provider/integration-1/connect') {
+        if (!routes.authenticated) {
+          throw new Error('authenticated save not expected');
+        }
+        return routes.authenticated(url);
+      }
+      if (url === '/integrations/public/provider/integration-1/connect') {
+        if (!routes.public) {
+          throw new Error('public save not expected');
+        }
+        return routes.public(url);
+      }
+      throw new Error(`unexpected request ${url}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return { calls, fetchMock };
+  };
+
+  it('falls back to the public save by state when the tab organization does not own the channel', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-b');
+    window.sessionStorage.setItem('showorg', 'org-b');
+    const { calls } = routed({
+      callback: callback(facebookPages),
+      authenticated: () => respond(404, { message: 'Integration not found' }),
+      public: () => respond(200, { success: true }),
     });
 
-    const { queryByText } = renderContinue('instagram-standalone');
+    const { findByText, getByText } = renderContinue('facebook');
 
-    await waitFor(() => expect(close).toHaveBeenCalled());
-    expect(queryByText('Save')).toBeNull();
-    expect(queryByText('Configure Your Channel')).toBeNull();
-    expect(saveCalls(calls)).toHaveLength(0);
-    expect(windowOpener.postMessage).toHaveBeenCalledWith(
-      { type: 'CHANNEL_UPDATED', provider: 'instagram-standalone' },
-      '*'
+    fireEvent.click(await findByText('Brand page'));
+    fireEvent.click(getByText('Save'));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        '/launches?added=facebook&msg=Channel Added'
+      )
     );
+    expect(push).toHaveBeenCalledTimes(1);
+    // the current-organization save is tried first, then the state-bound one
+    expect(saveCalls(calls).map((call) => call.url)).toEqual([
+      '/integrations/provider/integration-1/connect',
+      '/integrations/public/provider/integration-1/connect',
+    ]);
+    // the fallback is not a second guess: it carries the state the platform
+    // returned and the account the merchant picked
+    expect(saveCalls(calls)[1].body).toMatchObject({
+      state: 'state-1',
+      page: 'page-2',
+    });
   });
+
+  it('keeps the chooser and retries only the state-bound save after a failed fallback', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-b');
+    window.sessionStorage.setItem('showorg', 'org-b');
+    let publicAttempts = 0;
+    const { calls } = routed({
+      callback: callback(youtubePages),
+      authenticated: () => respond(404, { message: 'Integration not found' }),
+      public: () =>
+        ++publicAttempts === 1
+          ? respond(500, { message: 'Page not found in your accounts' })
+          : respond(200, { success: true }),
+    });
+
+    const { findByText, getByText, queryByText } = renderContinue('youtube');
+
+    fireEvent.click(await findByText('Second channel'));
+    fireEvent.click(getByText('Save'));
+
+    expect(await findByText('Page not found in your accounts')).toBeTruthy();
+    expect(push).not.toHaveBeenCalled();
+    // the picked channel is still there for another try
+    expect(queryByText('Second channel')).toBeTruthy();
+
+    fireEvent.click(getByText('Save'));
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        '/launches?added=youtube&msg=Channel Added'
+      )
+    );
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(
+      saveCalls(calls).filter((call) =>
+        call.url.startsWith('/integrations/public/provider/')
+      )
+    ).toHaveLength(2);
+    expect(
+      saveCalls(calls).every((call) => call.url.includes('/provider/'))
+    ).toBe(true);
+  });
+
+  it('saves an anonymous recipient only through the public endpoint', async () => {
+    window.sessionStorage.removeItem('auth');
+    window.sessionStorage.removeItem('showorg');
+    const { calls } = routed({
+      callback: callback(instagramPages),
+      public: () => respond(200, { success: true }),
+    });
+
+    const view = renderContinue('instagram');
+
+    fireEvent.click(await view.findByText('Second account'));
+    fireEvent.click(view.getByText('Save'));
+
+    // anonymous without a return address stays on the page
+    expect(await view.findByText('Channel Added')).toBeTruthy();
+    expect(push).not.toHaveBeenCalled();
+    expect(saveCalls(calls)).toHaveLength(1);
+    expect(saveCalls(calls)[0].url).toBe(
+      '/integrations/public/provider/integration-1/connect'
+    );
+    expect(savedSelection(saveCalls(calls)[0].body)).toEqual({
+      id: 'ig-2',
+      pageId: 'page-2',
+    });
+  });
+
+  it('saves a recipient signed into the link organization through its own endpoint', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-a');
+    window.sessionStorage.setItem('showorg', 'org-a');
+    const { calls } = routed({
+      callback: callback(youtubePages),
+      authenticated: () => respond(200, { success: true }),
+    });
+
+    const { findByText, getByText } = renderContinue('youtube');
+
+    fireEvent.click(await findByText('Second channel'));
+    fireEvent.click(getByText('Save'));
+
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    expect(saveCalls(calls)).toHaveLength(1);
+    expect(saveCalls(calls)[0].url).toBe(
+      '/integrations/provider/integration-1/connect'
+    );
+    expect(saveCalls(calls)[0].headers).toMatchObject({
+      auth: 'jwt-a',
+      showorg: 'org-a',
+    });
+  });
+});
+
+describe('the single-account providers keep their direct save', () => {
+  it.each(['linkedin', 'tiktok', 'instagram-standalone'])(
+    'does not show a chooser when %s finished in one step',
+    async (provider) => {
+      window.sessionStorage.setItem('channel_popup_mode', 'true');
+      const windowOpener = opener();
+      const close = closeSpy();
+      const { calls } = api({
+        callback: () => respond(200, { id: 'integration-1' }),
+      });
+
+      const { queryByText } = renderContinue(provider);
+
+      await waitFor(() => expect(close).toHaveBeenCalled());
+      expect(queryByText('Save')).toBeNull();
+      expect(queryByText('Configure Your Channel')).toBeNull();
+      expect(saveCalls(calls)).toHaveLength(0);
+      expect(windowOpener.postMessage).toHaveBeenCalledWith(
+        { type: 'CHANNEL_UPDATED', provider },
+        '*'
+      );
+    }
+  );
 });
 
 describe('the chooser follows the candidate list', () => {
@@ -522,5 +692,50 @@ describe('early callback exits for a two-step provider', () => {
     expect(queryByText('Configure Your Channel')).toBeNull();
     expect(windowOpener.postMessage).not.toHaveBeenCalled();
     expect(close).not.toHaveBeenCalled();
+  });
+});
+
+describe('a provider-side cancel or callback failure in the popup', () => {
+  beforeEach(() => {
+    window.sessionStorage.setItem('channel_popup_mode', 'true');
+  });
+
+  it('shows the callback error, reports nothing and does not redirect or close', async () => {
+    const windowOpener = opener();
+    const close = closeSpy();
+    api({
+      callback: () => respond(500, { message: 'invalid_grant' }),
+    });
+
+    const { findByText, queryByTestId } = renderContinue('youtube');
+
+    expect(await findByText('invalid_grant')).toBeTruthy();
+    expect(windowOpener.postMessage).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    // a popup has no dashboard to return to and no binding to report
+    expect(queryByTestId('redirect')).toBeNull();
+  });
+
+  it('treats a provider cancel as the same non-binding failure', async () => {
+    const windowOpener = opener();
+    const close = closeSpy();
+    const { calls } = api({
+      callback: () => respond(400, { message: 'access_denied' }),
+    });
+
+    const { findByText, queryByTestId } = renderContinue('facebook', {
+      error: 'access_denied',
+      state: 'state-1',
+    });
+
+    expect(await findByText('access_denied')).toBeTruthy();
+    // the cancel came back to the callback, never to the chooser
+    expect(calls.filter((call) => call.url.includes('social-connect'))).toHaveLength(1);
+    expect(calls[0].body.error).toBe('access_denied');
+    expect(windowOpener.postMessage).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    expect(queryByTestId('redirect')).toBeNull();
   });
 });

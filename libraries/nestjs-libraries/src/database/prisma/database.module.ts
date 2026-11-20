@@ -8,6 +8,7 @@ import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/s
 import { SubscriptionRepository } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.repository';
 import { NotificationService } from '@gitroom/nestjs-libraries/database/prisma/notifications/notification.service';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
+import { ConnectLinkRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/connect.link.repository';
 import { IntegrationRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.repository';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
 import { PostsRepository } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.repository';
@@ -16,10 +17,14 @@ import { MediaService } from '@gitroom/nestjs-libraries/database/prisma/media/me
 import { MediaRepository } from '@gitroom/nestjs-libraries/database/prisma/media/media.repository';
 import { NotificationsRepository } from '@gitroom/nestjs-libraries/database/prisma/notifications/notifications.repository';
 import { EmailService } from '@gitroom/nestjs-libraries/services/email.service';
+import { EncryptionService } from '@gitroom/nestjs-libraries/services/encryption.service';
 import { StripeService } from '@gitroom/nestjs-libraries/services/stripe.service';
 import { PaymentService } from '@gitroom/nestjs-libraries/services/payment/payment.service';
 import { PaymentProviderManager } from '@gitroom/nestjs-libraries/services/payment/payment.provider.manager';
 import { RevenueCatProvider } from '@gitroom/nestjs-libraries/services/payment/providers/revenuecat.provider';
+import { AttributionService } from '@gitroom/nestjs-libraries/services/attribution/attribution.service';
+import { AttributionProviderManager } from '@gitroom/nestjs-libraries/services/attribution/attribution.provider.manager';
+import { LeadJourneyProvider } from '@gitroom/nestjs-libraries/services/attribution/providers/leadjourney.provider';
 import { ExtractContentService } from '@gitroom/nestjs-libraries/openai/extract.content.service';
 import { OpenaiService } from '@gitroom/nestjs-libraries/openai/openai.service';
 import { DeepgramService } from '@gitroom/nestjs-libraries/deepgram/deepgram.service';
@@ -71,12 +76,16 @@ import { AdminStatsService } from '@gitroom/nestjs-libraries/database/prisma/adm
     WebhooksService,
     IntegrationService,
     IntegrationRepository,
+    ConnectLinkRepository,
     PostsService,
     PostsRepository,
     StripeService,
     PaymentService,
     PaymentProviderManager,
     RevenueCatProvider,
+    AttributionService,
+    AttributionProviderManager,
+    LeadJourneyProvider,
     SignatureRepository,
     AutopostRepository,
     AutopostService,
@@ -94,6 +103,7 @@ import { AdminStatsService } from '@gitroom/nestjs-libraries/database/prisma/adm
     ClippingRepository,
     FalService,
     EmailService,
+    EncryptionService,
     TrackService,
     ShortLinkService,
     SetsService,

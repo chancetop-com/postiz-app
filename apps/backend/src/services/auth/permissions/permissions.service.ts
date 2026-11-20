@@ -27,13 +27,23 @@ export class PermissionsService {
       (!process.env.STRIPE_PUBLISHABLE_KEY ? 'PRO' : 'FREE');
 
     const { channel, ...all } = pricing[tier];
+    const baseChannels = tier === 'FREE' ? channel : -10;
     return {
       subscription,
+      channelLimit: Math.max(
+        baseChannels || 0,
+        subscription?.totalChannels || 0
+      ),
       options: {
         ...all,
-        ...{ channel: tier === 'FREE' ? channel : -10 },
+        channel: baseChannels,
       },
     };
+  }
+
+  async channelLimit(orgId: string) {
+    if (!process.env.STRIPE_PUBLISHABLE_KEY) return undefined;
+    return (await this.getPackageOptions(orgId)).channelLimit;
   }
 
   async check(
@@ -62,7 +72,7 @@ export class PermissionsService {
       });
     }
 
-    const { subscription, options } = await this.getPackageOptions(orgId);
+    const { options, channelLimit } = await this.getPackageOptions(orgId);
     for (const [action, section] of requestedPermission) {
       // check for the amount of channels
       if (section === Sections.CHANNEL) {
@@ -84,10 +94,7 @@ export class PermissionsService {
           await this._integrationService.getIntegrationsList(orgId)
         ).filter((f) => !f.refreshNeeded).length;
 
-        if (
-          (options.channel && options.channel > totalChannels) ||
-          (subscription?.totalChannels || 0) > totalChannels
-        ) {
+        if (channelLimit > totalChannels) {
           can(action, section);
           continue;
         }

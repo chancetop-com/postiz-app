@@ -17,6 +17,7 @@ import {
 
 interface TwoStepState {
   integrationId: string;
+  publicSelection: boolean;
   onboarding: boolean;
   pages: any[];
   returnURL?: string;
@@ -44,7 +45,7 @@ export const ContinueIntegration: FC<{
 
   // Helper to handle navigation - redirects if logged or returnURL exists, otherwise shows inline
   const navigateOrShow = useCallback(
-    (path: string, returnURL: string | undefined, successMessage: string) => {
+    (path: string, returnURL: string | undefined, message: string, failed = false) => {
       // Popup mode: opened from an iframe to handle OAuth without navigating the iframe itself.
       // Send postMessage to the opener so it refreshes the channel list, then close popup.
       if (isChannelPopup()) {
@@ -56,13 +57,17 @@ export const ContinueIntegration: FC<{
       if (returnURL) {
         // If returnURL exists, always redirect to it with the path params
         const params = path.includes('?') ? path.split('?')[1] : '';
-        push(params ? `${returnURL}?${params}` : returnURL);
+        // a returnURL of the public API may carry its own query string
+        const separator = returnURL.includes('?') ? '&' : '?';
+        push(params ? `${returnURL}${separator}${params}` : returnURL);
       } else if (window.sessionStorage.getItem('auth')) {
         // If logged in without returnURL, use normal navigation
         push(path);
+      } else if (failed) {
+        setErrorMessage(message);
+        setError(true);
       } else {
-        // If not logged in without returnURL, show success inline
-        setSuccessState({ message: successMessage });
+        setSuccessState({ message });
       }
     },
     [provider, push]
@@ -77,7 +82,7 @@ export const ContinueIntegration: FC<{
     }
     if (provider === 'x') {
       return {
-        state: searchParams.oauth_token || '',
+        state: searchParams.oauth_token || searchParams.denied || '',
         code: searchParams.oauth_verifier || '',
         refresh: searchParams.refresh || '',
       };
@@ -96,7 +101,9 @@ export const ContinueIntegration: FC<{
       return {
         ...searchParams,
         state: searchParams.state || '',
-        code: searchParams.code + '&&&&' + searchParams.device_id,
+        code: searchParams.code
+          ? searchParams.code + '&&&&' + searchParams.device_id
+          : '',
       };
     }
 
@@ -111,7 +118,7 @@ export const ContinueIntegration: FC<{
       };
     }
 
-    return searchParams;
+    return { ...searchParams, code: searchParams.code || '' };
   }, []);
 
   useEffect(() => {
@@ -123,15 +130,19 @@ export const ContinueIntegration: FC<{
         method: 'POST',
         body: JSON.stringify({ ...modifiedParams, timezone }),
       });
+      // A 400 body is read once to decide whether this was a public flow at
+      // all; keep it so a genuine provider refusal can still be shown.
+      let errorData: any = null;
 
       // If public endpoint fails with specific errors, try authenticated endpoint
       if (data.status === HttpStatusCode.BadRequest) {
-        const errorData = await data.json().catch(() => ({}));
+        errorData = await data.json().catch(() => ({}));
         // "Invalid connection type" means this wasn't started as a public flow
         if (
           errorData.message?.includes('Invalid connection type') ||
           errorData.message?.includes('Invalid or expired state')
         ) {
+          errorData = null;
           data = await fetch(`/integrations/social-connect/${provider}`, {
             method: 'POST',
             body: JSON.stringify({ ...modifiedParams, timezone }),
@@ -142,16 +153,16 @@ export const ContinueIntegration: FC<{
       if (data.status === HttpStatusCode.PreconditionFailed) {
         const { returnURL } = await data.json().catch(() => ({}));
         navigateOrShow(
-          `/launches?precondition=true`,
-          returnURL,
-          'Precondition failed'
+          '/launches?precondition=true', returnURL,
+          t('channel_connection_refused', 'This channel could not be connected to the workspace.'), true
         );
         return;
       }
 
       if (data.status === HttpStatusCode.NotAcceptable) {
-        const { msg, returnURL } = await data.json();
-        navigateOrShow(`/launches?msg=${msg}`, returnURL, msg);
+        const { msg, message, returnURL } = await data.json();
+        const reason = msg || message || 'Could not add provider';
+        navigateOrShow(`/launches?msg=${encodeURIComponent(reason)}`, returnURL, reason, true);
         return;
       }
 
@@ -159,16 +170,25 @@ export const ContinueIntegration: FC<{
         data.status !== HttpStatusCode.Ok &&
         data.status !== HttpStatusCode.Created
       ) {
-        const errorData = await data.json().catch(() => ({}));
-        setErrorMessage(
-          errorData.message || errorData.msg || 'Could not add provider'
-        );
+        errorData = errorData || (await data.json().catch(() => ({})));
+        const message =
+          errorData.message || errorData.msg || 'Could not add provider';
+        if (errorData.returnURL) {
+          navigateOrShow(
+            `/launches?msg=${encodeURIComponent(message)}`,
+            errorData.returnURL,
+            message
+          );
+          return;
+        }
+        setErrorMessage(message);
         setError(true);
         return;
       }
 
       const {
         inBetweenSteps,
+        publicSelection,
         id,
         onboarding: resOnboarding,
         pages,
@@ -206,9 +226,10 @@ export const ContinueIntegration: FC<{
       }
 
       // If it's a two-step provider, show the selection UI inline
-      if (inBetweenSteps && !searchParams.refresh) {
+      if (inBetweenSteps && (publicSelection || !searchParams.refresh)) {
         setTwoStepState({
           integrationId: id,
+          publicSelection: !!publicSelection,
           onboarding,
           pages: pages || [],
           returnURL,
@@ -235,15 +256,18 @@ export const ContinueIntegration: FC<{
 
       try {
         // Use public or authenticated endpoint based on the flow
-        const endpoint = window.sessionStorage.getItem('auth')
-          ? `/integrations/provider/${twoStepState.integrationId}/connect`
-          : `/integrations/public/provider/${twoStepState.integrationId}/connect`;
+        const logged = !!window.sessionStorage.getItem('auth');
+        const endpoint =
+          logged && !twoStepState.publicSelection
+            ? `/integrations/provider/${twoStepState.integrationId}/connect`
+            : `/integrations/public/provider/${twoStepState.integrationId}/connect`;
 
+        const body = JSON.stringify({ ...modifiedParams, ...data });
         let response: Response;
         try {
           response = await fetch(endpoint, {
             method: 'POST',
-            body: JSON.stringify({ ...modifiedParams, ...data }),
+            body,
           });
         } catch {
           // The request never reached the API, so nothing was written either.
@@ -251,6 +275,22 @@ export const ContinueIntegration: FC<{
             t('failed_to_save_channel', 'Failed to save channel configuration')
           );
           return;
+        }
+
+        // Logged into another organization than the one the channel is added
+        // to (a connect link or an invite link): save it by the connection state
+        if (
+          logged &&
+          !twoStepState.publicSelection &&
+          response.status === HttpStatusCode.NotFound
+        ) {
+          response = await fetch(
+            `/integrations/public/provider/${twoStepState.integrationId}/connect`,
+            {
+              method: 'POST',
+              body,
+            }
+          );
         }
 
         if (
@@ -261,6 +301,16 @@ export const ContinueIntegration: FC<{
           // Keep the popup on the selection: the binding was not written, so
           // reporting completion here would show a connection that does not
           // exist. The chooser stays usable for another attempt.
+          if (twoStepState.publicSelection && twoStepState.returnURL) {
+            const message =
+              errorData.message || 'Could not complete channel selection';
+            navigateOrShow(
+              `/launches?msg=${encodeURIComponent(message)}`,
+              twoStepState.returnURL,
+              message
+            );
+            return;
+          }
           setTwoStepError(
             errorData.message ||
               t(
@@ -447,9 +497,11 @@ export const ContinueIntegration: FC<{
                 'An error occurred. Please try again.'
               )}
           </div>
-          {typeof window !== 'undefined' && window.sessionStorage.getItem('auth') && (
-            <Redirect url="/launches" delay={3000} />
-          )}
+          {typeof window !== 'undefined' &&
+            window.sessionStorage.getItem('auth') &&
+            !isChannelPopup() && (
+              <Redirect url="/launches" delay={3000} />
+            )}
         </div>
       </div>
     );

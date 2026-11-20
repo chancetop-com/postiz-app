@@ -34,8 +34,26 @@ export class OrganizationService {
     return this._organizationRepository.getCount();
   }
 
-  async createMaxUser(id: string, name: string, saasName: string, email: string) {
-    return this._organizationRepository.createMaxUser(id, name, saasName, email);
+  async createMaxUser(
+    id: string,
+    name: string,
+    saasName: string,
+    email: string
+  ) {
+    return this._organizationRepository.createMaxUser(
+      id,
+      name,
+      saasName,
+      email
+    );
+  }
+
+  getActiveMembership(userId: string, orgId: string) {
+    return this._organizationRepository.getActiveMembership(userId, orgId);
+  }
+
+  activationInvitation(userId: string, inviteId: string) {
+    return this._organizationRepository.activationInvitation(userId, inviteId);
   }
 
   addUserToOrg(

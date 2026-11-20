@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AuthMiddleware } from '@gitroom/backend/services/auth/auth.middleware';
+import { AuthService } from '@gitroom/backend/services/auth/auth.service';
 import { UsersController } from '@gitroom/backend/api/routes/users.controller';
 import { AuthService as AuthChecker } from '@gitroom/helpers/auth/auth.service';
 
@@ -115,15 +116,50 @@ describe('default organisation attribution', () => {
   it('rejects a user that has no organisation at all', async () => {
     await expect(run([])).rejects.toMatchObject({ status: 403 });
   });
+
+  it('prefers the accepting tab header over a legacy shared showorg cookie', async () => {
+    const middleware = new AuthMiddleware(
+      {
+        getOrgsByUserId: vi
+          .fn()
+          .mockResolvedValue([org('org-cookie'), org('org-accepting-tab')]),
+        updateApiKey: vi.fn(),
+        getUserOrg: vi.fn(),
+      } as never,
+      {
+        getUserById: vi
+          .fn()
+          .mockResolvedValue({ id: 'user-1', activated: true, isSuperAdmin: false }),
+      } as never
+    );
+    const req: any = {
+      headers: {
+        auth: AuthChecker.signJWT({
+          id: 'user-1',
+          email: 'merchant@example.test',
+          providerName: 'GENERIC',
+          activated: true,
+        }),
+        showorg: 'org-accepting-tab',
+      },
+      // A stale first-party cookie from an older deployment must not move the
+      // tab that just accepted the invitation.
+      cookies: { showorg: 'org-cookie' },
+    };
+
+    await middleware.use(req, {} as never, vi.fn());
+
+    expect(req.org.id).toBe('org-accepting-tab');
+  });
 });
 
 describe('manual organisation switch endpoint', () => {
-  const controller = () =>
+  const controller = (active = true) =>
     new UsersController(
       {} as never,
       {} as never,
       {} as never,
-      {} as never,
+      { getActiveMembership: async () => active && { organizationId: 'org-2' } } as never,
       {} as never,
       {} as never
     );
@@ -145,12 +181,18 @@ describe('manual organisation switch endpoint', () => {
     return { response, headers };
   };
 
-  it('returns the selected organisation so the tab can store it', () => {
+  it('returns the selected organisation so the tab can store it', async () => {
     const { response, headers } = recordedResponse();
 
-    controller().changeOrg('org-2', response as never);
+    await controller().changeOrg({ id: 'user' } as never, 'org-2', response as never);
 
     expect(headers.showorg).toBe('org-2');
+  });
+
+  it('does not select a workspace after membership has been removed or disabled', async () => {
+    const { response, headers } = recordedResponse();
+    await expect(controller(false).changeOrg({ id: 'user' } as never, 'org-2', response as never)).rejects.toMatchObject({ status: 404 });
+    expect(headers.showorg).toBeUndefined();
   });
 
   it('creates the api key of the organisation that was actually selected', async () => {
@@ -178,5 +220,207 @@ describe('manual organisation switch endpoint', () => {
 
     expect(req.org.id).toBe('org-chosen');
     expect(updateApiKey).toHaveBeenCalledWith('org-chosen');
+  });
+});
+
+describe('accepting an invitation from an existing tab session', () => {
+  const invite = (overrides: Record<string, unknown> = {}) =>
+    AuthChecker.signJWT({
+      email: 'merchant@example.test',
+      role: 'USER',
+      orgId: 'org-invited',
+      timeLimit: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      id: 'invite-1',
+      ...overrides,
+    });
+
+  const response = () => {
+    const headers: Record<string, string> = {};
+    const cookies: unknown[] = [];
+    let body: unknown;
+    let status = 200;
+    const res = {
+      header(name: string, value: string) {
+        headers[name.toLowerCase()] = value;
+        return res;
+      },
+      cookie(...args: unknown[]) {
+        cookies.push(args);
+        return res;
+      },
+      status(code: number) {
+        status = code;
+        return res;
+      },
+      json(value: unknown) {
+        body = value;
+        return res;
+      },
+    };
+    return {
+      res,
+      headers,
+      cookies,
+      get body() {
+        return body;
+      },
+      get status() {
+        return status;
+      },
+    };
+  };
+
+  const build = (addUserToOrg: any, active = true) => {
+    const auth = new AuthService(
+      {} as never,
+      {
+        addUserToOrg,
+        getActiveMembership: async () =>
+          active && { organizationId: 'org-invited' },
+      } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      { lead: vi.fn() } as never
+    );
+    const controller = new UsersController(
+      {} as never,
+      {} as never,
+      auth,
+      { addUserToOrg } as never,
+      {} as never,
+      {} as never
+    );
+    return { controller, addUserToOrg };
+  };
+
+  it('adds one membership and returns showorg for the accepting tab', async () => {
+    const addUserToOrg = vi
+      .fn()
+      .mockResolvedValue({ organizationId: 'org-invited' });
+    const { controller } = build(addUserToOrg);
+    const recorded = response();
+
+    await controller.joinOrg(
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: null,
+      } as never,
+      invite({ role: 'ADMIN' }),
+      recorded.res as never
+    );
+
+    expect(addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(addUserToOrg).toHaveBeenCalledWith(
+      'user-1',
+      'invite-1',
+      'org-invited',
+      'ADMIN'
+    );
+    expect(recorded.status).toBe(200);
+    expect(recorded.body).toEqual({ id: 'org-invited' });
+    expect(recorded.headers.showorg).toBe('org-invited');
+    // tab-scoped: the switch travels in the response header, not a cookie
+    expect(recorded.cookies).toHaveLength(0);
+  });
+
+  it('keeps a repeated acceptance at one membership and emits no showorg', async () => {
+    const addUserToOrg = vi.fn().mockResolvedValue(false);
+    const { controller } = build(addUserToOrg);
+    const recorded = response();
+
+    await controller.joinOrg(
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: 'another-invite',
+      } as never,
+      invite(),
+      recorded.res as never
+    );
+
+    expect(addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(recorded.body).toEqual({ id: null });
+    expect(recorded.headers.showorg).toBeUndefined();
+  });
+
+  it('re-selects the invited organization for the accepted invitation after activation', async () => {
+    const addUserToOrg = vi.fn().mockResolvedValue(false);
+    const { controller } = build(addUserToOrg);
+    const recorded = response();
+
+    await controller.joinOrg(
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: 'invite-1',
+      } as never,
+      invite(),
+      recorded.res as never
+    );
+
+    expect(addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(recorded.body).toEqual({ id: 'org-invited' });
+    expect(recorded.headers.showorg).toBe('org-invited');
+  });
+
+  it('ignores an accepted invitation after its membership was removed or disabled', async () => {
+    const { controller } = build(vi.fn().mockResolvedValue(false), false);
+    const recorded = response();
+    await controller.joinOrg(
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: 'invite-1',
+      } as never,
+      invite(),
+      recorded.res as never
+    );
+    expect(recorded.headers.showorg).toBeUndefined();
+  });
+
+  it('does not join an invitation addressed to another account', async () => {
+    const addUserToOrg = vi.fn();
+    const { controller } = build(addUserToOrg);
+    const recorded = response();
+
+    await controller.joinOrg(
+      {
+        id: 'user-2',
+        email: 'other@example.test',
+        inviteId: null,
+      } as never,
+      invite(),
+      recorded.res as never
+    );
+
+    expect(addUserToOrg).not.toHaveBeenCalled();
+    expect(recorded.body).toEqual({ id: null });
+    expect(recorded.headers.showorg).toBeUndefined();
+  });
+
+  it.each([
+    ['expired', invite({ timeLimit: '2000-01-01T00:00:00.000Z' })],
+    ['invalid', 'not-a-signed-invite'],
+    ['unsigned org id', 'org-invited'],
+  ])('leaves membership untouched for an %s invitation', async (_label, value) => {
+    const addUserToOrg = vi.fn();
+    const { controller } = build(addUserToOrg);
+    const recorded = response();
+
+    await controller.joinOrg(
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: null,
+      } as never,
+      value,
+      recorded.res as never
+    );
+
+    expect(addUserToOrg).not.toHaveBeenCalled();
+    expect(recorded.body).toEqual({ id: null });
+    expect(recorded.headers.showorg).toBeUndefined();
   });
 });

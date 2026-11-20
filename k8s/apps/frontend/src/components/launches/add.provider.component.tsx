@@ -16,12 +16,10 @@ import { object, string } from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { web3List } from '@gitroom/frontend/components/launches/web3/web3.list';
 import { isAllowedAddChannel } from '@gitroom/frontend/components/launches/allowed.channels';
-import {
-  buildChannelRelayUrl,
-  isEmbeddedInIframe,
-} from '@gitroom/frontend/components/launches/channel.popup';
+import { openChannelOAuth } from '@gitroom/frontend/components/launches/channel.popup';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import clsx from 'clsx';
+import { PlatformIcon } from '@gitroom/frontend/components/ui/platform.icon.component';
 import copy from 'copy-to-clipboard';
 import { capitalize } from 'lodash';
 const resolver = classValidatorResolver(ApiKeyDto);
@@ -287,7 +285,7 @@ const ExtensionNotFound: FC = () => {
       <p className="text-[14px] text-textColor/80">
         {t(
           'extension_not_available',
-          'The Postiz browser extension is not installed. You need to install it before connecting this channel.'
+          'The Postiz browser extension is not installed or disabled. You need to install and enable it before connecting this channel.'
         )}
       </p>
       <div className="flex gap-[10px]">
@@ -313,6 +311,109 @@ const ExtensionNotFound: FC = () => {
         </Button>
       </div>
     </div>
+  );
+};
+
+export const useExtensionConnect = () => {
+  const { extensionId } = useVariables();
+  const modal = useModals();
+  const toaster = useToaster();
+  const fetch = useFetch();
+  const t = useT();
+  return useCallback(
+    async (
+      identifier: string,
+      params: { onboarding?: boolean; refresh?: string }
+    ) => {
+      if (
+        !extensionId ||
+        typeof chrome === 'undefined' ||
+        !chrome?.runtime?.sendMessage
+      ) {
+        modal.openModal({
+          title: t('extension_not_available_title', 'Extension Not Found'),
+          withCloseButton: true,
+          children: <ExtensionNotFound />,
+        });
+        return;
+      }
+      try {
+        await new Promise<void>((resolve, reject) => {
+          chrome.runtime.sendMessage(
+            extensionId,
+            { type: 'PING' },
+            (response: any) => {
+              if (chrome.runtime.lastError || !response?.status) {
+                reject(new Error('Extension not reachable'));
+              } else {
+                resolve();
+              }
+            }
+          );
+        });
+      } catch {
+        toaster.show(
+          t(
+            'extension_not_installed',
+            'Postiz browser extension is not installed or not reachable.'
+          ),
+          'warning'
+        );
+        return;
+      }
+      try {
+        const cookieResponse = await new Promise<any>((resolve, reject) => {
+          chrome.runtime.sendMessage(
+            extensionId,
+            { type: 'GET_COOKIES', provider: identifier },
+            (response: any) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+              } else {
+                resolve(response);
+              }
+            }
+          );
+        });
+        if (!cookieResponse.success) {
+          toaster.show(
+            cookieResponse.error ||
+              t(
+                'extension_cookies_missing',
+                'Could not get cookies. Please log in to the platform first.'
+              ),
+            'warning'
+          );
+          return;
+        }
+        const response = await fetch(
+          `/integrations/social/${identifier}${
+            params.refresh
+              ? `?refresh=${params.refresh}`
+              : params.onboarding
+              ? '?onboarding=true'
+              : ''
+          }`
+        );
+        if (response.status === 402) {
+          return;
+        }
+        const { url } = await response.json();
+        modal.closeAll();
+        window.location.href = `/integrations/social/${identifier}?state=${url}&code=${Buffer.from(
+          JSON.stringify(cookieResponse.cookies)
+        ).toString('base64')}${params.onboarding ? '&onboarding=true' : ''}`;
+      } catch {
+        toaster.show(
+          t(
+            'extension_communication_error',
+            'Failed to communicate with the browser extension.'
+          ),
+          'warning'
+        );
+      }
+    },
+    [extensionId]
   );
 };
 
@@ -413,7 +514,7 @@ export const AddProviderComponent: FC<{
   isMobile?: boolean;
 }> = (props) => {
   const { update, social, article, onboarding, isMobile } = props;
-  const { isGeneral, extensionId } = useVariables();
+  const extensionConnect = useExtensionConnect();
   const toaster = useToaster();
   const router = useRouter();
   const fetch = useFetch();
@@ -537,18 +638,18 @@ export const AddProviderComponent: FC<{
           // then redirects to the OAuth URL. After the channel is added the
           // popup reports completion to this window so the list can refresh.
           // Ordinary browser windows keep navigating in place.
-          if (isEmbeddedInIframe()) {
-            const relayUrl = buildChannelRelayUrl(url, {
-              auth: window.sessionStorage.getItem('auth'),
-              showorg: window.sessionStorage.getItem('showorg'),
-              impersonate: window.sessionStorage.getItem('impersonate'),
-            });
-            window.open(relayUrl, '_blank', 'popup,width=600,height=700');
+          const result = openChannelOAuth(url);
+          if (result === 'blocked') {
+            toaster.show(
+              t(
+                'channel_popup_blocked',
+                'Allow pop-ups for this site and try again.'
+              ),
+              'warning'
+            );
+          } else if (result === 'popup') {
             modal.closeAll();
-            return;
           }
-
-          window.location.href = url;
         };
         if (isWeb3) {
           openWeb3();
@@ -575,89 +676,7 @@ export const AddProviderComponent: FC<{
           if (!confirmed) {
             return;
           }
-          if (
-            !extensionId ||
-            typeof chrome === 'undefined' ||
-            !chrome?.runtime?.sendMessage
-          ) {
-            modal.openModal({
-              title: t('extension_not_available_title', 'Extension Not Found'),
-              withCloseButton: true,
-              children: <ExtensionNotFound />,
-            });
-            return;
-          }
-          try {
-            await new Promise<void>((resolve, reject) => {
-              chrome.runtime.sendMessage(
-                extensionId,
-                { type: 'PING' },
-                (response: any) => {
-                  if (chrome.runtime.lastError || !response?.status) {
-                    reject(new Error('Extension not reachable'));
-                  } else {
-                    resolve();
-                  }
-                }
-              );
-            });
-          } catch {
-            toaster.show(
-              t(
-                'extension_not_installed',
-                'Postiz browser extension is not installed or not reachable.'
-              ),
-              'warning'
-            );
-            return;
-          }
-          try {
-            const cookieResponse = await new Promise<any>((resolve, reject) => {
-              chrome.runtime.sendMessage(
-                extensionId,
-                { type: 'GET_COOKIES', provider: identifier },
-                (response: any) => {
-                  if (chrome.runtime.lastError) {
-                    reject(new Error(chrome.runtime.lastError.message));
-                  } else {
-                    resolve(response);
-                  }
-                }
-              );
-            });
-            if (!cookieResponse.success) {
-              toaster.show(
-                cookieResponse.error ||
-                  t(
-                    'extension_cookies_missing',
-                    'Could not get cookies. Please log in to the platform first.'
-                  ),
-                'warning'
-              );
-              return;
-            }
-            const response = await fetch(
-              `/integrations/social/${identifier}${
-                onboarding ? '?onboarding=true' : ''
-              }`
-            );
-            if (response.status === 402) {
-              return;
-            }
-            const { url } = await response.json();
-            modal.closeAll();
-            window.location.href = `/integrations/social/${identifier}?state=${url}&code=${Buffer.from(
-              JSON.stringify(cookieResponse.cookies)
-            ).toString('base64')}${onboarding ? '&onboarding=true' : ''}`;
-          } catch {
-            toaster.show(
-              t(
-                'extension_communication_error',
-                'Failed to communicate with the browser extension.'
-              ),
-              'warning'
-            );
-          }
+          await extensionConnect(identifier, { onboarding });
           return;
         }
         if (isExternal) {
@@ -754,18 +773,14 @@ export const AddProviderComponent: FC<{
                 )}
               >
                 <div>
-                  {item.identifier === 'youtube' ? (
-                    <img src={`/icons/platforms/youtube.svg`} />
-                  ) : (
-                    <img
-                      className={clsx(
-                        'w-[32px] h-[32px]',
-                        item.identifier !== 'google_my_business' &&
-                          'rounded-full'
-                      )}
-                      src={`/icons/platforms/${item.identifier}.png`}
-                    />
-                  )}
+                  <PlatformIcon
+                    identifier={item.identifier}
+                    size={32}
+                    iconClassName={clsx(
+                      'w-[32px] h-[32px]',
+                      item.identifier !== 'google_my_business' && 'rounded-full'
+                    )}
+                  />
                 </div>
                 <div
                   className={clsx(

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
 /**
  * Ticket 07: the OAuth callback page.
@@ -186,6 +186,153 @@ describe('the callback inside the popup', () => {
   });
 });
 
+describe('the two-step callback keeps the link destination', () => {
+  const api = (routes: {
+    pages: any[];
+    returnURL?: string;
+    publicSelection?: boolean;
+    authenticated?: number;
+    public?: number;
+  }) => {
+    const calls: Array<{ url: string; body: any }> = [];
+    const fetchMock = vi.fn(async (url: string, init: any = {}) => {
+      calls.push({ url, body: init.body ? JSON.parse(init.body) : undefined });
+      if (url.includes('social-connect')) {
+        return new Response(
+          JSON.stringify({
+            id: 'integration-1',
+            inBetweenSteps: true,
+            publicSelection: routes.publicSelection,
+            pages: routes.pages,
+            ...(routes.returnURL ? { returnURL: routes.returnURL } : {}),
+          }),
+          { status: 200 }
+        );
+      }
+      if (url === '/integrations/provider/integration-1/connect') {
+        return new Response(
+          JSON.stringify(
+            routes.authenticated === 404
+              ? { message: 'Integration not found' }
+              : { success: true }
+          ),
+          { status: routes.authenticated || 200 }
+        );
+      }
+      if (url === '/integrations/public/provider/integration-1/connect') {
+        return new Response(
+          JSON.stringify(
+            routes.public === 500
+              ? { message: 'Page not found in your accounts' }
+              : { success: true }
+          ),
+          { status: routes.public || 200 }
+        );
+      }
+      throw new Error(`unexpected request ${url}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return calls;
+  };
+
+  it('keeps the query string of a custom return address after a two-step save', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-b');
+    window.sessionStorage.setItem('showorg', 'org-b');
+    const returnURL = 'https://merchant.example/done?keep=1&lang=en';
+    const calls = api({
+      pages: [
+        {
+          id: 'page-2',
+          name: 'Brand page',
+          picture: { data: { url: 'https://cdn.test/page-2.png' } },
+        },
+      ],
+      returnURL,
+      authenticated: 404,
+    });
+
+    const { findByText, getByText } = renderContinue('facebook');
+
+    fireEvent.click(await findByText('Brand page'));
+    fireEvent.click(getByText('Save'));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        `${returnURL}&added=facebook&msg=Channel Added`
+      )
+    );
+    expect(calls.map((call) => call.url)).toEqual([
+      '/integrations/social-connect/facebook',
+      '/integrations/provider/integration-1/connect',
+      '/integrations/public/provider/integration-1/connect',
+    ]);
+  });
+
+  it('uses the signed link state for a signed-in recipient', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-b');
+    const calls = api({
+      publicSelection: true,
+      pages: [
+        { id: 'page-2', name: 'Brand page', picture: { data: { url: '' } } },
+      ],
+    });
+    const view = renderContinue('facebook');
+    fireEvent.click(await view.findByText('Brand page'));
+    fireEvent.click(view.getByText('Save'));
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    expect(calls.map(({ url }) => url)).toEqual([
+      '/integrations/social-connect/facebook',
+      '/integrations/public/provider/integration-1/connect',
+    ]);
+  });
+
+  it('shows the two-step result inline for an anonymous recipient without a return address', async () => {
+    window.sessionStorage.removeItem('auth');
+    api({
+      pages: [
+        {
+          id: 'page-2',
+          name: 'Brand page',
+          picture: { data: { url: 'https://cdn.test/page-2.png' } },
+        },
+      ],
+    });
+
+    const view = renderContinue('facebook');
+
+    fireEvent.click(await view.findByText('Brand page'));
+    fireEvent.click(view.getByText('Save'));
+
+    expect(await view.findByText('Channel Added')).toBeTruthy();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('sends a signed-in recipient without a return address to the calendar', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-a');
+    window.sessionStorage.setItem('showorg', 'org-a');
+    api({
+      pages: [
+        {
+          id: 'page-2',
+          name: 'Brand page',
+          picture: { data: { url: 'https://cdn.test/page-2.png' } },
+        },
+      ],
+    });
+
+    const view = renderContinue('facebook');
+
+    fireEvent.click(await view.findByText('Brand page'));
+    fireEvent.click(view.getByText('Save'));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        '/launches?added=facebook&msg=Channel Added'
+      )
+    );
+  });
+});
+
 describe('the callback in an ordinary window', () => {
   it('uses the actual callback page with a tab session and no auth cookie', async () => {
     document.cookie = 'auth=;max-age=0;path=/';
@@ -241,6 +388,14 @@ describe('the callback in an ordinary window', () => {
     );
   });
 
+  it('shows an anonymous precondition refusal as an error', async () => {
+    window.sessionStorage.removeItem('auth');
+    vi.stubGlobal('fetch', respond(412, {}));
+    const view = renderContinue();
+    expect(await view.findByText('This channel could not be connected to the workspace.')).toBeTruthy();
+    expect(view.queryByText('Channel Connected!')).toBeNull();
+  });
+
   it('navigates the current window on 406 with the provider message', async () => {
     const close = closeSpy();
     vi.stubGlobal('fetch', respond(406, { msg: 'Payment required' }));
@@ -248,9 +403,23 @@ describe('the callback in an ordinary window', () => {
     renderContinue();
 
     await waitFor(() =>
-      expect(push).toHaveBeenCalledWith('/launches?msg=Payment required')
+      expect(push).toHaveBeenCalledWith('/launches?msg=Payment%20required')
     );
     expect(close).not.toHaveBeenCalled();
+  });
+
+  it('returns an authorization failure without letting its message alter the merchant query', async () => {
+    const returnURL = 'https://merchant.example/done?keep=1';
+    vi.stubGlobal(
+      'fetch',
+      respond(409, { returnURL, message: 'Missing read & write' })
+    );
+    renderContinue();
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        returnURL + '&msg=Missing%20read%20%26%20write'
+      )
+    );
   });
 
   it('honours a returnURL without leaving a popup behind', async () => {
@@ -261,5 +430,38 @@ describe('the callback in an ordinary window', () => {
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith('/oauth/done?precondition=true')
     );
+  });
+
+  it('keeps the query string already on a custom return address', async () => {
+    const returnURL = 'https://merchant.example/done?keep=1&lang=en';
+    vi.stubGlobal('fetch', respond(200, { id: 'integration-1', returnURL }));
+
+    renderContinue();
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        `${returnURL}&added=tiktok&msg=Channel Updated`
+      )
+    );
+  });
+
+  it('sends an anonymous recipient with a return address away from Postiz', async () => {
+    window.sessionStorage.removeItem('auth');
+    vi.stubGlobal(
+      'fetch',
+      respond(200, {
+        id: 'integration-1',
+        returnURL: 'https://merchant.example/done?keep=1',
+      })
+    );
+
+    const view = renderContinue();
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        'https://merchant.example/done?keep=1&added=tiktok&msg=Channel Updated'
+      )
+    );
+    expect(view.queryByText('Channel Updated')).toBeNull();
   });
 });

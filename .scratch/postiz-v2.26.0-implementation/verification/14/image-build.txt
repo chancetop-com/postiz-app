@@ -1,0 +1,6 @@
+Fri Nov 20 12:33:27 UTC 2026
+CMD ./k8s/build-local.sh --tag postiz-ticket14:54fd888aaa0d
+EXIT=0
+Fri Nov 20 12:34:41 UTC 2026
+CMD ./k8s/build-local.sh --tag postiz-ticket14:b596737423c7 (retag build; same prepared context)
+EXIT=0

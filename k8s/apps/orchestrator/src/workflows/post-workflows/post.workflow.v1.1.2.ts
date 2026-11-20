@@ -253,13 +253,10 @@ export async function postWorkflowV112({
     getIntegration?: () => Promise<any>,
     heartbeats?: boolean
   ): Promise<{
-    type: 'retry' | 'stop' | 'bad-body' | 'timeout' | 'unknown';
+    type: 'retry' | 'stop' | 'bad-body' | 'timeout' | 'unknown' | 'unconfirmed';
     message: string;
   }> => {
-    if (
-      err instanceof ActivityFailure &&
-      err.cause instanceof TimeoutFailure
-    ) {
+    if (err instanceof ActivityFailure && err.cause instanceof TimeoutFailure) {
       // The server copies the last heartbeat details it received into the
       // timeout failure. None at all (undefined) means it never received a
       // heartbeat: the worker never ran the activity, so nothing was published
@@ -301,6 +298,13 @@ export async function postWorkflowV112({
     }
 
     if (cause?.type === 'bad_body') {
+      const detail = cause.details?.[0] as { outcome?: string } | undefined;
+      if (
+        detail?.outcome === 'unconfirmed' &&
+        patched('post-unconfirmed-media-id')
+      ) {
+        return { type: 'unconfirmed', message: cause.message };
+      }
       return { type: 'bad-body', message: cause.message || '' };
     }
 
@@ -385,7 +389,7 @@ export async function postWorkflowV112({
 
         // the token could not be refreshed while checking, but the platform
         // already accepted the post - warn about a possible live post
-        if (handle.type === 'stop') {
+        if (handle.type === 'stop' || handle.type === 'unconfirmed') {
           await markUnconfirmed(err);
           return false;
         }
@@ -559,7 +563,7 @@ export async function postWorkflowV112({
 
         // the activity timed out: the platform may still complete the publish
         // in the background, so never retry it
-        if (handle.type === 'timeout') {
+        if (handle.type === 'timeout' || handle.type === 'unconfirmed') {
           try {
             await markUnconfirmed(err);
           } catch (e) {

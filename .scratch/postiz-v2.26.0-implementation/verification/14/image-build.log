@@ -1,0 +1,251 @@
+============================================
+ Postiz local image build
+============================================
+ context: /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/k8s
+ image  : postiz-ticket14:54fd888aaa0d
+ commit : b596737423c73427a7a5bc6aef8de3d46dac9118 (clean)
+ node   : 22.23.4 / pnpm 10.6.1 (pinned in the Dockerfile)
+============================================
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 6.67kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22.23.4-bookworm
+#2 DONE 0.4s
+
+#3 [internal] load metadata for docker.io/library/node:22.23.4-bookworm-slim
+#3 DONE 0.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 449B done
+#4 DONE 0.0s
+
+#5 [builder 1/8] FROM docker.io/library/node:22.23.4-bookworm@sha256:7702d8aa4d5910871692af4480eb3ba86f23047a6417a44d857d06c95d060d3f
+#5 resolve docker.io/library/node:22.23.4-bookworm@sha256:7702d8aa4d5910871692af4480eb3ba86f23047a6417a44d857d06c95d060d3f 0.0s done
+#5 DONE 0.0s
+
+#6 [runtime  1/18] FROM docker.io/library/node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d
+#6 resolve docker.io/library/node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 10.74MB 0.4s done
+#7 DONE 0.4s
+
+#8 [builder 3/8] RUN npm install --no-update-notifier --no-fund --global pnpm@10.6.1
+#8 CACHED
+
+#9 [runtime 10/18] COPY --from=builder /app/apps/frontend/public ./apps/frontend/public
+#9 CACHED
+
+#10 [runtime  3/18] RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
+#10 CACHED
+
+#11 [runtime  5/18] WORKDIR /app
+#11 CACHED
+
+#12 [builder 6/8] COPY libraries ./libraries
+#12 CACHED
+
+#13 [runtime  6/18] COPY --from=builder /app/node_modules ./node_modules
+#13 CACHED
+
+#14 [runtime  4/18] RUN addgroup --system www  && adduser --system --ingroup www --home /www --shell /usr/sbin/nologin www  && mkdir -p /www /uploads /app /var/log/nginx  && chown -R www:www /www /uploads /var/lib/nginx /var/log/nginx /app
+#14 CACHED
+
+#15 [builder 2/8] WORKDIR /app
+#15 CACHED
+
+#16 [builder 5/8] COPY apps ./apps
+#16 CACHED
+
+#17 [runtime 12/18] COPY --from=builder /app/apps/frontend/next.config.js ./apps/frontend/next.config.js
+#17 CACHED
+
+#18 [runtime 13/18] COPY --from=builder /app/package.json ./
+#18 CACHED
+
+#19 [runtime 15/18] COPY var/docker/entrypoint.sh ./var/docker/entrypoint.sh
+#19 CACHED
+
+#20 [runtime 14/18] COPY libraries/nestjs-libraries/src/database/prisma/schema.prisma      ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+#20 CACHED
+
+#21 [runtime 11/18] COPY --from=builder /app/apps/frontend/package.json ./apps/frontend/package.json
+#21 CACHED
+
+#22 [runtime 16/18] RUN chmod +x ./var/docker/entrypoint.sh
+#22 CACHED
+
+#23 [builder 8/8] RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build  && rm -rf apps/frontend/.next/cache
+#23 CACHED
+
+#24 [runtime 17/18] COPY var/docker/nginx.conf /etc/nginx/nginx.conf
+#24 CACHED
+
+#25 [builder 4/8] COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json tsconfig.json ./
+#25 CACHED
+
+#26 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#26 CACHED
+
+#27 [runtime  7/18] COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+#27 CACHED
+
+#28 [runtime  9/18] COPY --from=builder /app/apps/frontend/.next ./apps/frontend/.next
+#28 CACHED
+
+#29 [runtime  2/18] RUN apt-get update && apt-get install -y --no-install-recommends     nginx curl  && rm -rf /var/lib/apt/lists/*
+#29 CACHED
+
+#30 [runtime  8/18] COPY --from=builder /app/apps/orchestrator/dist ./apps/orchestrator/dist
+#30 CACHED
+
+#31 [runtime 18/18] COPY --chown=www:www var/docker/ecosystem.config.cjs ./ecosystem.config.cjs
+#31 CACHED
+
+#32 exporting to image
+#32 exporting layers 0.0s done
+#32 exporting manifest sha256:c676bc4b777f9e0d175d7559ac93bf5e718e55bcb81c2449abbeeeef85dc540f done
+#32 exporting config sha256:11a35d451d0eb393e011db50989151b34c778765ed7a3acdc7a8f235da97b8e5 done
+#32 exporting attestation manifest sha256:e3dbd323d6b1a8e12a7c2fa32a62f3eb36b2abeeeff2988422d8ce1ac05383f5 0.0s done
+#32 exporting manifest list sha256:9246a2fffa00ea1b9b6d833aeb10d955e98da56599210c3bc85790ac9f67c97a done
+#32 naming to docker.io/library/postiz-ticket14:54fd888aaa0d done
+#32 unpacking to docker.io/library/postiz-ticket14:54fd888aaa0d
+#32 unpacking to docker.io/library/postiz-ticket14:54fd888aaa0d 47.7s done
+#32 DONE 47.8s
+
+Built postiz-ticket14:54fd888aaa0d
+Image ID: sha256:9246a2fffa00ea1b9b6d833aeb10d955e98da56599210c3bc85790ac9f67c97a
+Provenance: /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/k8s/BUILD_PROVENANCE.json
+
+This script did not publish or deploy anything.
+Publish: ./k8s/build-postiz.sh --local postiz-ticket14:54fd888aaa0d
+Deploy : ./k8s/deploy-postiz.sh --image <registry>/app/postiz:<tag>
+============================================
+ Postiz local image build
+============================================
+ context: /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/k8s
+ image  : postiz-ticket14:b596737423c7
+ commit : b596737423c73427a7a5bc6aef8de3d46dac9118 (clean)
+ node   : 22.23.4 / pnpm 10.6.1 (pinned in the Dockerfile)
+============================================
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 6.67kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22.23.4-bookworm-slim
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/node:22.23.4-bookworm
+#3 DONE 0.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 449B done
+#4 DONE 0.0s
+
+#5 [runtime  1/18] FROM docker.io/library/node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d
+#5 resolve docker.io/library/node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d 0.0s done
+#5 DONE 0.0s
+
+#6 [builder 1/8] FROM docker.io/library/node:22.23.4-bookworm@sha256:7702d8aa4d5910871692af4480eb3ba86f23047a6417a44d857d06c95d060d3f
+#6 resolve docker.io/library/node:22.23.4-bookworm@sha256:7702d8aa4d5910871692af4480eb3ba86f23047a6417a44d857d06c95d060d3f 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 96.56kB 0.0s done
+#7 DONE 0.1s
+
+#8 [runtime  2/18] RUN apt-get update && apt-get install -y --no-install-recommends     nginx curl  && rm -rf /var/lib/apt/lists/*
+#8 CACHED
+
+#9 [runtime  7/18] COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+#9 CACHED
+
+#10 [builder 8/8] RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build  && rm -rf apps/frontend/.next/cache
+#10 CACHED
+
+#11 [runtime  3/18] RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
+#11 CACHED
+
+#12 [runtime  4/18] RUN addgroup --system www  && adduser --system --ingroup www --home /www --shell /usr/sbin/nologin www  && mkdir -p /www /uploads /app /var/log/nginx  && chown -R www:www /www /uploads /var/lib/nginx /var/log/nginx /app
+#12 CACHED
+
+#13 [runtime 12/18] COPY --from=builder /app/apps/frontend/next.config.js ./apps/frontend/next.config.js
+#13 CACHED
+
+#14 [runtime 16/18] RUN chmod +x ./var/docker/entrypoint.sh
+#14 CACHED
+
+#15 [runtime  9/18] COPY --from=builder /app/apps/frontend/.next ./apps/frontend/.next
+#15 CACHED
+
+#16 [builder 4/8] COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json tsconfig.json ./
+#16 CACHED
+
+#17 [builder 5/8] COPY apps ./apps
+#17 CACHED
+
+#18 [builder 3/8] RUN npm install --no-update-notifier --no-fund --global pnpm@10.6.1
+#18 CACHED
+
+#19 [builder 2/8] WORKDIR /app
+#19 CACHED
+
+#20 [runtime 10/18] COPY --from=builder /app/apps/frontend/public ./apps/frontend/public
+#20 CACHED
+
+#21 [runtime 17/18] COPY var/docker/nginx.conf /etc/nginx/nginx.conf
+#21 CACHED
+
+#22 [builder 6/8] COPY libraries ./libraries
+#22 CACHED
+
+#23 [runtime  8/18] COPY --from=builder /app/apps/orchestrator/dist ./apps/orchestrator/dist
+#23 CACHED
+
+#24 [runtime 11/18] COPY --from=builder /app/apps/frontend/package.json ./apps/frontend/package.json
+#24 CACHED
+
+#25 [runtime  5/18] WORKDIR /app
+#25 CACHED
+
+#26 [runtime 13/18] COPY --from=builder /app/package.json ./
+#26 CACHED
+
+#27 [builder 7/8] RUN pnpm config set store-dir /pnpm-store  && pnpm install --frozen-lockfile
+#27 CACHED
+
+#28 [runtime  6/18] COPY --from=builder /app/node_modules ./node_modules
+#28 CACHED
+
+#29 [runtime 15/18] COPY var/docker/entrypoint.sh ./var/docker/entrypoint.sh
+#29 CACHED
+
+#30 [runtime 14/18] COPY libraries/nestjs-libraries/src/database/prisma/schema.prisma      ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+#30 CACHED
+
+#31 [runtime 18/18] COPY --chown=www:www var/docker/ecosystem.config.cjs ./ecosystem.config.cjs
+#31 CACHED
+
+#32 exporting to image
+#32 exporting layers done
+#32 exporting manifest sha256:c676bc4b777f9e0d175d7559ac93bf5e718e55bcb81c2449abbeeeef85dc540f done
+#32 exporting config sha256:11a35d451d0eb393e011db50989151b34c778765ed7a3acdc7a8f235da97b8e5 done
+#32 exporting attestation manifest sha256:02c1cd53cec066c2202b47b436d1919f028d0affd91bdc8b4d7790a220eab7ad done
+#32 exporting manifest list sha256:478e615011abc13679e77023776de196d01c7a503085050c21a6e8842af1a2ee done
+#32 naming to docker.io/library/postiz-ticket14:b596737423c7 done
+#32 unpacking to docker.io/library/postiz-ticket14:b596737423c7 done
+#32 DONE 0.1s
+
+Built postiz-ticket14:b596737423c7
+Image ID: sha256:478e615011abc13679e77023776de196d01c7a503085050c21a6e8842af1a2ee
+Provenance: /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/k8s/BUILD_PROVENANCE.json
+
+This script did not publish or deploy anything.
+Publish: ./k8s/build-postiz.sh --local postiz-ticket14:b596737423c7
+Deploy : ./k8s/deploy-postiz.sh --image <registry>/app/postiz:<tag>

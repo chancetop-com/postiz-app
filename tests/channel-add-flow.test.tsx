@@ -19,10 +19,11 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(relaySearch),
 }));
 vi.mock('@gitroom/react/helpers/variable.context', () => ({
-  useVariables: () => ({ isGeneral: false, extensionId: '', backendUrl: '' }),
+  useVariables: () => variables,
 }));
+const showToast = vi.fn();
 vi.mock('@gitroom/react/toaster/toaster', () => ({
-  useToaster: () => ({ show: vi.fn() }),
+  useToaster: () => ({ show: showToast }),
 }));
 const closeAll = vi.fn();
 vi.mock('@gitroom/frontend/components/layout/new-modal', () => ({
@@ -32,22 +33,19 @@ vi.mock('@gitroom/react/translation/get.transation.service.client', () => ({
   useT: () => (key: string, fallback?: string) => fallback || key,
 }));
 
-let embedded = false;
-vi.mock(
-  '@gitroom/frontend/components/launches/channel.popup',
-  async (importOriginal) => {
-    const actual =
-      await importOriginal<
-        typeof import('@gitroom/frontend/components/launches/channel.popup')
-      >();
-    return {
-      ...actual,
-      isEmbeddedInIframe: () => embedded,
-    };
-  }
-);
+const setEmbedded = (value: boolean) => {
+  // openChannelOAuth asks window.self !== window.top; shadow `top` so the
+  // parent-iframe branch is exercised without a real iframe.
+  Object.defineProperty(window, 'top', {
+    configurable: true,
+    value: value ? {} : window,
+  });
+};
 
 import { AddProviderComponent } from '@gitroom/frontend/components/launches/add.provider.component';
+import { useExtensionConnect } from '@gitroom/frontend/components/launches/add.provider.component';
+
+let variables = { isGeneral: false, extensionId: '', backendUrl: '' };
 
 const social = [
   { identifier: 'linkedin', name: 'LinkedIn', isExternal: false, isWeb3: false },
@@ -90,17 +88,21 @@ const renderAdd = () =>
   render(<AddProviderComponent social={social} article={[]} invite={false} />);
 
 beforeEach(() => {
-  embedded = false;
+  setEmbedded(false);
   relaySearch = '';
   push.mockReset();
   closeAll.mockReset();
+  showToast.mockReset();
   window.sessionStorage.clear();
+  variables = { isGeneral: false, extensionId: '', backendUrl: '' };
 });
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete (window as any).top;
 });
 
 describe('adding a channel in an ordinary window', () => {
@@ -147,7 +149,7 @@ describe('adding a channel in an ordinary window', () => {
 
 describe('adding a channel inside the parent application iframe', () => {
   beforeEach(() => {
-    embedded = true;
+    setEmbedded(true);
     window.sessionStorage.setItem('auth', 'jwt-a');
     window.sessionStorage.setItem('showorg', 'org-a');
     window.sessionStorage.setItem('impersonate', 'imp-a');
@@ -207,7 +209,6 @@ describe('adding a channel inside the parent application iframe', () => {
 
   it('leaves the iframe in place when the popup is blocked', async () => {
     const location = stubLocation();
-    // baseline: a blocked popup is not reopened or retried, the modal still closes
     vi.spyOn(window, 'open').mockImplementation((() => null) as any);
     vi.stubGlobal(
       'fetch',
@@ -223,7 +224,13 @@ describe('adding a channel inside the parent application iframe', () => {
     const { container } = renderAdd();
     clickTile(container, '/icons/platforms/linkedin.png');
 
-    await waitFor(() => expect(closeAll).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith(
+        expect.stringContaining('pop-ups'),
+        'warning'
+      )
+    );
+    expect(closeAll).not.toHaveBeenCalled();
     expect(location.href).toBe('http://localhost:4200/launches');
   });
 
@@ -265,5 +272,83 @@ describe('adding a channel inside the parent application iframe', () => {
     expect(window.sessionStorage.getItem('showorg')).toBe('org-a');
     expect(window.sessionStorage.getItem('impersonate')).toBe('imp-a');
     expect(window.sessionStorage.getItem('channel_popup_mode')).toBe('true');
+  });
+});
+
+describe('reconnecting an existing extension channel', () => {
+  const ExtensionReconnect = ({
+    identifier,
+    refresh,
+  }: {
+    identifier: string;
+    refresh: string;
+  }) => {
+    const connect = useExtensionConnect();
+    return (
+      <button onClick={() => connect(identifier, { refresh })}>Reconnect</button>
+    );
+  };
+
+  const stubChrome = (cookies: Array<Record<string, string>>) => {
+    const chromeMock = {
+      runtime: {
+        lastError: null,
+        sendMessage: vi.fn(
+          (_id: string, message: any, callback: (value: any) => void) => {
+            if (message.type === 'PING') {
+              callback({ status: true });
+              return;
+            }
+            if (message.type === 'GET_COOKIES') {
+              callback({ success: true, cookies });
+            }
+          }
+        ),
+      },
+    };
+    vi.stubGlobal('chrome', chromeMock);
+    return chromeMock;
+  };
+
+  it('reuses the cookie hand-off with the channel refresh id', async () => {
+    variables = {
+      isGeneral: false,
+      extensionId: 'extension-id',
+      backendUrl: 'http://localhost:3105',
+    };
+    const chromeMock = stubChrome([{ name: 'session', value: 'cookie-1' }]);
+    const location = stubLocation();
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ url: 'state-token' }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { getByText } = render(
+      <ExtensionReconnect identifier="skool" refresh="internal-9" />
+    );
+    fireEvent.click(getByText('Reconnect'));
+
+    await waitFor(() =>
+      expect(location.href).toContain('/integrations/social/skool')
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/integrations/social/skool?refresh=internal-9',
+      expect.anything()
+    );
+    expect(chromeMock.runtime.sendMessage).toHaveBeenCalledWith(
+      'extension-id',
+      { type: 'GET_COOKIES', provider: 'skool' },
+      expect.any(Function)
+    );
+
+    const url = new URL(location.href, 'http://localhost:4200');
+    expect(url.searchParams.get('state')).toBe('state-token');
+    expect(
+      JSON.parse(
+        Buffer.from(url.searchParams.get('code')!, 'base64').toString()
+      )
+    ).toEqual([{ name: 'session', value: 'cookie-1' }]);
+    expect(url.searchParams.get('onboarding')).toBeNull();
   });
 });

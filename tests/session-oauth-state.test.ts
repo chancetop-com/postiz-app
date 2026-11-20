@@ -10,21 +10,31 @@ import { AuthService as AuthChecker } from '@gitroom/helpers/auth/auth.service';
 
 process.env.JWT_SECRET = 'ticket-05-oauth-secret';
 
-const build = () => {
+const build = (
+  organizationService: any = {},
+  user: any = {
+    id: 'user-1',
+    email: 'merchant@example.test',
+    inviteId: null,
+  }
+) => {
   const getToken = vi.fn().mockResolvedValue('provider-token');
-  const getUser = vi.fn().mockResolvedValue({ id: 'provider-user' });
+  const getUser = vi
+    .fn()
+    .mockResolvedValue({ id: 'provider-user', email: 'merchant@example.test' });
   const service = new AuthService(
     {
-      getUserByProvider: vi.fn().mockResolvedValue({ id: 'user-1' }),
+      getUserByProvider: vi.fn().mockResolvedValue(user),
     } as never,
-    {} as never,
+    organizationService as never,
     {} as never,
     {
       getProvider: () => ({ getToken, getUser }),
     } as never,
-    {} as never
+    {} as never,
+    { lead: async () => undefined } as never
   );
-  return { service, getToken };
+  return { service, getToken, organizationService };
 };
 
 afterEach(() => {
@@ -71,7 +81,7 @@ describe('standard OAuth state validation', () => {
         'state-a',
         service.createOAuthStateToken('github', 'state-a')
       )
-    ).resolves.toEqual({ jwt: expect.any(String) });
+    ).resolves.toEqual({ jwt: expect.any(String), addedOrg: false });
     expect(getToken).toHaveBeenCalledWith('code', undefined);
   });
 
@@ -152,5 +162,131 @@ describe('standard OAuth state validation', () => {
     );
 
     expect(getToken).toHaveBeenCalledWith('code', 'postiz://callback');
+  });
+
+  it('joins the invited organization for an existing OAuth user', async () => {
+    delete process.env.NOT_SECURED;
+    const addUserToOrg = vi
+      .fn()
+      .mockResolvedValue({ organizationId: 'org-invited' });
+    const { service } = build({ addUserToOrg });
+    const invite = {
+      id: 'invite-1',
+      email: 'merchant@example.test',
+      orgId: 'org-invited',
+      role: 'ADMIN',
+      timeLimit: '2999-01-01T00:00:00.000Z',
+    };
+
+    await expect(
+      service.checkExists(
+        'github',
+        'code',
+        undefined,
+        'state-a',
+        service.createOAuthStateToken('github', 'state-a'),
+        invite as never
+      )
+    ).resolves.toEqual({
+      jwt: expect.any(String),
+      addedOrg: { organizationId: 'org-invited' },
+    });
+    expect(addUserToOrg).toHaveBeenCalledWith(
+      'user-1',
+      'invite-1',
+      'org-invited',
+      'ADMIN'
+    );
+  });
+
+  it('keeps a repeated invite from reporting a new membership', async () => {
+    delete process.env.NOT_SECURED;
+    const addUserToOrg = vi.fn().mockResolvedValue(false);
+    const { service } = build(
+      { addUserToOrg },
+      { id: 'user-1', email: 'merchant@example.test', inviteId: 'another' }
+    );
+
+    await expect(
+      service.checkExists(
+        'github',
+        'code',
+        undefined,
+        'state-a',
+        service.createOAuthStateToken('github', 'state-a'),
+        {
+          id: 'invite-1',
+          email: 'merchant@example.test',
+          orgId: 'org-invited',
+          role: 'USER',
+          timeLimit: '2999-01-01T00:00:00.000Z',
+        } as never
+      )
+    ).resolves.toEqual({ jwt: expect.any(String), addedOrg: false });
+  });
+
+  it('reuses the accepted membership after activation without flagging it as new', async () => {
+    delete process.env.NOT_SECURED;
+    const addUserToOrg = vi.fn().mockResolvedValue(false);
+    const { service } = build(
+      {
+        addUserToOrg,
+        getActiveMembership: async () => ({ organizationId: 'org-invited' }),
+      },
+      { id: 'user-1', email: 'merchant@example.test', inviteId: 'invite-1' }
+    );
+
+    await expect(
+      service.checkExists(
+        'github',
+        'code',
+        undefined,
+        'state-a',
+        service.createOAuthStateToken('github', 'state-a'),
+        {
+          id: 'invite-1',
+          email: 'merchant@example.test',
+          orgId: 'org-invited',
+          role: 'USER',
+          timeLimit: '2999-01-01T00:00:00.000Z',
+        } as never
+      )
+    ).resolves.toEqual({
+      jwt: expect.any(String),
+      addedOrg: { organizationId: 'org-invited' },
+    });
+    expect(addUserToOrg).toHaveBeenCalledWith(
+      'user-1',
+      'invite-1',
+      'org-invited',
+      'USER'
+    );
+  });
+
+  it('ignores an invitation addressed to another account', async () => {
+    delete process.env.NOT_SECURED;
+    const addUserToOrg = vi.fn();
+    const { service } = build(
+      { addUserToOrg },
+      { id: 'user-2', email: 'other@example.test', inviteId: null }
+    );
+
+    await expect(
+      service.checkExists(
+        'github',
+        'code',
+        undefined,
+        'state-a',
+        service.createOAuthStateToken('github', 'state-a'),
+        {
+          id: 'invite-1',
+          email: 'merchant@example.test',
+          orgId: 'org-invited',
+          role: 'ADMIN',
+          timeLimit: '2999-01-01T00:00:00.000Z',
+        } as never
+      )
+    ).resolves.toEqual({ jwt: expect.any(String), addedOrg: false });
+    expect(addUserToOrg).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthController } from '@gitroom/backend/api/routes/auth.controller';
 import { AuthService } from '@gitroom/backend/services/auth/auth.service';
+import { AuthService as AuthChecker } from '@gitroom/helpers/auth/auth.service';
 import { customFetch } from '@gitroom/helpers/utils/custom.fetch.func';
 
 process.env.JWT_SECRET = 'synthetic-oauth-session-test-secret';
@@ -22,7 +23,12 @@ beforeEach(() => {
   });
   const service = new AuthService(
     {
-      getUserByProvider: async () => ({ id: 'user-1', activated: true }),
+      getUserByProvider: async () => ({
+        id: 'user-1',
+        email: 'oauth@example.test',
+        providerName: 'GITHUB',
+        activated: true,
+      }),
     } as never,
     {} as never,
     {} as never,
@@ -34,9 +40,12 @@ beforeEach(() => {
         getUser: async () => ({ id: 'provider-user' }),
       }),
     } as never,
-    {} as never
+    {} as never,
+    { lead: async () => undefined } as never
   );
-  const controller = new AuthController(service, {} as never);
+  const controller = new AuthController(service, {} as never, {
+    queryParams: () => [],
+  } as never);
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init: RequestInit = {}) => {
@@ -67,9 +76,7 @@ beforeEach(() => {
             {
               headers: Object.fromEntries(headers),
               get: (name: string) => headers.get(name),
-              get cookies() {
-                throw new Error('No cookies should be read');
-              },
+              cookies: {},
             } as never,
             input.code,
             undefined,
@@ -113,7 +120,14 @@ describe('cookie-free OAuth browser and API round trip', () => {
 
     const response = await complete(state);
     expect(response.ok).toBe(true);
-    expect(response.headers.get('auth')).toBeTruthy();
+    const auth = response.headers.get('auth');
+    expect(auth).toBeTruthy();
+    // The OAuth completion must keep issuing the fork's full-User session,
+    // which is what the middleware and the admin lookup accept after the merge.
+    expect(AuthChecker.verifySessionJWT(auth!)).toEqual({ id: 'user-1' });
+    // A password-reset credential is never a session, even in this flow.
+    const reset = AuthChecker.signPasswordResetToken('user-1');
+    expect(() => AuthChecker.verifySessionJWT(reset)).toThrow();
     expect(requests[1].headers.get('oauth-state-token')).toBe(proof);
     expect(storage.has('oauth_state:GITHUB')).toBe(false);
     expect(getToken).toHaveBeenCalledTimes(1);

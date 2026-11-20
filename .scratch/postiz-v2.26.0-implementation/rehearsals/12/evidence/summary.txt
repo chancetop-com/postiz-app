@@ -1,0 +1,155 @@
+Ticket 12 — in-flight Temporal continuity rehearsal
+generated: 2026-11-20T10:27:52.846Z
+node: v22.23.4
+result: PASS
+
+## v101-sleep-takeover — A V101 execution created by the old bundle sleeps until its publish date; the candidate worker takes over the same workflow/run, publishes with the blocking postSocial contract, writes the result back and leaves the publish date unchanged.
+  · old execution before hand-over: {"workflowId":"post_post-mwou5ejx-3","runId":"01a1f87f-a0e7-7803-956f-1ff2f85c95a6","type":"postWorkflowV101"}
+  · published row: {"id":"post-mwou5ejx-3","state":"PUBLISHED","publishDate":"2026-11-20T10:28:00.709Z","releaseId":"stub-post-5979-1","releaseURL":"https://stub.invalid/stub-post-5979-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwou5ei8-1\",\"name\":\"org-mwou5ei8-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou5ei8-1.png\"}]"}
+  · execution after hand-over: {"workflowId":"post_post-mwou5ejx-3","runId":"01a1f87f-a0e7-7803-956f-1ff2f85c95a6","type":"postWorkflowV101","status":"COMPLETED","taskQueue":"main","searchAttributes":{"organizationId":"org_org-mwou5ei8-1","postId":"post-mwou5ejx-3","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+d8d11b8ff078663da8ddcfdbbd74f76a02b19392b1a9cc652b6f83dce79faf61","unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"]}}
+  · history after hand-over: {"eventCount":54,"lastEvent":"EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED","activities":[{"activity":"getPostsList","taskQueue":"main"},{"activity":"postSocial","taskQueue":"bluesky"},{"activity":"updatePost","taskQueue":"main"},{"activity":"inAppNotification","taskQueue":"main"},{"activity":"sendWebhooks","taskQueue":"main"},{"activity":"internalPlugs","taskQueue":"bluesky"},{"activity":"globalPlugs","taskQueue":"bluesky"}]}
+  · publish calls: ["post"]
+  · payload contract: {"id":"post-mwou5ejx-3","message":"Synthetic V101 post waiting for hand-over","settings":{},"media":[{"path":"<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/12/work/uploads/uploads/rehearsal12/org-mwou5ei8-1.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwou5ei8-1","type":"image"}]}
+  PASS  state is PUBLISHED
+  PASS  publish date is not rewritten
+  PASS  releaseId written
+  PASS  releaseURL written
+  PASS  workflow id is unchanged
+  PASS  run id is unchanged (same execution)
+  PASS  workflow type stays V101
+  PASS  workflow task queue stays main
+  PASS  post business id remains a search attribute
+  PASS  execution completed normally
+  PASS  blocking postSocial ran on the provider queue
+  PASS  pending contract was not used by V101
+  PASS  exactly one publish attempt
+  PASS  old path uses blocking post
+  PASS  publish targets the bound channel
+  PASS  publish uses the stored credential
+  PASS  payload message matches the DB content
+  PASS  payload media bytes match the legacy file
+  PASS  provider read the whole image
+
+## v102-delayed-comment — A V102 execution created by the old bundle keeps its schedule timer, then publishes the root and, after the stored one-minute comment delay, the comment through the old postComment activity.
+  · root published: {"id":"post-mwou5xa6-6","state":"PUBLISHED","publishDate":"2026-11-20T10:28:23.981Z","releaseId":"stub-post-6076-1","releaseURL":"https://stub.invalid/stub-post-6076-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwou5x8t-4\",\"name\":\"org-mwou5x8t-4.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou5x8t-4.png\"}]"}
+  · comment published: {"id":"post-mwou5xac-8","state":"PUBLISHED","publishDate":"2026-11-20T10:28:23.981Z","releaseId":"stub-post-6076-2","releaseURL":"https://stub.invalid/stub-post-6076-2","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwou5x8t-4\",\"name\":\"org-mwou5x8t-4.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou5x8t-4.png\"}]"}
+  · comment calls: [{"postId":"stub-post-6076-1","message":"Synthetic delayed comment","at":"2026-11-20T10:29:43.429Z"}]
+  · measured comment delay (ms): 60790
+  · history: {"eventCount":77,"lastEvent":"EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED","activities":[{"activity":"getPostsList","taskQueue":"main"},{"activity":"isCommentable","taskQueue":"main"},{"activity":"postSocial","taskQueue":"bluesky"},{"activity":"updatePost","taskQueue":"main"},{"activity":"inAppNotification","taskQueue":"main"},{"activity":"postComment","taskQueue":"bluesky"},{"activity":"updatePost","taskQueue":"main"},{"activity":"sendWebhooks","taskQueue":"main"},{"activity":"internalPlugs","taskQueue":"bluesky"},{"activity":"globalPlugs","taskQueue":"bluesky"}]}
+  PASS  root publish once
+  PASS  comment state is PUBLISHED
+  PASS  root publish date is not rewritten
+  PASS  comment keeps the same scheduled date
+  PASS  exactly one comment call
+  PASS  comment is posted under the root platform id
+  PASS  comment payload is the delayed DB row
+  PASS  comment respected the one-minute delay
+  PASS  postComment ran on the provider queue
+  PASS  updatePost wrote both rows back
+  PASS  execution completed normally
+
+## v102-repeat-child — A V102 parent created by the old bundle starts a V102 repeat child; the candidate consumes both the parent and the child on the same old definition. The interval is negative only to make the repeat timer due immediately; the startChild branch is unchanged.
+  · repeat child execution: {"workflowId":"post_post-mwou7sk0-11_Ol5R6GkYG1","runId":"01a1f881-92e4-71bc-9537-2f559b43b6bc","type":"postWorkflowV102","status":"RUNNING","taskQueue":"main","startTime":"2026-11-20T10:30:03.748Z"}
+  · publish calls: [{"method":"post"},{"method":"post"}]
+  · parent history child starts: [{"workflowType":"postWorkflowV102","workflowId":"post_post-mwou7sk0-11_Ol5R6GkYG1"}]
+  · root row after repeat: {"id":"post-mwou7sk0-11","state":"PUBLISHED","publishDate":"2026-11-20T10:29:51.168Z","releaseId":"stub-post-7072-2","releaseURL":"https://stub.invalid/stub-post-7072-2","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwou7sif-9\",\"name\":\"org-mwou7sif-9.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou7sif-9.png\"}]"}
+  PASS  child type is the old V102
+  PASS  child id uses the repeat prefix
+  PASS  parent and child each published once
+  PASS  both generations used the old blocking contract
+  PASS  parent recorded a V102 child
+  PASS  parent completed normally
+  PASS  root remains PUBLISHED
+
+## v112-pending-finalize — A new V112 execution takes the provider through postPending, checkPostStatus and finalizePost exactly once, writes the finalize result back and keeps the requested publish date and timezone untouched.
+  · published row: {"id":"post-mwou8b41-14","state":"PUBLISHED","publishDate":"2026-11-20T10:30:12.217Z","releaseId":"stub-pending-7191-1","releaseURL":"https://stub.invalid/stub-pending-7191-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwou8b1o-12\",\"name\":\"org-mwou8b1o-12.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou8b1o-12.png\"}]"}
+  · pending/finalize calls: {"pending":1,"checks":1,"finalizes":1,"blocking":0}
+  · pending payload: {"id":"post-mwou8b41-14","message":"Synthetic V112 pending post","settings":{},"media":[{"path":"<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/12/work/uploads/uploads/rehearsal12/org-mwou8b1o-12.png","readable":true,"bytes":70,"sha256":"c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77","id":"media_org-mwou8b1o-12","type":"image"}]}
+  · execution: {"workflowId":"post_post-mwou8b41-14","runId":"01a1f881-eb98-7edb-98c9-1a69e5a0956e","type":"postWorkflowV112","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"post-mwou8b41-14","organizationId":"org_org-mwou8b1o-12","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"]}}
+  · history activity queues: [{"activity":"getPost","taskQueue":"main"},{"activity":"getPostsList","taskQueue":"main"},{"activity":"postSocialPending","taskQueue":"bluesky"},{"activity":"checkPostStatus","taskQueue":"bluesky"},{"activity":"finalizePost","taskQueue":"bluesky"},{"activity":"updatePost","taskQueue":"main"},{"activity":"inAppNotification","taskQueue":"main"},{"activity":"sendWebhooks","taskQueue":"main"},{"activity":"internalPlugs","taskQueue":"bluesky"},{"activity":"globalPlugs","taskQueue":"bluesky"}]
+  PASS  state is PUBLISHED
+  PASS  publish date is not converted by the workflow
+  PASS  pending accepted exactly once
+  PASS  status checked exactly once
+  PASS  finalize ran exactly once
+  PASS  V112 did not use the blocking activity
+  PASS  releaseId is the finalize result
+  PASS  releaseURL is the finalize result
+  PASS  payload message matches the DB content
+  PASS  payload media is the local legacy image
+  PASS  new starts use V112
+  PASS  workflow id keeps the post id
+  PASS  workflow queue is main
+  PASS  post id search attribute written
+  PASS  postPending ran on the provider queue
+  PASS  checkPostStatus ran on the provider queue
+  PASS  finalizePost ran on the provider queue
+  PASS  database write-back ran on main
+  PASS  execution completed normally
+
+## refresh-backlog — An old refreshTokenWorkflow created before the hand-over wakes on its expiry timer; the candidate executes the decorated refreshToken activity, decrypts the enc:v1: credentials and stores the rotated tokens.
+  · old refresh execution: {"workflowId":"refresh_int_org-mwou8q2b-15","runId":"01a1f881-f4d8-7bba-86c1-404b688bd192","type":"refreshTokenWorkflow","status":"RUNNING","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+d8d11b8ff078663da8ddcfdbbd74f76a02b19392b1a9cc652b6f83dce79faf61"]}}
+  · provider refresh call: {"at":"2026-11-20T10:30:49.080Z","pid":7290,"method":"providerRefreshToken","refreshToken":"synthetic-refresh-org-mwou8q2b-15","accessToken":"synthetic-refreshed-access-7290-1","rotatedRefreshToken":"synthetic-refreshed-refresh-7290-1"}
+  · stored credentials after refresh: {"tokenPrefix":"enc:v1:d1dcf","refreshPrefix":"enc:v1:d1dcf","tokenExpiration":"2026-11-20T11:30:49.081Z","refreshNeeded":false}
+  · refresh history activities: [{"activity":"getIntegrationsById","taskQueue":"main"},{"activity":"getIntegrationsById","taskQueue":"main"},{"activity":"refreshToken","taskQueue":"main"},{"activity":"getIntegrationsById","taskQueue":"main"}]
+  PASS  refresh type
+  PASS  refresh workflow id
+  PASS  refresh runs on main
+  PASS  candidate decrypted the stored refresh token before the provider call
+  PASS  plaintext token replaced with an enc:v1: value
+  PASS  rotated refresh token stored encrypted
+  PASS  token expiration moved forward
+  PASS  channel is not flagged for reconnect
+  PASS  decorated refreshToken activity was scheduled on main
+  PASS  getIntegrationsById also ran on main
+
+## legacy-email-drain — A pre-existing send_email singleton with one queued message is drained by the candidate through the old sendEmail activity on main; a second signal is appended and both recipients receive exactly one message.
+  · pre-existing singleton: {"workflowId":"send_email","runId":"01a1f882-45af-7a40-b409-b2349acf82f9","type":"sendEmailWorkflow"}
+  · emails: [{"to":"backlog-one@synthetic.invalid","subject":"Synthetic backlog one"},{"to":"backlog-two@synthetic.invalid","subject":"Synthetic backlog two"}]
+  · singleton after drain: {"workflowId":"send_email","runId":"01a1f882-45af-7a40-b409-b2349acf82f9","type":"sendEmailWorkflow","status":"RUNNING","taskQueue":"main","searchAttributes":{"BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"]}}
+  · email history: {"eventCount":26,"signals":["sendEmail"],"activities":[{"activity":"sendEmail","taskQueue":"main"},{"activity":"sendEmail","taskQueue":"main"}]}
+  PASS  exactly two emails sent
+  PASS  both queued recipients received one message
+  PASS  no recipient received a duplicate
+  PASS  old singleton type is kept
+  PASS  old singleton queue is main
+  PASS  singleton is still running
+  PASS  sendEmail activity ran on main
+  PASS  no per-email workflow was involved in the old singleton
+
+## compat-provider-queue — With COMPAT_WORKFLOW_QUEUES=bluesky the candidate polls the provider queue for workflows as well as activities, so a V102 execution whose workflow task queue is bluesky completes; an unlisted provider queue stays activity-only.
+  · workflow pollers: {"main":15,"bluesky":11,"x":0}
+  · published row: {"id":"post-mwou9exr-19","state":"PUBLISHED","publishDate":"2026-11-20T10:31:03.331Z","releaseId":"stub-post-7373-1","releaseURL":"https://stub.invalid/stub-post-7373-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwou9exf-17\",\"name\":\"org-mwou9exf-17.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou9exf-17.png\"}]"}
+  · execution: {"workflowId":"post_post-mwou9exr-19","runId":"01a1f882-a74a-7f2c-aa58-aee19fde4cc5","type":"postWorkflowV102","status":"COMPLETED","taskQueue":"bluesky","searchAttributes":{"postId":"post-mwou9exr-19","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"],"organizationId":"org_org-mwou9exf-17"}}
+  · history activities: [{"activity":"getPostsList","taskQueue":"bluesky"},{"activity":"postSocial","taskQueue":"bluesky"},{"activity":"updatePost","taskQueue":"bluesky"},{"activity":"inAppNotification","taskQueue":"bluesky"},{"activity":"sendWebhooks","taskQueue":"bluesky"},{"activity":"internalPlugs","taskQueue":"bluesky"},{"activity":"globalPlugs","taskQueue":"bluesky"}]
+  PASS  main has a workflow poller
+  PASS  compat-listed provider queue has a workflow poller
+  PASS  unlisted provider queue stays activity-only
+  PASS  state is PUBLISHED
+  PASS  workflow type is old V102
+  PASS  workflow task queue is the compat provider queue
+  PASS  blocking publish ran on the provider queue
+  PASS  execution completed normally
+  PASS  one publish
+  PASS  blocking contract used
+
+## missing-scan — The hourly maintenance scan re-reads each candidate before dispatching: a deleted post and an already-published post start nothing, a post published by another worker after the scan loaded it is skipped, and a still-QUEUE post starts V112 and publishes.
+  · live stale post published: {"id":"post-mwou9r7b-22","state":"PUBLISHED","publishDate":"2026-11-20T09:31:16.727Z","releaseId":"stub-pending-7418-1","releaseURL":"https://stub.invalid/stub-pending-7418-1","error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwou9r73-20\",\"name\":\"org-mwou9r73-20.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou9r73-20.png\"}]"}
+  · race post row: {"id":"post-mwou9r7i-28","state":"PUBLISHED","publishDate":"2026-11-20T09:31:16.727Z","releaseId":null,"releaseURL":null,"error":null,"deletedAt":null,"image":"[{\"id\":\"media_org-mwou9r73-20\",\"name\":\"org-mwou9r73-20.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou9r73-20.png\"}]"}
+  · dispatched execution: {"workflowId":"post_post-mwou9r7b-22","runId":"f50f9f00-d797-407b-8429-d4ada655ba6f","type":"postWorkflowV112","status":"COMPLETED","taskQueue":"main","searchAttributes":{"postId":"post-mwou9r7b-22","organizationId":"org_org-mwou9r73-20","BuildIds":["unversioned","unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"]}}
+  · race execution: {"workflowId":"post_post-mwou9r7i-28","error":"workflow not found for ID: post_post-mwou9r7i-28"}
+  · deleted execution: {"workflowId":"post_post-mwou9r7c-24","error":"workflow not found for ID: post_post-mwou9r7c-24"}
+  · already published execution: {"workflowId":"post_post-mwou9r7h-26","error":"workflow not found for ID: post_post-mwou9r7h-26"}
+  · publish calls: ["postPending"]
+  · dispatched history: {"lastEvent":"EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED","activities":[{"activity":"getPost","taskQueue":"main"},{"activity":"getPostsList","taskQueue":"main"},{"activity":"postSocialPending","taskQueue":"bluesky"},{"activity":"checkPostStatus","taskQueue":"bluesky"},{"activity":"finalizePost","taskQueue":"bluesky"},{"activity":"updatePost","taskQueue":"main"},{"activity":"inAppNotification","taskQueue":"main"},{"activity":"sendWebhooks","taskQueue":"main"},{"activity":"internalPlugs","taskQueue":"bluesky"},{"activity":"globalPlugs","taskQueue":"bluesky"}]}
+  PASS  live QUEUE post published
+  PASS  race post was marked PUBLISHED after the scan loaded it
+  PASS  scan dispatched V112
+  PASS  scan used the post business id
+  PASS  scan did not dispatch the race post
+  PASS  scan did not dispatch the deleted post
+  PASS  scan did not dispatch the already published post
+  PASS  only the live post published
+  PASS  scan race hook ran
+  PASS  dispatched V112 completed
+

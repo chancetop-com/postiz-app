@@ -30,6 +30,7 @@ vi.mock('googleapis', () => {
 import { IntegrationRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.repository';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { IntegrationManager } from '@gitroom/nestjs-libraries/integrations/integration.manager';
+import { EncryptionService } from '@gitroom/nestjs-libraries/services/encryption.service';
 
 interface Row {
   id: string;
@@ -151,7 +152,8 @@ const service = (db: ReturnType<typeof memoryDb>) =>
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      new EncryptionService()
     ),
     {} as any,
     new IntegrationManager(),
