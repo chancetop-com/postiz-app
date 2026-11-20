@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { decode, sign } from 'jsonwebtoken';
+import { decode, sign, verify } from 'jsonwebtoken';
 import crypto from 'crypto';
 import dayjs from 'dayjs';
 import { AuthService } from '@gitroom/backend/services/auth/auth.service';
 import { AuthMiddleware } from '@gitroom/backend/services/auth/auth.middleware';
 import { AuthController } from '@gitroom/backend/api/routes/auth.controller';
+import { UsersController } from '@gitroom/backend/api/routes/users.controller';
 import { AuthService as AuthChecker } from '@gitroom/helpers/auth/auth.service';
+import { LoginUserDto } from '@gitroom/nestjs-libraries/dtos/auth/login.user.dto';
 import { Provider } from '@prisma/client';
 
 const user = {
@@ -16,12 +18,21 @@ const user = {
   isSuperAdmin: false,
 };
 const now = new Date('2026-11-13T04:00:00Z');
+// bcrypt hashing is deliberately slow; one pre-upgrade password hash is enough
+// for every login assertion in this file.
+const oldPasswordHash = AuthChecker.hashPassword('old-password');
+const emptyAttribution = { lead: vi.fn() };
 
 const build = () => {
+  const password = { hash: oldPasswordHash };
   const users = {
-    getUserByEmail: vi.fn(async () => ({ ...user })),
-    getUserById: vi.fn(async () => ({ ...user })),
-    updatePassword: vi.fn().mockResolvedValue({ id: user.id }),
+    getUserByEmail: vi.fn(async () => ({ ...user, password: password.hash })),
+    getUserById: vi.fn(async () => ({ ...user, password: password.hash })),
+    updatePassword: vi.fn(async (_id: string, value: string) => {
+      // Mirror UsersRepository.updatePassword, which hashes before writing.
+      password.hash = AuthChecker.hashPassword(value);
+      return { id: user.id };
+    }),
   };
   const organizations = {
     getOrgsByUserId: vi.fn().mockResolvedValue([
@@ -36,7 +47,8 @@ const build = () => {
     organizations as never,
     email as never,
     {} as never,
-    {} as never
+    {} as never,
+    emptyAttribution as never
   );
   const middleware = new AuthMiddleware(organizations as never, users as never);
   const controller = new AuthController(service, email as never);
@@ -45,6 +57,17 @@ const build = () => {
     const message = email.sendEmailSync.mock.calls.at(-1)![2] as string;
     return message.match(/\/auth\/forgot\/([^\"]+)/)![1];
   };
+  const login = (loginPassword: string) =>
+    service.routeAuth(
+      Provider.LOCAL,
+      Object.assign(new LoginUserDto(), {
+        provider: Provider.LOCAL,
+        email: user.email,
+        password: loginPassword,
+      }),
+      '127.0.0.1',
+      'vitest'
+    );
   const request = (auth: string, cookies = false, extraHeaders = {}) => {
     const req: any = {
       headers: { ...(cookies ? {} : { auth }), ...extraHeaders },
@@ -59,7 +82,15 @@ const build = () => {
       run: () => middleware.use(req, response as never, next),
     };
   };
-  return { users, organizations, service, controller, issueReset, request };
+  return {
+    users,
+    organizations,
+    service,
+    controller,
+    issueReset,
+    login,
+    request,
+  };
 };
 
 beforeEach(() => {
@@ -154,6 +185,132 @@ describe('reset endpoint validates purpose and expiry', () => {
       exp: now.getTime() / 1000 + 20 * 60,
     });
     expect(() => AuthChecker.verifyJWT(token)).toThrow();
+  });
+
+  it('signs the new link with HS256, the derived reset key and the full claim set', async () => {
+    const { issueReset } = build();
+    const token = await issueReset();
+    const decoded = decode(token, { complete: true })!;
+    expect(decoded.header.alg).toBe('HS256');
+    expect(() =>
+      verify(token, process.env.JWT_SECRET!, { algorithms: ['HS256'] })
+    ).toThrow();
+
+    const resetKey = crypto
+      .createHmac('sha256', process.env.JWT_SECRET!)
+      .update('postiz:user-auth:v1:password-reset')
+      .digest();
+    const payload = verify(token, resetKey, {
+      algorithms: ['HS256'],
+      issuer: 'postiz',
+      audience: 'password-reset',
+    }) as Record<string, unknown>;
+    expect(payload).toMatchObject({
+      purpose: 'password-reset',
+      sub: user.id,
+      iss: 'postiz',
+      aud: 'password-reset',
+    });
+    // Standard exp, not the legacy custom `expires` field: twenty minutes flat.
+    expect(payload.exp as number).toBe((payload.iat as number) + 20 * 60);
+    expect(payload).not.toHaveProperty('expires');
+  });
+
+  it.each([
+    ['one second before expiry', 20 * 60 - 1, true],
+    ['exactly at expiry', 20 * 60, false],
+    ['one second after expiry', 20 * 60 + 1, false],
+  ])(
+    'handles a new reset link %s',
+    async (_label, offsetSeconds, accepted) => {
+      const { issueReset, controller, users } = build();
+      const token = await issueReset();
+      vi.setSystemTime(new Date(now.getTime() + offsetSeconds * 1000));
+      await expect(
+        controller.forgotReturn({ token, password: 'new-password' })
+      ).resolves.toEqual({ reset: accepted });
+      expect(users.updatePassword).toHaveBeenCalledTimes(accepted ? 1 : 0);
+    }
+  );
+
+  it.each([
+    ['one second before expiry', -1, true],
+    ['exactly at expiry', 0, false],
+    ['one second after expiry', 1, false],
+  ])(
+    'handles a pre-upgrade reset link %s',
+    async (_label, offsetSeconds, accepted) => {
+      const { controller, users } = build();
+      const expires = dayjs(now).add(20, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+      const token = AuthChecker.signJWT({ id: user.id, expires });
+      vi.setSystemTime(
+        new Date(dayjs(expires).valueOf() + offsetSeconds * 1000)
+      );
+      await expect(
+        controller.forgotReturn({ token, password: 'new-password' })
+      ).resolves.toEqual({ reset: accepted });
+      expect(users.updatePassword).toHaveBeenCalledTimes(accepted ? 1 : 0);
+    }
+  );
+
+  it('keeps the old password working after new and legacy submissions are rejected', async () => {
+    const { issueReset, controller, users, login } = build();
+    const token = await issueReset();
+    vi.setSystemTime(new Date(now.getTime() + 20 * 60 * 1000));
+    await expect(
+      controller.forgotReturn({ token, password: 'attacker-password' })
+    ).resolves.toEqual({ reset: false });
+
+    const legacy = AuthChecker.signJWT({
+      id: user.id,
+      expires: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    });
+    await expect(
+      controller.forgotReturn({ token: legacy, password: 'attacker-password' })
+    ).resolves.toEqual({ reset: false });
+
+    expect(users.updatePassword).not.toHaveBeenCalled();
+    await expect(login('old-password')).resolves.toMatchObject({
+      jwt: expect.any(String),
+    });
+    await expect(login('attacker-password')).rejects.toThrow(
+      'Invalid user name or password'
+    );
+  });
+
+  it('changes the password through the new link so only the new password logs in', async () => {
+    const { issueReset, controller, login } = build();
+    const token = await issueReset();
+    vi.setSystemTime(new Date(now.getTime() + 20 * 60 * 1000 - 1000));
+    await expect(
+      controller.forgotReturn({ token, password: 'new-password' })
+    ).resolves.toEqual({ reset: true });
+
+    await expect(login('old-password')).rejects.toThrow(
+      'Invalid user name or password'
+    );
+    await expect(login('new-password')).resolves.toMatchObject({
+      jwt: expect.any(String),
+    });
+  });
+
+  it('changes the password through a pre-upgrade link and verifies the login result', async () => {
+    const { controller, login } = build();
+    const token = AuthChecker.signJWT({
+      id: user.id,
+      expires: dayjs(now).add(20, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+    });
+    vi.setSystemTime(new Date(now.getTime() + 19 * 60 * 1000));
+    await expect(
+      controller.forgotReturn({ token, password: 'legacy-new-password' })
+    ).resolves.toEqual({ reset: true });
+
+    await expect(login('old-password')).rejects.toThrow(
+      'Invalid user name or password'
+    );
+    await expect(login('legacy-new-password')).resolves.toMatchObject({
+      jwt: expect.any(String),
+    });
   });
 
   it('resets a password using the newly issued link until its expiry', async () => {
@@ -290,7 +447,8 @@ describe('existing session compatibility', () => {
             merchantId: 'merchant',
             merchantName: 'Merchant',
           }),
-      } as never
+      } as never,
+      emptyAttribution as never
     );
     const headers: Record<string, string> = {};
     const response = {
@@ -374,6 +532,34 @@ describe('existing session compatibility', () => {
     ).rejects.toMatchObject({ status: 403 });
   });
 
+  it('resolves a pre-upgrade session into the database user, organisation and role', async () => {
+    const { request, organizations } = build();
+    organizations.getOrgsByUserId.mockResolvedValueOnce([
+      {
+        id: 'org-chosen',
+        apiKey: 'key-chosen',
+        users: [{ disabled: false, role: 'ADMIN' }],
+      },
+    ]);
+    // The old session carries claims; the request must use the database values.
+    const call = request(
+      AuthChecker.signJWT({ ...user, isSuperAdmin: true, role: 'SUPERADMIN' }),
+      false,
+      { showorg: 'org-chosen' }
+    );
+    await call.run();
+    expect(call.req.user).toMatchObject({
+      id: user.id,
+      email: user.email,
+      providerName: user.providerName,
+    });
+    expect(call.req.org).toMatchObject({
+      id: 'org-chosen',
+      users: [{ role: 'ADMIN' }],
+    });
+    expect(call.next).toHaveBeenCalledOnce();
+  });
+
   it('preserves administrator impersonation after checking the session token', async () => {
     const { request, users, organizations } = build();
     users.getUserById.mockResolvedValueOnce({ ...user, isSuperAdmin: true });
@@ -388,5 +574,115 @@ describe('existing session compatibility', () => {
     expect(call.req.user.id).toBe('target-user');
     expect(call.req.org.id).toBe('target-org');
     expect(call.next).toHaveBeenCalledOnce();
+  });
+});
+
+describe('the original administrator lookup accepts only real sessions', () => {
+  // POST /user/switch reads the signing-in administrator from the request
+  // token (the request user is the impersonated account), so it exposes
+  // getRequestUserId to both transports.
+  const buildSwitch = () => {
+    const switchUser = vi.fn().mockResolvedValue({
+      kept: { id: 'impersonated-user' },
+      switched: { id: 'target-user' },
+    });
+    const syncCustomerEmailsAfterSwitch = vi.fn();
+    const controller = new UsersController(
+      {} as never,
+      { syncCustomerEmailsAfterSwitch } as never,
+      {} as never,
+      {} as never,
+      { switchUser } as never,
+      {} as never
+    );
+    const impersonated = {
+      ...user,
+      id: 'impersonated-user',
+      isSuperAdmin: true,
+    };
+    const switchTo = (auth: string, cookies = false) =>
+      controller.switchUser(
+        impersonated as never,
+        'target-user',
+        {
+          headers: cookies ? {} : { auth },
+          cookies: cookies ? { auth } : {},
+        } as never
+      );
+    return { switchUser, syncCustomerEmailsAfterSwitch, switchTo };
+  };
+
+  it.each([false, true])(
+    'resolves the administrator from a real session (cookie=%s)',
+    async (cookie) => {
+      const { switchUser, switchTo } = buildSwitch();
+      await expect(switchTo(AuthChecker.signJWT(user), cookie)).resolves.toEqual({
+        success: true,
+      });
+      expect(switchUser).toHaveBeenCalledWith(
+        'impersonated-user',
+        'target-user',
+        user.id
+      );
+    }
+  );
+
+  it.each([false, true])(
+    'rejects a newly issued reset token (cookie=%s)',
+    async (cookie) => {
+      const { issueReset } = build();
+      const { switchUser, switchTo } = buildSwitch();
+      await expect(switchTo(await issueReset(), cookie)).rejects.toMatchObject({
+        message: 'Invalid user to switch to',
+        status: 400,
+      });
+      expect(switchUser).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([false, true])(
+    'rejects an expired new reset token (cookie=%s)',
+    async (cookie) => {
+      const { issueReset } = build();
+      const token = await issueReset();
+      vi.setSystemTime(new Date(now.getTime() + 20 * 60 * 1000));
+      const { switchUser, switchTo } = buildSwitch();
+      await expect(switchTo(token, cookie)).rejects.toMatchObject({
+        message: 'Invalid user to switch to',
+        status: 400,
+      });
+      expect(switchUser).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([-60, 0, 20])(
+    'rejects a legacy reset token with expiry offset %s minutes (both transports)',
+    async (minutes) => {
+      const { switchUser, switchTo } = buildSwitch();
+      const token = AuthChecker.signJWT({
+        id: user.id,
+        expires: dayjs().add(minutes, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+      });
+      for (const cookie of [false, true]) {
+        await expect(switchTo(token, cookie)).rejects.toMatchObject({
+          message: 'Invalid user to switch to',
+          status: 400,
+        });
+      }
+      expect(switchUser).not.toHaveBeenCalled();
+    }
+  );
+
+  it('rejects a reset-shaped token that also carries full user claims', async () => {
+    const { switchUser, switchTo } = buildSwitch();
+    const token = AuthChecker.signJWT({
+      ...user,
+      expires: dayjs().add(20, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+    });
+    await expect(switchTo(token)).rejects.toMatchObject({
+      message: 'Invalid user to switch to',
+      status: 400,
+    });
+    expect(switchUser).not.toHaveBeenCalled();
   });
 });

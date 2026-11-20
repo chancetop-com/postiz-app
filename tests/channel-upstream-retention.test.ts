@@ -109,3 +109,39 @@ describe('the callback keeps the upstream provider adaptations', () => {
     expect(continueIntegration).toContain("'linkedin-page': 'LinkedIn'");
   });
 });
+
+describe('public connect links', () => {
+  const connectLink = read(FRONTEND, 'components/launches/connect.link.tsx');
+  const connectLayout = read(
+    FRONTEND,
+    'app/(app)/integrations/connect/layout.tsx'
+  );
+  const publicController = read(
+    BACKEND,
+    'public-api/routes/v1/public.integrations.controller.ts'
+  );
+  const connectTool = read(
+    path.resolve(import.meta.dirname, '../libraries/nestjs-libraries/src'),
+    'chat/tools/integration.connect.tool.ts'
+  );
+
+  it('both upstream entry points issue the same link', () => {
+    expect(publicController).toContain('createConnectLink(');
+    expect(connectTool).toContain('createConnectLink(');
+    expect(connectTool).toContain('{ output: { errors: err.message } }');
+  });
+
+  it('uses the customized mark on a light surface instead of the upstream dark page', () => {
+    expect(connectLink).toContain(
+      "import { Logo } from '@gitroom/frontend/components/new-layout/logo'"
+    );
+    expect(connectLink).toContain('<Logo />');
+    expect(connectLink).not.toContain('/postiz.svg');
+    expect(connectLayout).toContain('light');
+    expect(connectLayout).not.toContain('#0B0A0A');
+  });
+
+  it('keeps the query string of a custom return address', () => {
+    expect(continueIntegration).toContain("returnURL.includes('?') ? '&' : '?'");
+  });
+});

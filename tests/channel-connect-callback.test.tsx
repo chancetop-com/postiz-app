@@ -262,4 +262,37 @@ describe('the callback in an ordinary window', () => {
       expect(push).toHaveBeenCalledWith('/oauth/done?precondition=true')
     );
   });
+
+  it('keeps the query string already on a custom return address', async () => {
+    const returnURL = 'https://merchant.example/done?keep=1&lang=en';
+    vi.stubGlobal('fetch', respond(200, { id: 'integration-1', returnURL }));
+
+    renderContinue();
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        `${returnURL}&added=tiktok&msg=Channel Updated`
+      )
+    );
+  });
+
+  it('sends an anonymous recipient with a return address away from Postiz', async () => {
+    window.sessionStorage.removeItem('auth');
+    vi.stubGlobal(
+      'fetch',
+      respond(200, {
+        id: 'integration-1',
+        returnURL: 'https://merchant.example/done?keep=1',
+      })
+    );
+
+    const view = renderContinue();
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        'https://merchant.example/done?keep=1&added=tiktok&msg=Channel Updated'
+      )
+    );
+    expect(view.queryByText('Channel Updated')).toBeNull();
+  });
 });

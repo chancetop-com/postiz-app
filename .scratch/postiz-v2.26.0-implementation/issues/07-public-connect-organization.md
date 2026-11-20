@@ -4,7 +4,7 @@
 
 **Blocked by:** [06 通过公开 Connect Link 完成单步授权](06-public-connect-link.md)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Source:** [升级规格](../../postiz-v2.26.0-wayfinder/spec.md) · [公开授权最终组织归属](../../postiz-v2.26.0-wayfinder/issues/04-flow-acceptance.md#answer)
 
