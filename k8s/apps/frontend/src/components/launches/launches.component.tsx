@@ -3,6 +3,7 @@
 import {
   AddProviderButton,
   CustomVariables,
+  useExtensionConnect,
 } from '@gitroom/frontend/components/launches/add.provider.component';
 import {
   FC,
@@ -12,7 +13,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import SafeImage from '@gitroom/react/helpers/safe.image';
 import { capitalize, groupBy, orderBy } from 'lodash';
 import { CalendarWeekProvider } from '@gitroom/frontend/components/launches/calendar.context';
 import { Filters } from '@gitroom/frontend/components/launches/filters';
@@ -24,6 +24,10 @@ import { Menu } from '@gitroom/frontend/components/launches/menu/menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Integration } from '@prisma/client';
 import ImageWithFallback from '@gitroom/react/helpers/image.with.fallback';
+import {
+  isBrandMark,
+  PlatformIcon,
+} from '@gitroom/frontend/components/ui/platform.icon.component';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useFireEvents } from '@gitroom/helpers/utils/use.fire.events';
 import { Calendar } from './calendar';
@@ -41,7 +45,11 @@ import { HubspotInstalled } from '@gitroom/frontend/components/launches/hubspot.
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { Input } from '@gitroom/react/form/input';
 import { Button } from '@gitroom/react/form/button';
-import { subscribeToChannelUpdates } from '@gitroom/frontend/components/launches/channel.popup';
+import {
+  isEmbeddedInIframe,
+  openChannelOAuth,
+  subscribeToChannelUpdates,
+} from '@gitroom/frontend/components/launches/channel.popup';
 
 export const SVGLine = () => {
   return (
@@ -383,7 +391,9 @@ export const MenuComponent: FC<
       <div
         className={clsx(
           'relative gap-[6px] flex justify-center items-center',
-          integration.disabled && 'opacity-50'
+          isBrandMark(integration.identifier)
+            ? 'isolate'
+            : integration.disabled && 'opacity-50'
         )}
       >
         <div className="h-full w-[4px] -ms-[12px] rounded-s-[3px] opacity-0 group-hover/profile:opacity-100 transition-opacity">
@@ -394,11 +404,11 @@ export const MenuComponent: FC<
             className="absolute start-0 top-0 w-[39px] h-[46px] cursor-pointer"
             onClick={
               integration.refreshNeeded
-                ? refreshChannel(integration)
+                ? undefined
                 : continueIntegration(integration)
             }
           >
-            <div className="bg-red-500 w-[15px] h-[15px] rounded-full start-[5px] top-[5px] absolute z-[200] text-[10px] flex justify-center items-center">
+            <div className="bg-red-500 w-[15px] h-[15px] rounded-full -start-[7px] top-[5px] absolute z-[200] text-[10px] flex justify-center items-center">
               !
             </div>
             <div className="bg-primary/60 w-[39px] h-[46px] start-0 top-0 absolute rounded-full z-[199]" />
@@ -407,26 +417,32 @@ export const MenuComponent: FC<
         <ImageWithFallback
           fallbackSrc={'/no-picture.jpg'}
           src={integration.picture || '/no-picture.jpg'}
-          className="rounded-[8px] min-w-[36px] min-h-[36px]"
+          className={clsx(
+            'rounded-[8px] min-w-[36px] min-h-[36px]',
+            isBrandMark(integration.identifier) &&
+              integration.disabled &&
+              'opacity-50'
+          )}
           alt={integration.identifier}
           width={36}
           height={36}
         />
-        {integration.identifier === 'youtube' ? (
-          <img
-            src="/icons/platforms/youtube.svg"
-            className="absolute z-10 bottom-[5px] -end-[5px]"
-            width={20}
-          />
-        ) : (
-          <SafeImage
-            src={`/icons/platforms/${integration.identifier}.png`}
-            className="rounded-[8px] absolute z-10 bottom-[5px] -end-[5px] border border-fifth"
-            alt={integration.identifier}
-            width={18.41}
-            height={18.41}
-          />
-        )}
+        {/* a brand mark stays above the reconnect overlay (z-[199]), the
+            wrapper is isolated so it stays under the tooltips, and it hangs a
+            little off the corner to hide less of the picture */}
+        <PlatformIcon
+          identifier={integration.identifier}
+          size={18.41}
+          inactive={integration.disabled}
+          channel={
+            integration.refreshNeeded || integration.inBetweenSteps
+              ? undefined
+              : integration.internalId
+          }
+          className="absolute bottom-[5px] -end-[5px]"
+          iconClassName="z-10 rounded-[8px] border border-fifth"
+          markClassName="z-[201] -mb-[5px] -me-[3px] transition-all bg-newBgColorInner group-hover/profile:bg-boxHover"
+        />
       </div>
       <div
         // @ts-ignore
@@ -562,11 +578,13 @@ export const LaunchesComponent = () => {
     },
     []
   );
+  const extensionConnect = useExtensionConnect();
   const refreshChannel = useCallback(
     (
         integration: Integration & {
           identifier: string;
           isCustomFields?: boolean;
+          isChromeExtension?: boolean;
           customFields?: any[];
         }
       ) =>
@@ -591,6 +609,13 @@ export const LaunchesComponent = () => {
           return;
         }
 
+        if (integration.isChromeExtension) {
+          await extensionConnect(integration.identifier, {
+            refresh: integration.internalId,
+          });
+          return;
+        }
+
         const { url } = await (
           await fetch(
             `/integrations/social/${integration.identifier}?refresh=${integration.internalId}`,
@@ -599,7 +624,7 @@ export const LaunchesComponent = () => {
             }
           )
         ).json();
-        window.location.href = url;
+        openChannelOAuth(url, { embedded: isEmbeddedInIframe() });
       },
     []
   );

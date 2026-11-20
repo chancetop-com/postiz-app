@@ -11,6 +11,7 @@ import dayjs from 'dayjs';
 import { ForgotReturnPasswordDto } from '@gitroom/nestjs-libraries/dtos/auth/forgot-return.password.dto';
 import { EmailService } from '@gitroom/nestjs-libraries/services/email.service';
 import { NewsletterService } from '@gitroom/nestjs-libraries/newsletter/newsletter.service';
+import { AttributionService } from '@gitroom/nestjs-libraries/services/attribution/attribution.service';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +20,8 @@ export class AuthService {
     private _organizationService: OrganizationService,
     private _emailService: EmailService,
     private _providerManager: AuthProviderManager,
-    private _ssoService: SsoService
+    private _ssoService: SsoService,
+    private _attributionService: AttributionService
   ) {}
   async canRegister(provider: string) {
     if (
@@ -62,6 +64,10 @@ export class AuthService {
           userAgent
         );
 
+        this._attributionService
+          .lead(create.users[0].user, body.attribution)
+          .catch((err) => {});
+
         const addedOrg =
           addToOrg && typeof addToOrg !== 'boolean'
             ? await this._organizationService.addUserToOrg(
@@ -85,11 +91,28 @@ export class AuthService {
         throw new Error('Invalid user name or password');
       }
 
+      // Existing user logging in with a valid team invite: join the inviting
+      // org. Done BEFORE the activation gate on purpose, so a not-yet-activated
+      // user still gets the membership recorded -- the same model as a brand-new
+      // signup via invite, which is also added to the org while still
+      // unactivated. Activation remains required to actually use it: the throw
+      // below (and the auth middleware) keep an unactivated user out until they
+      // verify their email.
+      const addedOrg =
+        addToOrg && typeof addToOrg !== 'boolean'
+          ? await this._organizationService.addUserToOrg(
+              user.id,
+              addToOrg.id,
+              addToOrg.orgId,
+              addToOrg.role
+            )
+          : false;
+
       if (!user.activated) {
         throw new Error('User is not activated');
       }
 
-      return { addedOrg: false, jwt: await this.signJwt(user) };
+      return { addedOrg, jwt: await this.signJwt(user) };
     }
 
     const user = await this.loginOrRegisterProvider(
@@ -180,6 +203,10 @@ export class AuthService {
     this._track('register', providerUser.email, body.datafast_visitor_id).catch(
       (err) => {}
     );
+
+    this._attributionService
+      .lead(create.users[0].user, body.attribution)
+      .catch((err) => {});
 
     await NewsletterService.register(providerUser.email);
 
@@ -308,7 +335,8 @@ export class AuthService {
     code: string,
     redirectUri?: string,
     state?: string,
-    stateToken?: string
+    stateToken?: string,
+    addToOrg?: boolean | { orgId: string; role: 'USER' | 'ADMIN'; id: string }
   ) {
     // Native clients keep their existing redirect_uri flow. Browser callbacks
     // must carry the signed, expiring proof stored in their sessionStorage.
@@ -345,7 +373,19 @@ export class AuthService {
       provider as Provider
     );
     if (checkExists) {
-      return { jwt: await this.signJwt(checkExists) };
+      // Existing user signing in via OAuth while holding a valid team invite.
+      // This path bypasses routeAuth, so join the inviting org here too (OAuth
+      // accounts are always activated, so there is no activation gate to clear).
+      const addedOrg =
+        addToOrg && typeof addToOrg !== 'boolean'
+          ? await this._organizationService.addUserToOrg(
+              checkExists.id,
+              addToOrg.id,
+              addToOrg.orgId,
+              addToOrg.role
+            )
+          : false;
+      return { jwt: await this.signJwt(checkExists), addedOrg };
     }
 
     return { token };

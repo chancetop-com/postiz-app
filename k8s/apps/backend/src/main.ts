@@ -23,50 +23,12 @@ import { PostValidationExceptionFilter } from '@gitroom/backend/api/routes/posts
 import { HttpExceptionFilter } from '@gitroom/nestjs-libraries/services/exception.filter';
 import { ConfigurationChecker } from '@gitroom/helpers/configuration/configuration.checker';
 import { startMcp } from '@gitroom/nestjs-libraries/chat/start.mcp';
+import { getCorsOptions } from '@gitroom/backend/cors.config';
 
 async function start() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
-    cors: {
-      ...(!process.env.NOT_SECURED ? { credentials: true } : {}),
-      allowedHeaders: [
-        'Content-Type',
-        'Authorization',
-        'auth',
-        'showorg',
-        'impersonate',
-        'oauth-state-token',
-        'x-postiz-org',
-        'x-postiz-include-deleted',
-        'x-copilotkit-runtime-client-gql-version',
-      ],
-      exposedHeaders: [
-        'reload',
-        'onboarding',
-        'activate',
-        'auth',
-        'showorg',
-        'impersonate',
-        'logout',
-        'oauth-state',
-        'oauth-state-token',
-        'x-copilotkit-runtime-client-gql-version',
-      ],
-      origin: [
-        process.env.FRONTEND_URL,
-        'http://localhost:6274',
-        ...(process.env.MAIN_URL ? [process.env.MAIN_URL] : []),
-        // Optional: the Canva app calls the public API from its iframe origin
-        // (browsers send it lowercase, e.g. https://app-aabbcc.canva-apps.com)
-        ...(process.env.CANVA_APP_ORIGIN
-          ? [
-              process.env.CANVA_APP_ORIGIN.trim()
-                .replace(/\/+$/, '')
-                .toLowerCase(),
-            ]
-          : []),
-      ],
-    },
+    cors: getCorsOptions(),
   });
 
   startMcp(app).catch((e) => Logger.error('MCP startup failed (non-fatal)', e));
@@ -93,6 +55,14 @@ async function start() {
 
   try {
     await app.listen(port);
+
+    // Keep idle connections open longer than the load balancer does (AWS ALB
+    // idle timeout is 900s). Node's default of 5s lets the backend close a
+    // connection the ALB is about to reuse, which the ALB returns as a 502.
+    const server = app.getHttpServer();
+    server.keepAliveTimeout = 905_000;
+    server.headersTimeout = 906_000;
+
     console.log('Backend started successfully on port ' + port);
 
     checkConfiguration(); // Do this last, so that users will see obvious issues at the end of the startup log without having to scroll up.

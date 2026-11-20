@@ -56,7 +56,9 @@ export const ContinueIntegration: FC<{
       if (returnURL) {
         // If returnURL exists, always redirect to it with the path params
         const params = path.includes('?') ? path.split('?')[1] : '';
-        push(params ? `${returnURL}?${params}` : returnURL);
+        // a returnURL of the public API may carry its own query string
+        const separator = returnURL.includes('?') ? '&' : '?';
+        push(params ? `${returnURL}${separator}${params}` : returnURL);
       } else if (window.sessionStorage.getItem('auth')) {
         // If logged in without returnURL, use normal navigation
         push(path);
@@ -123,15 +125,19 @@ export const ContinueIntegration: FC<{
         method: 'POST',
         body: JSON.stringify({ ...modifiedParams, timezone }),
       });
+      // A 400 body is read once to decide whether this was a public flow at
+      // all; keep it so a genuine provider refusal can still be shown.
+      let errorData: any = null;
 
       // If public endpoint fails with specific errors, try authenticated endpoint
       if (data.status === HttpStatusCode.BadRequest) {
-        const errorData = await data.json().catch(() => ({}));
+        errorData = await data.json().catch(() => ({}));
         // "Invalid connection type" means this wasn't started as a public flow
         if (
           errorData.message?.includes('Invalid connection type') ||
           errorData.message?.includes('Invalid or expired state')
         ) {
+          errorData = null;
           data = await fetch(`/integrations/social-connect/${provider}`, {
             method: 'POST',
             body: JSON.stringify({ ...modifiedParams, timezone }),
@@ -159,7 +165,7 @@ export const ContinueIntegration: FC<{
         data.status !== HttpStatusCode.Ok &&
         data.status !== HttpStatusCode.Created
       ) {
-        const errorData = await data.json().catch(() => ({}));
+        errorData = errorData || (await data.json().catch(() => ({})));
         setErrorMessage(
           errorData.message || errorData.msg || 'Could not add provider'
         );
@@ -235,15 +241,17 @@ export const ContinueIntegration: FC<{
 
       try {
         // Use public or authenticated endpoint based on the flow
-        const endpoint = window.sessionStorage.getItem('auth')
+        const logged = !!window.sessionStorage.getItem('auth');
+        const endpoint = logged
           ? `/integrations/provider/${twoStepState.integrationId}/connect`
           : `/integrations/public/provider/${twoStepState.integrationId}/connect`;
 
+        const body = JSON.stringify({ ...modifiedParams, ...data });
         let response: Response;
         try {
           response = await fetch(endpoint, {
             method: 'POST',
-            body: JSON.stringify({ ...modifiedParams, ...data }),
+            body,
           });
         } catch {
           // The request never reached the API, so nothing was written either.
@@ -251,6 +259,18 @@ export const ContinueIntegration: FC<{
             t('failed_to_save_channel', 'Failed to save channel configuration')
           );
           return;
+        }
+
+        // Logged into another organization than the one the channel is added
+        // to (a connect link or an invite link): save it by the connection state
+        if (logged && response.status === HttpStatusCode.NotFound) {
+          response = await fetch(
+            `/integrations/public/provider/${twoStepState.integrationId}/connect`,
+            {
+              method: 'POST',
+              body,
+            }
+          );
         }
 
         if (
@@ -447,9 +467,11 @@ export const ContinueIntegration: FC<{
                 'An error occurred. Please try again.'
               )}
           </div>
-          {typeof window !== 'undefined' && window.sessionStorage.getItem('auth') && (
-            <Redirect url="/launches" delay={3000} />
-          )}
+          {typeof window !== 'undefined' &&
+            window.sessionStorage.getItem('auth') &&
+            !isChannelPopup() && (
+              <Redirect url="/launches" delay={3000} />
+            )}
         </div>
       </div>
     );

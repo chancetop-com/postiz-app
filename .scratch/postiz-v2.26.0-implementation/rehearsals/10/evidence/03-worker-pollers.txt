@@ -1,0 +1,4 @@
+DEPRECATION NOTICE: tctl will enter End of Support September 30, 2025. Please transition to Temporal CLI (https://docs.temporal.io/cli).
+
+  [94mWORKFLOW POLLER IDENTITY[0m | [94m  LAST ACCESS TIME  [0m  
+  156@36de84b92575         | 2026-11-20T12:03:24Z  

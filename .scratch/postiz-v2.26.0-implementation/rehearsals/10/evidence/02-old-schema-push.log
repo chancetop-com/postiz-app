@@ -1,0 +1,5 @@
+Prisma schema loaded from ../rehearsal/old-schema.prisma
+Datasource "db": PostgreSQL database "postiz", schema "public" at "t10-pg:5432"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 833ms
+

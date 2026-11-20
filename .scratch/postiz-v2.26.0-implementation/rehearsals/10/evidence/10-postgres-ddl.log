@@ -1,0 +1,7 @@
+2026-11-20 12:02:40.082 UTC [182] LOG:  duration: 121.542 ms  statement: CREATE INDEX "Errors_createdAt_platform_idx" ON "Errors"("createdAt", "platform")
+2026-11-20 12:02:40.174 UTC [182] LOG:  duration: 91.546 ms  statement: CREATE INDEX "Notifications_organizationId_createdAt_deletedAt_idx" ON "Notifications"("organizationId", "createdAt", "deletedAt")
+2026-11-20 12:02:40.376 UTC [182] LOG:  process 182 still waiting for ShareLock on relation 18077 of database 16384 after 201.792 ms
+2026-11-20 12:02:49.887 UTC [182] LOG:  process 182 still waiting for ShareLock on relation 18077 of database 16384 after 9713.108 ms
+2026-11-20 12:03:04.159 UTC [182] LOG:  duration: 23985.050 ms  statement: CREATE INDEX "Post_publishDate_state_deletedAt_parentPostId_integrationId_idx" ON "Post"("publishDate", "state", "deletedAt", "parentPostId", "integrationId", "organizationId", "creationMethod")
+2026-11-20 12:03:04.442 UTC [182] LOG:  duration: 281.299 ms  statement: CREATE INDEX "Post_organizationId_publishDate_idx" ON "Post"("organizationId", "publishDate")
+2026-11-20 12:03:04.449 UTC [182] LOG:  duration: 6.085 ms  statement: CREATE INDEX "User_providerId_providerName_idx" ON "User"("providerId", "providerName")
