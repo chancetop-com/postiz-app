@@ -56,7 +56,9 @@ export const ContinueIntegration: FC<{
       if (returnURL) {
         // If returnURL exists, always redirect to it with the path params
         const params = path.includes('?') ? path.split('?')[1] : '';
-        push(params ? `${returnURL}?${params}` : returnURL);
+        // a returnURL of the public API may carry its own query string
+        const separator = returnURL.includes('?') ? '&' : '?';
+        push(params ? `${returnURL}${separator}${params}` : returnURL);
       } else if (window.sessionStorage.getItem('auth')) {
         // If logged in without returnURL, use normal navigation
         push(path);
@@ -235,15 +237,17 @@ export const ContinueIntegration: FC<{
 
       try {
         // Use public or authenticated endpoint based on the flow
-        const endpoint = window.sessionStorage.getItem('auth')
+        const logged = !!window.sessionStorage.getItem('auth');
+        const endpoint = logged
           ? `/integrations/provider/${twoStepState.integrationId}/connect`
           : `/integrations/public/provider/${twoStepState.integrationId}/connect`;
 
+        const body = JSON.stringify({ ...modifiedParams, ...data });
         let response: Response;
         try {
           response = await fetch(endpoint, {
             method: 'POST',
-            body: JSON.stringify({ ...modifiedParams, ...data }),
+            body,
           });
         } catch {
           // The request never reached the API, so nothing was written either.
@@ -251,6 +255,18 @@ export const ContinueIntegration: FC<{
             t('failed_to_save_channel', 'Failed to save channel configuration')
           );
           return;
+        }
+
+        // Logged into another organization than the one the channel is added
+        // to (a connect link or an invite link): save it by the connection state
+        if (logged && response.status === HttpStatusCode.NotFound) {
+          response = await fetch(
+            `/integrations/public/provider/${twoStepState.integrationId}/connect`,
+            {
+              method: 'POST',
+              body,
+            }
+          );
         }
 
         if (
