@@ -1,0 +1,56 @@
+[
+  {
+    "id": "scan-mutations-during-compensation",
+    "classification": "complete",
+    "duplicate": false,
+    "summary": "deleted/canceled candidates were skipped by the pre-dispatch re-read; the rescheduled QUEUE row dispatched once at its new time"
+  },
+  {
+    "id": "finalize-platform-rejected",
+    "classification": "failed",
+    "duplicate": false,
+    "summary": "bad_body from finalize: platform accepted no finalize, row ERROR with the rejection; not an unknown result"
+  },
+  {
+    "id": "pending-still-in-progress",
+    "classification": "pending",
+    "duplicate": false,
+    "summary": "platform accepted once; status kept returning pending, row QUEUE, execution RUNNING, no finalize and no error marker"
+  },
+  {
+    "id": "writeback-transient-recovers",
+    "classification": "complete",
+    "duplicate": false,
+    "summary": "one accepted platform send; the first local write-back failed, the shipped retry wrote PUBLISHED with the finalize id"
+  },
+  {
+    "id": "total-writeback-loss-before-sweep",
+    "classification": "unknown",
+    "duplicate": false,
+    "summary": "platform accepted once; updatePost and changeState failed, the row says QUEUE and cannot be distinguished from never-published"
+  },
+  {
+    "id": "total-writeback-loss-sweep-duplicate",
+    "classification": "unknown",
+    "duplicate": true,
+    "summary": "the compensation scan accepted the already-published post a second time; must reconcile the platform before re-enabling the sweep"
+  },
+  {
+    "id": "worker-death-finalize-before-platform-accept",
+    "classification": "complete",
+    "duplicate": false,
+    "summary": "no heartbeat details and no platform accept before the kill; the retry accepted once and wrote back"
+  },
+  {
+    "id": "worker-death-finalize-after-platform-accept-no-details",
+    "classification": "unknown",
+    "duplicate": true,
+    "summary": "no heartbeat details, but the platform had already accepted the finalize; the retry sent a second accept. Residual 15s-window hazard, recorded not hidden."
+  },
+  {
+    "id": "worker-death-finalize-with-details",
+    "classification": "unknown",
+    "duplicate": false,
+    "summary": "one accepted finalize; heartbeat timeout carried details; the workflow marked ERROR/unconfirmed and never retried finalize after the restart"
+  }
+]
