@@ -1,0 +1,2 @@
+exit=1
+dockerignore excludes node_modules; the runtime Dockerfile expects it in the context.

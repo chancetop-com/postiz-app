@@ -1,0 +1,7 @@
+Errors_createdAt_platform_idx	CREATE INDEX "Errors_createdAt_platform_idx" ON public."Errors" USING btree ("createdAt", platform)
+Notifications_organizationId_createdAt_deletedAt_idx	CREATE INDEX "Notifications_organizationId_createdAt_deletedAt_idx" ON public."Notifications" USING btree ("organizationId", "createdAt", "deletedAt")
+Post_organizationId_publishDate_idx	CREATE INDEX "Post_organizationId_publishDate_idx" ON public."Post" USING btree ("organizationId", "publishDate")
+Post_publishDate_state_deletedAt_parentPostId_integrationId_idx	CREATE INDEX "Post_publishDate_state_deletedAt_parentPostId_integrationId_idx" ON public."Post" USING btree ("publishDate", state, "deletedAt", "parentPostId", "integrationId", "organizationId", "creationMethod")
+User_providerId_providerName_idx	CREATE INDEX "User_providerId_providerName_idx" ON public."User" USING btree ("providerId", "providerName")
+indexes.total	286
+indexes.on_post	19

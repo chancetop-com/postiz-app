@@ -1,0 +1,4 @@
+Fri Nov 20 12:49:35 UTC 2026
+COMMIT b596737423c73427a7a5bc6aef8de3d46dac9118
+CMD DATABASE_URL=postgresql://.../postiz-ticket-14-tests pnpm test
+EXIT=0

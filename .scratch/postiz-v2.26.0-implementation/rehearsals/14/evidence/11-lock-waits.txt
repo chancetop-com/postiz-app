@@ -1,0 +1,2 @@
+2026-11-20 12:35:52.050 UTC [183] LOG:  process 183 still waiting for ShareLock on relation 18077 of database 16384 after 201.380 ms
+2026-11-20 12:36:01.471 UTC [183] LOG:  process 183 still waiting for ShareLock on relation 18077 of database 16384 after 9621.818 ms

@@ -1,0 +1,877 @@
+{
+  "run": "8705480",
+  "checks": [
+    {
+      "name": "org A and B are distinct",
+      "ok": true,
+      "detail": {
+        "orgA": "d662f6a9-6424-4eb3-a2b9-b074a6800b09",
+        "orgB": "c80d5fb4-2f3b-4a4d-8169-dd2125af3398"
+      }
+    },
+    {
+      "name": "public API link creation",
+      "ok": true,
+      "detail": {
+        "status": 201,
+        "url": "http://localhost:4314/integrations/connect/a3dd601a33cd19227fffbbd1da816bd2f85fb21d4e552288a08a5bd8956cacd9"
+      }
+    },
+    {
+      "name": "anonymous: consent page has no tab identity",
+      "ok": true,
+      "detail": {
+        "auth": null,
+        "cookies": ""
+      }
+    },
+    {
+      "name": "anonymous: the callback asked for the picker",
+      "ok": true,
+      "detail": {
+        "status": 201,
+        "body": {
+          "id": "cmwoz1yw80001cbtyvgbfo3ti",
+          "internalId": "fb-user-1",
+          "organizationId": "d662f6a9-6424-4eb3-a2b9-b074a6800b09",
+          "name": "Synthetic Recipient",
+          "customName": null,
+          "picture": null,
+          "providerIdentifier": "facebook",
+          "type": "social",
+          "disabled": false,
+          "tokenExpiration": "2027-01-18T12:45:11.527Z",
+          "profile": "",
+          "deletedAt": null,
+          "createdAt": "2026-11-20T12:45:11.528Z",
+          "updatedAt": "2026-11-20T12:45:11.528Z",
+          "inBetweenSteps": true,
+          "refreshNeeded": false,
+          "postingTimes": "[{\"time\":80},{\"time\":370},{\"time\":660}]",
+          "customerId": null,
+          "rootInternalId": "fb-user-1",
+          "additionalSettings": "[]",
+          "onboarding": false,
+          "pages": [
+            {
+              "id": "page-1",
+              "username": "apageone",
+              "name": "A Page One",
+              "access_token": "page-token-1",
+              "picture": {
+                "data": {
+                  "url": "http://localhost:4314/page-1.png"
+                }
+              }
+            },
+            {
+              "id": "page-2",
+              "username": "apagetwo",
+              "name": "A Page Two",
+              "access_token": "page-token-2",
+              "picture": {
+                "data": {
+                  "url": "http://localhost:4314/page-2.png"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "anonymous: both candidate pages were offered",
+      "ok": true,
+      "detail": {
+        "one": true,
+        "two": true
+      }
+    },
+    {
+      "name": "anonymous: exactly one bound row in A, page-2",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz1yw80001cbtyvgbfo3ti",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "anonymous: the other candidate is not bound",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz1yw80001cbtyvgbfo3ti",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "anonymous: org B has no row",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "anonymous: the integration id exists only in A",
+      "ok": true,
+      "detail": [
+        "d662f6a9-6424-4eb3-a2b9-b074a6800b09"
+      ]
+    },
+    {
+      "name": "anonymous: stays on the callback page with the result",
+      "ok": true,
+      "detail": "http://localhost:4314/integrations/social/facebook?code=t07-code-0WvCep&state=0WvCep"
+    },
+    {
+      "name": "signed into A: one bound row in A, page-2",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz20vr0003cbtyq2yj1myi",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "signed into A: B has no row",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "signed into A: destination is the calendar",
+      "ok": true,
+      "detail": "http://localhost:4314/launches?added=facebook&msg=Channel%20Added"
+    },
+    {
+      "name": "signed into A: session still belongs to A",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "id": "c1e19939-7fb2-4f31-b3c3-1975ab43f06a",
+          "email": "t07-8705480-t07-org-a@example.invalid",
+          "providerName": "LOCAL",
+          "name": null,
+          "lastName": null,
+          "isSuperAdmin": false,
+          "bio": null,
+          "audience": 0,
+          "pictureId": null,
+          "providerId": "",
+          "timezone": 0,
+          "timezoneName": null,
+          "createdAt": "2026-11-20T12:45:05.619Z",
+          "updatedAt": "2026-11-20T12:45:05.619Z",
+          "lastReadNotifications": "2026-11-20T12:45:05.619Z",
+          "inviteId": null,
+          "activated": true,
+          "account": null,
+          "connectedAccount": false,
+          "lastOnline": "2026-11-20T12:45:05.619Z",
+          "ip": "::1",
+          "agent": "node",
+          "deletedAt": null,
+          "sendSuccessEmails": true,
+          "sendFailureEmails": true,
+          "sendStreakEmails": true,
+          "orgId": "d662f6a9-6424-4eb3-a2b9-b074a6800b09",
+          "totalChannels": 10000,
+          "tier": "ULTIMATE",
+          "role": "SUPERADMIN",
+          "isLifetime": false,
+          "admin": false,
+          "impersonate": false,
+          "isTrailing": false,
+          "allowTrial": true,
+          "streakSince": null,
+          "publicApi": "9920296383f3627f1d6692dc3901641213aad8f2243705dfa245129f6c7f8f91"
+        }
+      }
+    },
+    {
+      "name": "tab B: one bound row in A, page-2",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz230b0005cbtyv9al4sgs",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "tab B: the binding did not land in B",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "tab B: the tab still reports user B and org B after refresh",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "id": "a5f0b890-8c08-4598-92f6-80daae37304a",
+          "email": "t07-8705480-t07-org-b@example.invalid",
+          "providerName": "LOCAL",
+          "name": null,
+          "lastName": null,
+          "isSuperAdmin": false,
+          "bio": null,
+          "audience": 0,
+          "pictureId": null,
+          "providerId": "",
+          "timezone": 0,
+          "timezoneName": null,
+          "createdAt": "2026-11-20T12:45:05.757Z",
+          "updatedAt": "2026-11-20T12:45:05.757Z",
+          "lastReadNotifications": "2026-11-20T12:45:05.757Z",
+          "inviteId": null,
+          "activated": true,
+          "account": null,
+          "connectedAccount": false,
+          "lastOnline": "2026-11-20T12:45:05.757Z",
+          "ip": "::1",
+          "agent": "node",
+          "deletedAt": null,
+          "sendSuccessEmails": true,
+          "sendFailureEmails": true,
+          "sendStreakEmails": true,
+          "orgId": "c80d5fb4-2f3b-4a4d-8169-dd2125af3398",
+          "totalChannels": 10000,
+          "tier": "ULTIMATE",
+          "role": "SUPERADMIN",
+          "isLifetime": false,
+          "admin": false,
+          "impersonate": false,
+          "isTrailing": false,
+          "allowTrial": true,
+          "streakSince": null,
+          "publicApi": "a6815a83e21e3934640319ff9bf3651cd3ec3d5a7f8f20a528911f86b29cc86c"
+        }
+      }
+    },
+    {
+      "name": "tab B: the tab session keys are unchanged",
+      "ok": true,
+      "detail": {
+        "auth": true,
+        "showorg": "c80d5fb4-2f3b-4a4d-8169-dd2125af3398"
+      }
+    },
+    {
+      "name": "save failure: an error is shown",
+      "ok": true,
+      "detail": "Internal server error"
+    },
+    {
+      "name": "save failure: the chooser stays usable",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "save failure: no completed binding",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz26rr0007cbty88ljb0yx",
+          "internalId": "fb-user-1",
+          "name": "Synthetic Recipient",
+          "token": "fb-user-token-long",
+          "inBetweenSteps": true,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "save failure: the tab did not navigate",
+      "ok": true,
+      "detail": "http://localhost:4314/integrations/social/facebook?code=t07-code-Tzquoo&state=Tzquoo"
+    },
+    {
+      "name": "retry: exactly one bound row remains",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz26rr0007cbty88ljb0yx",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "retry: no duplicate row was left behind",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz26rr0007cbty88ljb0yx",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "cancel: nothing is bound",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz2a2z0009cbty0kctx9n7",
+          "internalId": "fb-user-1",
+          "name": "Synthetic Recipient",
+          "token": "fb-user-token-long",
+          "inBetweenSteps": true,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "cancel: only the pending selection remains",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz2a2z0009cbty0kctx9n7",
+          "internalId": "fb-user-1",
+          "name": "Synthetic Recipient",
+          "token": "fb-user-token-long",
+          "inBetweenSteps": true,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "cancel then retry: one bound row",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz2a2z0009cbty0kctx9n7",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "cancel then retry: no duplicate live row",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz2a2z0009cbty0kctx9n7",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    {
+      "name": "redirect (anonymous): the consent page names the return site",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "redirect (anonymous): existing query params are kept and the result is appended",
+      "ok": true,
+      "detail": "http://127.0.0.1:4414/return?keep=1&lang=en&added=facebook&msg=Channel%20Added"
+    },
+    {
+      "name": "redirect (signed into B): same preserved query string",
+      "ok": true,
+      "detail": "http://127.0.0.1:4414/return?keep=1&lang=en&added=facebook&msg=Channel%20Added"
+    },
+    {
+      "name": "redirect (signed into B): binding still only in A",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "cookies disabled: anonymous completion stays inline",
+      "ok": true,
+      "detail": "http://localhost:4314/integrations/social/facebook?code=t07-code-M0hINK&state=M0hINK"
+    },
+    {
+      "name": "cookies disabled: signed-in completion reaches the calendar",
+      "ok": true,
+      "detail": "http://localhost:4314/launches?added=facebook&msg=Channel%20Added"
+    },
+    {
+      "name": "cookies disabled: no auth/showorg cookie was stored",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "cookies disabled: backend requests carry no cookie",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "cookies disabled: the binding is still only in A",
+      "ok": true,
+      "detail": [
+        {
+          "id": "cmwoz2f7v000jcbtylhiqxkz9",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    }
+  ],
+  "scenarios": {
+    "anonymous": {
+      "link": "http://localhost:4314/integrations/connect/ea3869b9a342aade16cebfdd2b36de29e70d11e6867efd68c1ac6b3ae02f05f9",
+      "before": {
+        "auth": null,
+        "cookies": ""
+      },
+      "candidates": {
+        "one": true,
+        "two": true
+      },
+      "callback": {
+        "status": 201,
+        "body": {
+          "id": "cmwoz1yw80001cbtyvgbfo3ti",
+          "internalId": "fb-user-1",
+          "organizationId": "d662f6a9-6424-4eb3-a2b9-b074a6800b09",
+          "name": "Synthetic Recipient",
+          "customName": null,
+          "picture": null,
+          "providerIdentifier": "facebook",
+          "type": "social",
+          "disabled": false,
+          "tokenExpiration": "2027-01-18T12:45:11.527Z",
+          "profile": "",
+          "deletedAt": null,
+          "createdAt": "2026-11-20T12:45:11.528Z",
+          "updatedAt": "2026-11-20T12:45:11.528Z",
+          "inBetweenSteps": true,
+          "refreshNeeded": false,
+          "postingTimes": "[{\"time\":80},{\"time\":370},{\"time\":660}]",
+          "customerId": null,
+          "rootInternalId": "fb-user-1",
+          "additionalSettings": "[]",
+          "onboarding": false,
+          "pages": [
+            {
+              "id": "page-1",
+              "username": "apageone",
+              "name": "A Page One",
+              "access_token": "page-token-1",
+              "picture": {
+                "data": {
+                  "url": "http://localhost:4314/page-1.png"
+                }
+              }
+            },
+            {
+              "id": "page-2",
+              "username": "apagetwo",
+              "name": "A Page Two",
+              "access_token": "page-token-2",
+              "picture": {
+                "data": {
+                  "url": "http://localhost:4314/page-2.png"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "finalUrl": "http://localhost:4314/integrations/social/facebook?code=t07-code-0WvCep&state=0WvCep",
+      "rowsA": [
+        {
+          "id": "cmwoz1yw80001cbtyvgbfo3ti",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ],
+      "rowsB": [],
+      "boundA": [
+        {
+          "id": "cmwoz1yw80001cbtyvgbfo3ti",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ],
+      "stateOnlyInA": [
+        "d662f6a9-6424-4eb3-a2b9-b074a6800b09"
+      ],
+      "pageErrors": []
+    },
+    "signedIntoA": {
+      "link": "http://localhost:4314/integrations/connect/be0300c02390e253e9eaad86832e263b5f6f554fa98ac2576547a479f94a3762",
+      "callback": {
+        "status": 201,
+        "body": {
+          "id": "cmwoz20vr0003cbtyq2yj1myi",
+          "internalId": "fb-user-1",
+          "organizationId": "d662f6a9-6424-4eb3-a2b9-b074a6800b09",
+          "name": "Synthetic Recipient",
+          "customName": null,
+          "picture": null,
+          "providerIdentifier": "facebook",
+          "type": "social",
+          "disabled": false,
+          "tokenExpiration": "2027-01-18T12:45:14.102Z",
+          "profile": "",
+          "deletedAt": null,
+          "createdAt": "2026-11-20T12:45:14.103Z",
+          "updatedAt": "2026-11-20T12:45:14.103Z",
+          "inBetweenSteps": true,
+          "refreshNeeded": false,
+          "postingTimes": "[{\"time\":80},{\"time\":370},{\"time\":660}]",
+          "customerId": null,
+          "rootInternalId": "fb-user-1",
+          "additionalSettings": "[]",
+          "onboarding": false,
+          "pages": [
+            {
+              "id": "page-1",
+              "username": "apageone",
+              "name": "A Page One",
+              "access_token": "page-token-1",
+              "picture": {
+                "data": {
+                  "url": "http://localhost:4314/page-1.png"
+                }
+              }
+            },
+            {
+              "id": "page-2",
+              "username": "apagetwo",
+              "name": "A Page Two",
+              "access_token": "page-token-2",
+              "picture": {
+                "data": {
+                  "url": "http://localhost:4314/page-2.png"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "finalUrl": "http://localhost:4314/launches?added=facebook&msg=Channel%20Added",
+      "boundA": [
+        {
+          "id": "cmwoz20vr0003cbtyq2yj1myi",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ],
+      "rowsB": [],
+      "self": {
+        "status": 200,
+        "body": {
+          "id": "c1e19939-7fb2-4f31-b3c3-1975ab43f06a",
+          "email": "t07-8705480-t07-org-a@example.invalid",
+          "providerName": "LOCAL",
+          "name": null,
+          "lastName": null,
+          "isSuperAdmin": false,
+          "bio": null,
+          "audience": 0,
+          "pictureId": null,
+          "providerId": "",
+          "timezone": 0,
+          "timezoneName": null,
+          "createdAt": "2026-11-20T12:45:05.619Z",
+          "updatedAt": "2026-11-20T12:45:05.619Z",
+          "lastReadNotifications": "2026-11-20T12:45:05.619Z",
+          "inviteId": null,
+          "activated": true,
+          "account": null,
+          "connectedAccount": false,
+          "lastOnline": "2026-11-20T12:45:05.619Z",
+          "ip": "::1",
+          "agent": "node",
+          "deletedAt": null,
+          "sendSuccessEmails": true,
+          "sendFailureEmails": true,
+          "sendStreakEmails": true,
+          "orgId": "d662f6a9-6424-4eb3-a2b9-b074a6800b09",
+          "totalChannels": 10000,
+          "tier": "ULTIMATE",
+          "role": "SUPERADMIN",
+          "isLifetime": false,
+          "admin": false,
+          "impersonate": false,
+          "isTrailing": false,
+          "allowTrial": true,
+          "streakSince": null,
+          "publicApi": "9920296383f3627f1d6692dc3901641213aad8f2243705dfa245129f6c7f8f91"
+        }
+      }
+    },
+    "tabUsingB": {
+      "link": "http://localhost:4314/integrations/connect/23f1a4a5b1352b9afc9e09a62fbfe98b1b7d93bbda5f221159956068572041bb",
+      "callback": {
+        "status": 201,
+        "body": {
+          "id": "cmwoz230b0005cbtyv9al4sgs",
+          "internalId": "fb-user-1",
+          "organizationId": "d662f6a9-6424-4eb3-a2b9-b074a6800b09",
+          "name": "Synthetic Recipient",
+          "customName": null,
+          "picture": null,
+          "providerIdentifier": "facebook",
+          "type": "social",
+          "disabled": false,
+          "tokenExpiration": "2027-01-18T12:45:16.859Z",
+          "profile": "",
+          "deletedAt": null,
+          "createdAt": "2026-11-20T12:45:16.859Z",
+          "updatedAt": "2026-11-20T12:45:16.859Z",
+          "inBetweenSteps": true,
+          "refreshNeeded": false,
+          "postingTimes": "[{\"time\":80},{\"time\":370},{\"time\":660}]",
+          "customerId": null,
+          "rootInternalId": "fb-user-1",
+          "additionalSettings": "[]",
+          "onboarding": false,
+          "pages": [
+            {
+              "id": "page-1",
+              "username": "apageone",
+              "name": "A Page One",
+              "access_token": "page-token-1",
+              "picture": {
+                "data": {
+                  "url": "http://localhost:4314/page-1.png"
+                }
+              }
+            },
+            {
+              "id": "page-2",
+              "username": "apagetwo",
+              "name": "A Page Two",
+              "access_token": "page-token-2",
+              "picture": {
+                "data": {
+                  "url": "http://localhost:4314/page-2.png"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "finalUrl": "http://localhost:4314/launches?added=facebook&msg=Channel%20Added",
+      "boundA": [
+        {
+          "id": "cmwoz230b0005cbtyv9al4sgs",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ],
+      "rowsB": [],
+      "self": {
+        "status": 200,
+        "body": {
+          "id": "a5f0b890-8c08-4598-92f6-80daae37304a",
+          "email": "t07-8705480-t07-org-b@example.invalid",
+          "providerName": "LOCAL",
+          "name": null,
+          "lastName": null,
+          "isSuperAdmin": false,
+          "bio": null,
+          "audience": 0,
+          "pictureId": null,
+          "providerId": "",
+          "timezone": 0,
+          "timezoneName": null,
+          "createdAt": "2026-11-20T12:45:05.757Z",
+          "updatedAt": "2026-11-20T12:45:05.757Z",
+          "lastReadNotifications": "2026-11-20T12:45:05.757Z",
+          "inviteId": null,
+          "activated": true,
+          "account": null,
+          "connectedAccount": false,
+          "lastOnline": "2026-11-20T12:45:05.757Z",
+          "ip": "::1",
+          "agent": "node",
+          "deletedAt": null,
+          "sendSuccessEmails": true,
+          "sendFailureEmails": true,
+          "sendStreakEmails": true,
+          "orgId": "c80d5fb4-2f3b-4a4d-8169-dd2125af3398",
+          "totalChannels": 10000,
+          "tier": "ULTIMATE",
+          "role": "SUPERADMIN",
+          "isLifetime": false,
+          "admin": false,
+          "impersonate": false,
+          "isTrailing": false,
+          "allowTrial": true,
+          "streakSince": null,
+          "publicApi": "a6815a83e21e3934640319ff9bf3651cd3ec3d5a7f8f20a528911f86b29cc86c"
+        }
+      },
+      "storage": {
+        "auth": true,
+        "showorg": "c80d5fb4-2f3b-4a4d-8169-dd2125af3398"
+      }
+    },
+    "saveFailureRetry": {
+      "link": "http://localhost:4314/integrations/connect/826d2540894b2b92eb4c23dd3af482e435ca5183973ac73ee580e570a2c3b203",
+      "alertText": "Internal server error",
+      "failedUrl": "http://localhost:4314/integrations/social/facebook?code=t07-code-Tzquoo&state=Tzquoo",
+      "failedRows": [
+        {
+          "id": "cmwoz26rr0007cbty88ljb0yx",
+          "internalId": "fb-user-1",
+          "name": "Synthetic Recipient",
+          "token": "fb-user-token-long",
+          "inBetweenSteps": true,
+          "alive": true
+        }
+      ],
+      "retryUrl": "http://localhost:4314/launches?added=facebook&msg=Channel%20Added",
+      "retryRows": [
+        {
+          "id": "cmwoz26rr0007cbty88ljb0yx",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ],
+      "retryBoundA": [
+        {
+          "id": "cmwoz26rr0007cbty88ljb0yx",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    "cancelThenRetry": {
+      "link": "http://localhost:4314/integrations/connect/c7f8c9f5ece2dfdfe8182fa5cd4bd02baf7a65e635f4f24efe83f2869e50be53",
+      "afterCancel": [
+        {
+          "id": "cmwoz2a2z0009cbty0kctx9n7",
+          "internalId": "fb-user-1",
+          "name": "Synthetic Recipient",
+          "token": "fb-user-token-long",
+          "inBetweenSteps": true,
+          "alive": true
+        }
+      ],
+      "afterRetry": [
+        {
+          "id": "cmwoz2a2z0009cbty0kctx9n7",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ],
+      "afterRetryBound": [
+        {
+          "id": "cmwoz2a2z0009cbty0kctx9n7",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ]
+    },
+    "redirectUrl": {
+      "anonymousUrl": "http://127.0.0.1:4414/return?keep=1&lang=en&added=facebook&msg=Channel%20Added",
+      "signedUrl": "http://127.0.0.1:4414/return?keep=1&lang=en&added=facebook&msg=Channel%20Added",
+      "rowsB": [],
+      "hits": [
+        "/return?keep=1&lang=en&added=facebook&msg=Channel%20Added",
+        "/return?keep=1&lang=en&added=facebook&msg=Channel%20Added"
+      ],
+      "link": {
+        "status": 201,
+        "url": "http://localhost:4314/integrations/connect/36fb81722d8dcbd0f8ba06ba440d3360f3767ce18c4ba4aac24c87b513ca31e3"
+      }
+    },
+    "thirdPartyCookiesDisabled": {
+      "anonUrl": "http://localhost:4314/integrations/social/facebook?code=t07-code-M0hINK&state=M0hINK",
+      "signedUrl": "http://localhost:4314/launches?added=facebook&msg=Channel%20Added",
+      "anonCookies": [],
+      "signedCookies": [],
+      "sentCookies": [],
+      "boundA": [
+        {
+          "id": "cmwoz2f7v000jcbtylhiqxkz9",
+          "internalId": "page-2",
+          "name": "A Page Two",
+          "token": "page-token-2",
+          "inBetweenSteps": false,
+          "alive": true
+        }
+      ],
+      "states": {
+        "anon": [
+          "M0hINK"
+        ],
+        "a": [
+          "0wg83M"
+        ]
+      }
+    }
+  },
+  "errors": [],
+  "checksSummary": {
+    "total": 37,
+    "failed": 0
+  },
+  "fixtures": {
+    "userA": {
+      "id": "c1e19939-7fb2-4f31-b3c3-1975ab43f06a",
+      "org": "d662f6a9-6424-4eb3-a2b9-b074a6800b09",
+      "email": "t07-8705480-t07-org-a@example.invalid"
+    },
+    "userB": {
+      "id": "a5f0b890-8c08-4598-92f6-80daae37304a",
+      "org": "c80d5fb4-2f3b-4a4d-8169-dd2125af3398",
+      "email": "t07-8705480-t07-org-b@example.invalid"
+    }
+  }
+}

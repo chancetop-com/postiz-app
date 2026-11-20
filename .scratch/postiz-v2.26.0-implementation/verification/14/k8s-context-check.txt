@@ -1,2 +1,1 @@
-prepare-build-context: build context is in sync with bec90d1bd5720cd2d24d0bf3047b3ddc95ed0c0d
-2eabdbf71e03babdebf10c20506f4560699efd5846a9f9d247f8fd98cc774c14  k8s/BUILD_CONTEXT_MANIFEST.json
+prepare-build-context: build context is in sync with 2289ef4a23880fd0de2102cdac4a9cbbd7125c2a
