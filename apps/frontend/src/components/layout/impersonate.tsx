@@ -1050,9 +1050,13 @@ export const Impersonate = () => {
     return value;
   }, [name]);
   const stopImpersonating = useCallback(async () => {
-    if (!isSecured) {
-      setCookie('impersonate', '', -10);
-    } else {
+    // Drop this tab's value before the reload. The legacy cookie is expired in
+    // both modes so a cookie fallback cannot resurrect the old target.
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('impersonate');
+    }
+    setCookie('impersonate', '', -10);
+    if (isSecured) {
       await fetch(`/user/impersonate`, {
         method: 'POST',
         body: JSON.stringify({
@@ -1061,7 +1065,7 @@ export const Impersonate = () => {
       });
     }
     window.location.reload();
-  }, []);
+  }, [fetch, isSecured]);
   const t = useT();
 
   const setUser = useCallback(

@@ -56,7 +56,7 @@ export class AuthMiddleware implements NestMiddleware {
         throw new HttpForbiddenException();
       }
 
-      const impersonate = req.cookies.impersonate || req.headers.impersonate;
+      const impersonate = req.headers.impersonate || req.cookies.impersonate;
       if (user?.isSuperAdmin && impersonate) {
         const loadImpersonate = await this._organizationService.getUserOrg(
           impersonate

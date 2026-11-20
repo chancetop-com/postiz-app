@@ -14,7 +14,12 @@ import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
 const query = vi.hoisted(() => ({ value: '' }));
 let isGeneral = true;
-const location = { href: 'http://localhost:4200/auth/login', pathname: '/auth/login' };
+const location = {
+  href: 'http://localhost:4200/auth/login',
+  pathname: '/auth/login',
+  origin: 'http://localhost:4200',
+  protocol: 'http:',
+};
 
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(query.value),
@@ -80,6 +85,8 @@ beforeEach(() => {
   isGeneral = true;
   location.href = 'http://localhost:4200/auth/login';
   location.pathname = '/auth/login';
+  location.origin = 'http://localhost:4200';
+  location.protocol = 'http:';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delete (window as any).location;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,6 +125,24 @@ describe('a signed-in tab accepting an invitation', () => {
     expect(window.sessionStorage.getItem('auth')).toBe('jwt-a');
     expect(window.localStorage.length).toBe(0);
     expect(document.cookie).not.toContain('showorg=');
+  });
+
+  it('returns to a stored returnUrl after accepting the invitation', async () => {
+    query.value = 'org=signed-invite';
+    window.sessionStorage.setItem('auth', 'jwt-a');
+    window.localStorage.setItem(
+      'returnUrl',
+      'http://localhost:4200/analytics?invite=1'
+    );
+    const fetchMock = vi.fn(async () => reply({ id: 'org-b' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderLogin();
+
+    await waitFor(() =>
+      expect(location.href).toBe('http://localhost:4200/analytics?invite=1')
+    );
+    expect(window.localStorage.getItem('returnUrl')).toBeNull();
   });
 
   it('keeps the current organization when the invitation adds no membership', async () => {

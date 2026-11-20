@@ -292,7 +292,11 @@ describe('accepting an invitation from an existing tab session', () => {
     const recorded = response();
 
     await controller.joinOrg(
-      { id: 'user-1' } as never,
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: null,
+      } as never,
       invite({ role: 'ADMIN' }),
       recorded.res as never
     );
@@ -317,12 +321,56 @@ describe('accepting an invitation from an existing tab session', () => {
     const recorded = response();
 
     await controller.joinOrg(
-      { id: 'user-1' } as never,
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: 'another-invite',
+      } as never,
       invite(),
       recorded.res as never
     );
 
     expect(addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(recorded.body).toEqual({ id: null });
+    expect(recorded.headers.showorg).toBeUndefined();
+  });
+
+  it('re-selects the invited organization for the accepted invitation after activation', async () => {
+    const addUserToOrg = vi.fn().mockResolvedValue(false);
+    const { controller } = build(addUserToOrg);
+    const recorded = response();
+
+    await controller.joinOrg(
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: 'invite-1',
+      } as never,
+      invite(),
+      recorded.res as never
+    );
+
+    expect(addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(recorded.body).toEqual({ id: 'org-invited' });
+    expect(recorded.headers.showorg).toBe('org-invited');
+  });
+
+  it('does not join an invitation addressed to another account', async () => {
+    const addUserToOrg = vi.fn();
+    const { controller } = build(addUserToOrg);
+    const recorded = response();
+
+    await controller.joinOrg(
+      {
+        id: 'user-2',
+        email: 'other@example.test',
+        inviteId: null,
+      } as never,
+      invite(),
+      recorded.res as never
+    );
+
+    expect(addUserToOrg).not.toHaveBeenCalled();
     expect(recorded.body).toEqual({ id: null });
     expect(recorded.headers.showorg).toBeUndefined();
   });
@@ -337,7 +385,11 @@ describe('accepting an invitation from an existing tab session', () => {
     const recorded = response();
 
     await controller.joinOrg(
-      { id: 'user-1' } as never,
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: null,
+      } as never,
       value,
       recorded.res as never
     );

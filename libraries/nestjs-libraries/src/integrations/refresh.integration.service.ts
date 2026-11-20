@@ -8,6 +8,10 @@ import {
 } from '@gitroom/nestjs-libraries/integrations/social/social.integrations.interface';
 import { TemporalService } from 'nestjs-temporal-core';
 import { timer } from '@gitroom/helpers/utils/timer';
+import {
+  isRefreshableRow,
+  isReusableRefreshCredential,
+} from '@gitroom/nestjs-libraries/integrations/refresh.credential';
 
 @Injectable()
 export class RefreshIntegrationService {
@@ -92,23 +96,10 @@ export class RefreshIntegrationService {
           integration.organizationId,
           integration.id
         );
-        if (
-          !stored ||
-          stored.refreshNeeded ||
-          stored.inBetweenSteps ||
-          stored.deletedAt
-        ) {
+        if (!isRefreshableRow(stored)) {
           break;
         }
-        if (
-          stored.internalId === integration.internalId &&
-          stored.providerIdentifier === integration.providerIdentifier &&
-          stored.refreshToken &&
-          stored.refreshToken !== integration.refreshToken &&
-          stored.token !== integration.token &&
-          stored.tokenExpiration &&
-          stored.tokenExpiration.getTime() > Date.now()
-        ) {
+        if (isReusableRefreshCredential(stored, integration)) {
           return {
             id: stored.internalId,
             name: stored.name,

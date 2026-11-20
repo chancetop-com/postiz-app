@@ -100,7 +100,7 @@ describe('sessionStorage contract', () => {
     expect(window.sessionStorage.getItem('impersonate')).toBe('user-imp');
   });
 
-  it('keeps the old values when a response header is empty or absent', async () => {
+  it('keeps auth/showorg but clears impersonate when a response header is empty', async () => {
     window.sessionStorage.setItem('auth', 'jwt-old');
     window.sessionStorage.setItem('showorg', 'org-old');
     window.sessionStorage.setItem('impersonate', 'imp-old');
@@ -114,11 +114,14 @@ describe('sessionStorage contract', () => {
 
     expect(window.sessionStorage.getItem('auth')).toBe('jwt-old');
     expect(window.sessionStorage.getItem('showorg')).toBe('org-old');
-    expect(window.sessionStorage.getItem('impersonate')).toBe('imp-old');
+    // An empty impersonate header is the stop signal from /user/impersonate;
+    // it must not leave the old target behind for the reload.
+    expect(window.sessionStorage.getItem('impersonate')).toBeNull();
 
     vi.mocked(fetchMock).mockResolvedValueOnce(reply());
     await request!('/user/self');
     expect(window.sessionStorage.getItem('showorg')).toBe('org-old');
+    expect(window.sessionStorage.getItem('impersonate')).toBeNull();
   });
 
   it('sends the stored session on every request', async () => {

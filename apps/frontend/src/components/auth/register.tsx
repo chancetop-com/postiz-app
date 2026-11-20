@@ -164,10 +164,16 @@ export function RegisterAfter({
       .then(async (response) => {
         setLoading(false);
         if (response.status === 200) {
-          clearOrgInvite();
+          const activationRequired =
+            response.headers.get('activate') === 'true';
+          // Keep a pending invitation until the account is activated: the
+          // activation tab presents it so this tab receives the invited org.
+          if (!activationRequired) {
+            clearOrgInvite();
+          }
           fireEvents('register');
           return track(TrackEnum.CompleteRegistration).then(() => {
-            if (response.headers.get('activate') === 'true') {
+            if (activationRequired) {
               router.push('/auth/activate');
             } else {
               router.push('/auth/login');

@@ -32,20 +32,14 @@ vi.mock('@gitroom/react/translation/get.transation.service.client', () => ({
   useT: () => (key: string, fallback?: string) => fallback || key,
 }));
 
-let embedded = false;
-vi.mock(
-  '@gitroom/frontend/components/launches/channel.popup',
-  async (importOriginal) => {
-    const actual =
-      await importOriginal<
-        typeof import('@gitroom/frontend/components/launches/channel.popup')
-      >();
-    return {
-      ...actual,
-      isEmbeddedInIframe: () => embedded,
-    };
-  }
-);
+const setEmbedded = (value: boolean) => {
+  // openChannelOAuth asks window.self !== window.top; shadow `top` so the
+  // parent-iframe branch is exercised without a real iframe.
+  Object.defineProperty(window, 'top', {
+    configurable: true,
+    value: value ? {} : window,
+  });
+};
 
 import { AddProviderComponent } from '@gitroom/frontend/components/launches/add.provider.component';
 import { useExtensionConnect } from '@gitroom/frontend/components/launches/add.provider.component';
@@ -93,7 +87,7 @@ const renderAdd = () =>
   render(<AddProviderComponent social={social} article={[]} invite={false} />);
 
 beforeEach(() => {
-  embedded = false;
+  setEmbedded(false);
   relaySearch = '';
   push.mockReset();
   closeAll.mockReset();
@@ -105,6 +99,8 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete (window as any).top;
 });
 
 describe('adding a channel in an ordinary window', () => {
@@ -151,7 +147,7 @@ describe('adding a channel in an ordinary window', () => {
 
 describe('adding a channel inside the parent application iframe', () => {
   beforeEach(() => {
-    embedded = true;
+    setEmbedded(true);
     window.sessionStorage.setItem('auth', 'jwt-a');
     window.sessionStorage.setItem('showorg', 'org-a');
     window.sessionStorage.setItem('impersonate', 'imp-a');
