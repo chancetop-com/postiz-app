@@ -34,6 +34,45 @@ afterEach(() => {
 });
 
 describe('the connect request timezone', () => {
+  it('sends the stored timezone when a two-step provider finishes its first step', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes('social-connect')) {
+        return new Response(
+          JSON.stringify({
+            id: 'integration-1',
+            inBetweenSteps: true,
+            pages: [
+              {
+                id: 'page-2',
+                name: 'Brand page',
+                picture: { data: { url: 'https://cdn.test/page-2.png' } },
+              },
+            ],
+          }),
+          { status: 200 }
+        );
+      }
+      return new Response(JSON.stringify({ success: true }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    window.sessionStorage.setItem('channel_popup_mode', 'true');
+    window.sessionStorage.setItem('auth', 'jwt-a');
+    (window as any).close = vi.fn();
+
+    const view = render(
+      <ContinueIntegration
+        provider="facebook"
+        searchParams={{ code: 'c', state: 's' }}
+      />
+    );
+
+    expect(await view.findByText('Brand page')).toBeTruthy();
+    const [, init] = fetchMock.mock.calls[0] as any;
+    const body = JSON.parse(init.body);
+    expect(body.timezone).toBe('540');
+    expect(body.state).toBe('s');
+  });
+
   it('sends the stored user timezone offset', async () => {
     const fetchMock = vi.fn(
       async () => new Response(JSON.stringify({ id: 'i1' }), { status: 200 })
