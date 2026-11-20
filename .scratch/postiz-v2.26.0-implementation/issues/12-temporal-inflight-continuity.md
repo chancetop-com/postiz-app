@@ -4,7 +4,7 @@
 
 **Blocked by:** [01 合入固定版本并跑通候选版](01-merge-and-run-candidate.md)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Source:** [升级规格](../../postiz-v2.26.0-wayfinder/spec.md) · [在途任务与队列兼容](../../postiz-v2.26.0-wayfinder/assets/upgrade-data.md)
 
