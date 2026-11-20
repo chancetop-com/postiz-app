@@ -1,5 +1,5 @@
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
-import { Role, ShortLinkPreference, SubscriptionTier } from '@prisma/client';
+import { Prisma, Role, ShortLinkPreference, SubscriptionTier } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
 import { CreateOrgUserDto } from '@gitroom/nestjs-libraries/dtos/auth/create.org.user.dto';
@@ -11,7 +11,7 @@ export class OrganizationRepository {
   constructor(
     private _organization: PrismaRepository<'organization'>,
     private _userOrg: PrismaRepository<'userOrganization'>,
-    private _user: PrismaRepository<'user'>
+    private _user: PrismaRepository<'user' | 'acceptedOrganizationInvite'>
   ) {}
 
   createMaxUser(id: string, name: string, saasName: string, email: string) {
@@ -404,25 +404,46 @@ export class OrganizationRepository {
     });
   }
 
-  async acceptedInvitation(
-    userId: string,
-    inviteId: string,
-    organizationId?: string
-  ) {
+  async activeInviteMembership(userId: string, organizationId: string) {
     const membership = await this._userOrg.model.userOrganization.findFirst({
       where: {
         userId,
+        organizationId,
         disabled: false,
         organization: { deletedAt: null },
-        // Older memberships lack inviteId. A signed target and the user's
-        // matching inviteId still identify the existing membership.
-        ...(organizationId
-          ? { organizationId, OR: [{ inviteId }, { inviteId: null }] }
-          : { inviteId }),
       },
       select: { organizationId: true },
     });
     return membership || false;
+  }
+
+  async activationInvitation(userId: string, inviteId: string) {
+    const receipt =
+      await this._user.model.acceptedOrganizationInvite.findUnique({
+        where: { userId_inviteId: { userId, inviteId } },
+      });
+    if (receipt?.organizationId) {
+      return {
+        addedOrg: await this.activeInviteMembership(
+          userId,
+          receipt.organizationId
+        ),
+      };
+    }
+    // Older invitations stored only an opaque ID. When several memberships
+    // survive, let the recipient identify their workspace after activation.
+    const memberships = await this._userOrg.model.userOrganization.findMany({
+      where: { userId, disabled: false, organization: { deletedAt: null } },
+      select: { organization: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return {
+      addedOrg: false as const,
+      organizations:
+        memberships.length > 1
+          ? memberships.map(({ organization }) => organization)
+          : undefined,
+    };
   }
 
   async addUserToOrg(
@@ -437,7 +458,11 @@ export class OrganizationRepository {
       },
     });
 
-    if (checkIfInviteExists) {
+    const receipt =
+      await this._user.model.acceptedOrganizationInvite.findUnique({
+        where: { userId_inviteId: { userId, inviteId: id } },
+      });
+    if (checkIfInviteExists || receipt) {
       return false;
     }
 
@@ -457,6 +482,7 @@ export class OrganizationRepository {
       await this._organization.model.organization.findFirst({
         where: {
           id: orgId,
+          deletedAt: null,
         },
         select: {
           subscription: true,
@@ -464,24 +490,45 @@ export class OrganizationRepository {
       });
 
     if (
-      process.env.STRIPE_PUBLISHABLE_KEY &&
-      checkForSubscription?.subscription?.subscriptionTier ===
-        SubscriptionTier.STANDARD
+      !checkForSubscription ||
+      (process.env.STRIPE_PUBLISHABLE_KEY &&
+        checkForSubscription.subscription?.subscriptionTier ===
+          SubscriptionTier.STANDARD)
     ) {
       return false;
     }
 
-    await this._user.model.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        inviteId: id,
-        organizations: {
-          create: { role, organizationId: orgId, inviteId: id },
-        },
-      },
+    const user = await this._user.model.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { inviteId: true },
     });
+    try {
+      await this._user.model.user.update({
+        where: { id: userId },
+        data: {
+          inviteId: id,
+          organizations: { create: { role, organizationId: orgId } },
+          acceptedInvites: {
+            create: { inviteId: id, organizationId: orgId },
+            ...(user.inviteId
+              ? {
+                  createMany: {
+                    data: [{ inviteId: user.inviteId }],
+                    skipDuplicates: true,
+                  },
+                }
+              : {}),
+          },
+        },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      )
+        return false;
+      throw err;
+    }
 
     return { organizationId: orgId };
   }

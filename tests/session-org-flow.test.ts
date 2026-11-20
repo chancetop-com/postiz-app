@@ -269,7 +269,7 @@ describe('accepting an invitation from an existing tab session', () => {
       {} as never,
       {
         addUserToOrg,
-        acceptedInvitation: async () =>
+        activeInviteMembership: async () =>
           active && { organizationId: 'org-invited' },
       } as never,
       {} as never,

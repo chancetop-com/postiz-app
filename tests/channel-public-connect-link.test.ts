@@ -29,6 +29,7 @@ vi.mock('@gitroom/nestjs-libraries/redis/redis.service', () => ({
   ioRedis: redis,
 }));
 
+import { ConnectLinkRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/connect.link.repository';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { IntegrationManager } from '@gitroom/nestjs-libraries/integrations/integration.manager';
 import { IntegrationConnectTool } from '@gitroom/nestjs-libraries/chat/tools/integration.connect.tool';
@@ -87,7 +88,8 @@ const service = (
     {} as any,
     {} as any,
     {} as any,
-    {} as any
+    {} as any,
+    new ConnectLinkRepository()
   );
 
 const create = (
@@ -304,7 +306,7 @@ describe('the provider callback', () => {
         getAllowedSocialsIntegrations: () => ['tiktok'],
         getSocialIntegration: () => providerForCallback(),
       } as any,
-      integrationService,
+      { claimConnectAuthorization: async () => undefined, ...integrationService },
       { startRefreshWorkflow: vi.fn(async () => undefined) } as any,
       {
         getOrgById: vi.fn(async () => ({ id: 'org-a', isTrailing: false })),
@@ -411,11 +413,12 @@ describe('link-bound page selection', () => {
       {
         encrypt: async (s: string) => s,
         decrypt: async (s: string) => s,
-      } as never
+      } as never,
+      new ConnectLinkRepository()
     );
     const quota = {
       check: async () => ({ can: () => true }),
-      getPackageOptions: async () => ({ options: { channel: 1 } }),
+      channelLimit: async () => undefined,
     };
     const controller = new NoAuthIntegrationsController(
       mgr,
@@ -465,6 +468,14 @@ describe('link-bound page selection', () => {
     expect(repo.createOrUpdateIntegration).toHaveBeenCalledTimes(1);
   });
 
+  it('returns the signed address when the provider has no manageable pages', async () => {
+    const { token, returnURL, controller, callback, platform, repo } = await setup();
+    platform.pages.mockResolvedValueOnce([]);
+    await controller.startConnectLink(token);
+    await expect(callback('state-1')).rejects.toMatchObject({ status: 400, response: { returnURL } });
+    expect(repo.createOrUpdateIntegration).not.toHaveBeenCalled();
+  });
+
   it('returns the configured address on a cancelled provider callback', async () => {
     const { token, returnURL, controller, callback, platform } = await setup();
     await controller.startConnectLink(token);
@@ -491,7 +502,8 @@ describe('the MCP tool', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      new ConnectLinkRepository()
     );
 
   it('returns a link for an eligible outside-six platform', async () => {

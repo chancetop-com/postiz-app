@@ -118,6 +118,15 @@ describe('ordinary logout', () => {
     expectCleared();
   });
 
+  it('sends a legacy cookie session through server logout after clearing the invite', async () => {
+    const location = stubLocation('https://dashboard.example.com/analytics');
+    seeded();
+    render(<LayoutContext hasLegacySession><LogoutComponent /></LayoutContext>);
+    document.querySelector('div[class*="cursor-pointer"]')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await waitFor(() => expect(location.href).toBe('/auth/logout'));
+    expectCleared();
+  });
+
   it('keeps the session when the person cancels the dialog', async () => {
     const location = stubLocation('http://localhost:4200/analytics');
     deleteDialog.mockResolvedValue(false);
@@ -154,6 +163,16 @@ describe('401 and logout responses', () => {
     await request!('/user/self');
 
     await waitFor(() => expect(location.href).toBe('/auth/login'));
+    expectCleared();
+  });
+
+  it('expires the server cookie on a legacy 401 after clearing tab state', async () => {
+    const location = stubLocation('https://dashboard.example.com/analytics');
+    seeded();
+    vi.stubGlobal('fetch', vi.fn(async () => reply({}, 401)));
+    render(<LayoutContext hasLegacySession><Harness /></LayoutContext>);
+    await request!('/user/self');
+    expect(location.href).toBe('/auth/logout');
     expectCleared();
   });
 

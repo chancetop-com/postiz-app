@@ -231,7 +231,7 @@ describe('standard OAuth state validation', () => {
     const { service } = build(
       {
         addUserToOrg,
-        acceptedInvitation: async () => ({ organizationId: 'org-invited' }),
+        activeInviteMembership: async () => ({ organizationId: 'org-invited' }),
       },
       { id: 'user-1', email: 'merchant@example.test', inviteId: 'invite-1' }
     );

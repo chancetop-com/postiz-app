@@ -388,6 +388,14 @@ describe('the callback in an ordinary window', () => {
     );
   });
 
+  it('shows an anonymous precondition refusal as an error', async () => {
+    window.sessionStorage.removeItem('auth');
+    vi.stubGlobal('fetch', respond(412, {}));
+    const view = renderContinue();
+    expect(await view.findByText('This channel could not be connected to the workspace.')).toBeTruthy();
+    expect(view.queryByText('Channel Connected!')).toBeNull();
+  });
+
   it('navigates the current window on 406 with the provider message', async () => {
     const close = closeSpy();
     vi.stubGlobal('fetch', respond(406, { msg: 'Payment required' }));
@@ -395,7 +403,7 @@ describe('the callback in an ordinary window', () => {
     renderContinue();
 
     await waitFor(() =>
-      expect(push).toHaveBeenCalledWith('/launches?msg=Payment required')
+      expect(push).toHaveBeenCalledWith('/launches?msg=Payment%20required')
     );
     expect(close).not.toHaveBeenCalled();
   });

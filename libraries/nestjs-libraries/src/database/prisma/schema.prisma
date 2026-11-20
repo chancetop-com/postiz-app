@@ -113,6 +113,7 @@ model User {
   payoutProblems        PayoutProblems[]
   agencies              SocialMediaAgency?
   picture               Media?               @relation(fields: [pictureId], references: [id])
+  acceptedInvites       AcceptedOrganizationInvite[]
   organizations         UserOrganization[]
   sendSuccessEmails     Boolean              @default(true)
   sendFailureEmails     Boolean              @default(true)
@@ -140,8 +141,16 @@ model UsedCodes {
   @@index([code])
 }
 
+model AcceptedOrganizationInvite {
+  userId         String
+  inviteId       String
+  organizationId String?
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, inviteId])
+}
+
 model UserOrganization {
-  inviteId       String?
   id             String       @id @default(uuid())
   userId         String
   organizationId String

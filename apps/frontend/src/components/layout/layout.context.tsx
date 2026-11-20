@@ -85,7 +85,9 @@ function LayoutContextInner(params: LayoutProps) {
       }
       if (logout) {
         clearSessionAuth();
-        window.location.href = '/auth/login';
+        window.location.href = params.hasLegacySession
+          ? '/auth/logout'
+          : '/auth/login';
         return true;
       }
       const reloadOrOnboarding =
@@ -112,7 +114,9 @@ function LayoutContextInner(params: LayoutProps) {
 
       if (response.status === 401 || response?.headers?.get('logout')) {
         clearSessionAuth();
-        window.location.href = '/auth/login';
+        window.location.href = params.hasLegacySession
+          ? '/auth/logout'
+          : '/auth/login';
       }
       if (response.status === 406) {
         if (
@@ -142,7 +146,9 @@ function LayoutContextInner(params: LayoutProps) {
           });
           return true;
         }
-        if (await deleteDialog(message, 'Move to billing', 'Payment Required')) {
+        if (
+          await deleteDialog(message, 'Move to billing', 'Payment Required')
+        ) {
           window.open('/billing', '_blank');
           return false;
         }
@@ -150,7 +156,7 @@ function LayoutContextInner(params: LayoutProps) {
       }
       return true;
     },
-    []
+    [params.hasLegacySession]
   );
   return (
     <LegacySession.Provider value={!!params.hasLegacySession}>

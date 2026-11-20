@@ -705,12 +705,15 @@ export class InstagramProvider
     return status_code;
   }
 
-  private publishedWithoutMediaId(): never {
+  private publishedWithoutMediaId(confirmed = true): never {
     throw new BadBody(
       this.identifier,
       'PUBLISHED',
       '{}',
-      'Instagram reports this post was published, but its media ID could not be confirmed. Check the account before posting again.'
+      confirmed
+        ? 'Instagram reports this post was published, but its media ID could not be confirmed. Check the account before posting again.'
+        : 'Instagram did not return a media ID. Check the account before posting again.',
+      'unconfirmed'
     );
   }
 
@@ -971,6 +974,7 @@ export class InstagramProvider
             }
           )
         ).json();
+        if (!mediaId) this.publishedWithoutMediaId(false);
         lastMediaId = mediaId;
       }
 
@@ -1048,6 +1052,7 @@ export class InstagramProvider
       throw err;
     }
 
+    if (!mediaId) this.publishedWithoutMediaId(false);
     return {
       status: 'completed',
       postId: mediaId,

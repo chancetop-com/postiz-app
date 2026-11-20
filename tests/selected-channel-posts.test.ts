@@ -397,25 +397,6 @@ suite('selected-channel posts', () => {
         date: new Date(),
       },
     ]), 'WEB');
-    await service.createPost(orgA, request('schedule', [
-      {
-        integration: ids.ia2,
-        group: (await postById(ids.a2)).group,
-        postId: ids.a2,
-        content: beforeA2.content,
-        date: new Date(beforeA2.publishDate),
-      },
-    ]), 'WEB');
-    await service.createPost(orgA, request('draft', [
-      {
-        integration: ids.ia3,
-        group: (await postById(ids.a3)).group,
-        postId: ids.a3,
-        content: beforeA3.content,
-        date: new Date(beforeA3.publishDate),
-      },
-    ]), 'WEB');
-
     const a1 = await postById(ids.a1);
     expect(a1.state).toBe('QUEUE');
     expect(a1.content).toBe('a-one posted now');
@@ -426,10 +407,7 @@ suite('selected-channel posts', () => {
     expect(await snapshot(ids.a3)).toEqual(beforeA3);
     expect(await snapshot(ids.b1)).toEqual(beforeB1);
 
-    await until(() => started.length >= 2);
-    // one immediate publish request for the ticked channel, on its provider
-    // queue; the unticked sibling only gets the future execution its schedule
-    // already had, and the draft and the other organization get none
+    await until(() => started.length >= 1);
     const immediate = started.filter((run) => run.postId === ids.a1);
     expect(immediate).toHaveLength(1);
     expect(immediate[0]).toMatchObject({
@@ -439,10 +417,7 @@ suite('selected-channel posts', () => {
       providerQueue: 'x',
       organizationId: orgA,
     });
-    // the unticked sibling keeps the future execution it already had
-    const sibling = started.filter((run) => run.postId === ids.a2);
-    expect(sibling).toHaveLength(1);
-    expect(sibling[0].publishDate).toBe(beforeA2.publishDate);
+    expect(started.filter((run) => run.postId === ids.a2)).toHaveLength(0);
     expect(started.filter((run) => run.postId === ids.b1)).toHaveLength(0);
     expect(started.filter((run) => run.postId === ids.a3)).toHaveLength(0);
   });

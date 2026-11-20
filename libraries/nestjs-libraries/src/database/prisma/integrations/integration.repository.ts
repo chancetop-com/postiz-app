@@ -14,6 +14,7 @@ import {
 } from '@gitroom/nestjs-libraries/services/encryption.service';
 
 export interface ConnectLinkBinding {
+  migration?: Pick<Integration, 'id' | 'internalId' | 'providerIdentifier'>;
   rootInternalId?: string;
   channelLimit?: number;
 }
@@ -389,6 +390,9 @@ export class IntegrationRepository {
           ]),
         }
       : {};
+    const credentialProviders = ['linkedin', 'linkedin-page'].includes(provider)
+      ? ['linkedin', 'linkedin-page']
+      : [provider];
     const write = async (db: Pick<Prisma.TransactionClient, 'integration'>) => {
       const upsert = await db.integration.upsert({
         where: {
@@ -458,6 +462,7 @@ export class IntegrationRepository {
               not: upsert.id,
             },
             rootInternalId: rootId,
+            providerIdentifier: { in: credentialProviders },
             organizationId: org,
             deletedAt: null,
           },
@@ -485,15 +490,55 @@ export class IntegrationRepository {
           if (!organization.length)
             throw new HttpException('Organization not found', 404);
           const scope = { organizationId: org, deletedAt: null };
-          if (limit !== undefined) {
-            const existing = await tx.integration.findFirst({
-              where: { ...scope, internalId },
-              select: { refreshNeeded: true, rootInternalId: true },
+          if (binding.migration) {
+            const source = await tx.integration.findFirst({
+              where: { ...scope, ...binding.migration },
             });
+            if (!source)
+              throw new HttpException(
+                'The channel changed during authorization. Please reconnect it.',
+                409
+              );
+            await tx.integration.updateMany({
+              where: {
+                organizationId: org,
+                internalId,
+                deletedAt: { not: null },
+              },
+              data: { internalId: makeId(10) },
+            });
+            await tx.integration.update({
+              where: { id: source.id },
+              data: {
+                internalId,
+                providerIdentifier: provider,
+                rootInternalId:
+                  source.rootInternalId === source.internalId
+                    ? internalId
+                    : source.rootInternalId,
+              },
+            });
+          }
+          const existing = await tx.integration.findFirst({
+            where: { ...scope, internalId },
+            select: {
+              refreshNeeded: true,
+              rootInternalId: true,
+              providerIdentifier: true,
+            },
+          });
+          if (existing && existing.providerIdentifier !== provider) {
+            throw new HttpException(
+              'A channel on a different platform already uses this identifier',
+              409
+            );
+          }
+          if (limit !== undefined) {
             const restored = oneTimeToken
               ? await tx.integration.count({
                   where: {
                     ...scope,
+                    providerIdentifier: { in: credentialProviders },
                     rootInternalId:
                       binding.rootInternalId ??
                       existing?.rootInternalId ??

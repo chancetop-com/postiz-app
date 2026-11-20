@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import { ConnectLinkRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/connect.link.repository';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { IntegrationRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.repository';
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
@@ -988,6 +989,13 @@ describe('provider-specific credential reads', () => {
     expect(platform).toHaveBeenCalledTimes(2);
   });
 
+  it('classifies a successful publish response without a media ID as unconfirmed', async () => {
+    const provider = new InstagramProvider();
+    vi.spyOn(provider as any, 'fetch').mockResolvedValue({ json: async () => ({}) });
+    await expect(provider.finalizePost('token', { postType: 'single', type: 'graph.facebook.com', containers: ['container'] }, row() as any))
+      .rejects.toMatchObject({ nonRetryable: true, details: [expect.objectContaining({ outcome: 'unconfirmed' })] });
+  });
+
   it('reads an old Instagram single token as the whole access token', async () => {
     const calls = instagramFetch();
     const provider = new InstagramProvider();
@@ -1304,6 +1312,7 @@ describe('reconnect persistence', () => {
         getSocialIntegration: () => provider,
       } as any,
       {
+        claimConnectAuthorization: async () => undefined,
         createOrUpdateIntegration,
         checkPreviousConnections: vi.fn(async () => false),
         migrateIntegration: vi.fn(),
@@ -1889,7 +1898,8 @@ databaseSuite('real PostgreSQL credential matrix', () => {
       } as any,
       {} as any,
       {} as any,
-      encryption
+      encryption,
+      new ConnectLinkRepository()
     );
     refresh = new RefreshIntegrationService(manager, service, {} as any);
   });
@@ -1912,6 +1922,34 @@ databaseSuite('real PostgreSQL credential matrix', () => {
 
   const raw = (id: string) =>
     prisma.integration.findUniqueOrThrow({ where: { id } });
+
+  it('preserves a channel of another platform with the same native identifier', async () => {
+    const channel = await prisma.integration.findUniqueOrThrow({ where: { id: ids.linkedin } });
+    await expect(repository.createOrUpdateIntegration(undefined, false, orgA, 'Different platform', undefined, 'social',
+      channel.internalId, 'youtube', 'new-token', undefined, undefined, undefined, false, undefined, undefined, undefined, {}))
+      .rejects.toMatchObject({ status: 409 });
+    const after = await prisma.integration.findUniqueOrThrow({ where: { id: channel.id } });
+    expect(after).toEqual(channel);
+  });
+
+  it('rolls back a provider migration when the final slot check rejects it', async () => {
+    const org = 'ticket11-migration-quota-' + pid;
+    await prisma.organization.create({ data: { id: org, name: 'Migration quota test' } });
+    try {
+      const source = await prisma.integration.create({ data: {
+        organizationId: org, internalId: 'old', rootInternalId: 'old', providerIdentifier: 'tiktok',
+        name: 'Existing', type: 'social', token: 'original', refreshNeeded: true, postingTimes: '[]',
+      } });
+      await expect(repository.createOrUpdateIntegration(undefined, false, org, 'Existing', undefined, 'social',
+        'new', 'tiktok-business', 'renewed', undefined, undefined, undefined, false, undefined, undefined, undefined,
+        { channelLimit: 0, migration: { id: source.id, internalId: 'old', providerIdentifier: 'tiktok' } }))
+        .rejects.toMatchObject({ status: 400 });
+      expect(await prisma.integration.findUnique({ where: { id: source.id } })).toEqual(source);
+    } finally {
+      await prisma.integration.deleteMany({ where: { organizationId: org } });
+      await prisma.organization.delete({ where: { id: org } });
+    }
+  });
 
   it('serializes public bindings competing for the final channel slot', async () => {
     const org = 'ticket11-quota-' + pid;

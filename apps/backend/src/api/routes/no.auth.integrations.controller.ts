@@ -52,25 +52,15 @@ export class NoAuthIntegrationsController {
     @Param('integration') integration: string,
     @Body() body: ConnectIntegrationDto
   ) {
-    const stateKey = `connectOAuth:${body.state}`;
-    const value = await ioRedis.get(stateKey);
-    if (!value) return this.finishOAuth(integration, body);
-    const { token, codeVerifier } = JSON.parse(value);
-    const link = await this._integrationService.loadConnectLink(token);
-    if (integration !== link.integration || !(await ioRedis.del(stateKey))) {
-      throw new HttpException(
-        'Invalid connection state for this provider',
-        400
-      );
-    }
+    const link = await this._integrationService.claimConnectAuthorization(
+      body.state,
+      integration
+    );
+    if (!link) return this.finishOAuth(integration, body);
     try {
       if (!body.code)
         throw new HttpException('Authorization was cancelled', 400);
-      return await this.finishOAuth(integration, body, {
-        ...link,
-        token,
-        codeVerifier,
-      });
+      return await this.finishOAuth(integration, body, link);
     } catch (err) {
       if (!link.redirectUrl) throw err;
       const status =
@@ -85,13 +75,6 @@ export class NoAuthIntegrationsController {
           : 'Could not connect the channel';
       throw new HttpException({ message, returnURL: link.redirectUrl }, status);
     }
-  }
-
-  private async channelLimit(org: string) {
-    if (!process.env.STRIPE_PUBLISHABLE_KEY) return undefined;
-    const { options, subscription } =
-      await this._permissionsService.getPackageOptions(org);
-    return Math.max(options.channel || 0, subscription?.totalChannels || 0);
   }
 
   private async finishOAuth(
@@ -310,7 +293,7 @@ export class NoAuthIntegrationsController {
         integration,
         { id: String(id), username }
       );
-    } else if (!refresh) {
+    } else if (!refresh && !link) {
       // A fresh connect of a migration target for an account the org already
       // has on the source provider adopts that channel instead of creating a
       // duplicate. No-op for everything else.
@@ -349,7 +332,15 @@ export class NoAuthIntegrationsController {
               Buffer.from(body.code, 'base64').toString()
             )
           : undefined,
-        ...(link ? [{ channelLimit: await this.channelLimit(org.id) }] : [])
+        ...(link
+          ? [
+              {
+                channelLimit: await this._permissionsService.channelLimit(
+                  org.id
+                ),
+              },
+            ]
+          : [])
       );
 
     this._refreshIntegrationService
@@ -361,25 +352,16 @@ export class NoAuthIntegrationsController {
     // Fetch pages if this is a two-step provider and not a refresh
     let pages: any[] = [];
     if (integrationProvider.isBetweenSteps && !refresh) {
-      await ioRedis.set(
-        `pendingIntegration:${body.state}`,
+      await this._integrationService.rememberDashboardSelection(
+        body.state,
         createUpdate.id,
-        'EX',
-        3600
+        org.id
       );
       try {
-        // Check which method the provider uses (pages or companies)
-        const fetchMethod =
-          'pages' in integrationProvider
-            ? 'pages'
-            : 'companies' in integrationProvider
-            ? 'companies'
-            : null;
-
-        if (fetchMethod) {
-          // @ts-ignore - dynamic method call
-          pages = await integrationProvider[fetchMethod](accessToken);
-        }
+        pages = await this._integrationService.listConnectPages(
+          integrationProvider,
+          accessToken
+        );
       } catch (err) {
         console.log('Failed to fetch pages:', err);
       }
@@ -449,31 +431,14 @@ export class NoAuthIntegrationsController {
         body.state,
         id,
         String(body.page ?? body.id),
-        (org) => this.channelLimit(org)
+        (org) => this._permissionsService.channelLimit(org)
       );
     }
-    const organization = await ioRedis.get(`organization:${body.state}`);
-    const pendingKey = `pendingIntegration:${body.state}`;
-    if (
-      !organization ||
-      (await ioRedis.get(pendingKey)) !== id ||
-      !(await ioRedis.del(pendingKey))
-    ) {
-      throw new HttpException(
-        'This selection expired. Open the connection link again.',
-        400
-      );
-    }
-    try {
-      return await this._integrationService.saveProviderPage(
-        organization,
-        id,
-        body
-      );
-    } catch (err) {
-      await ioRedis.set(pendingKey, id, 'EX', 3600);
-      throw err;
-    }
+    return this._integrationService.completeDashboardSelection(
+      body.state,
+      id,
+      body
+    );
   }
 
   // The page of a connect link (POST /public/v1/integrations/connect), the

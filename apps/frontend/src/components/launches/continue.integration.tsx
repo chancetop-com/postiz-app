@@ -45,7 +45,7 @@ export const ContinueIntegration: FC<{
 
   // Helper to handle navigation - redirects if logged or returnURL exists, otherwise shows inline
   const navigateOrShow = useCallback(
-    (path: string, returnURL: string | undefined, successMessage: string) => {
+    (path: string, returnURL: string | undefined, message: string, failed = false) => {
       // Popup mode: opened from an iframe to handle OAuth without navigating the iframe itself.
       // Send postMessage to the opener so it refreshes the channel list, then close popup.
       if (isChannelPopup()) {
@@ -63,9 +63,11 @@ export const ContinueIntegration: FC<{
       } else if (window.sessionStorage.getItem('auth')) {
         // If logged in without returnURL, use normal navigation
         push(path);
+      } else if (failed) {
+        setErrorMessage(message);
+        setError(true);
       } else {
-        // If not logged in without returnURL, show success inline
-        setSuccessState({ message: successMessage });
+        setSuccessState({ message });
       }
     },
     [provider, push]
@@ -151,16 +153,16 @@ export const ContinueIntegration: FC<{
       if (data.status === HttpStatusCode.PreconditionFailed) {
         const { returnURL } = await data.json().catch(() => ({}));
         navigateOrShow(
-          `/launches?precondition=true`,
-          returnURL,
-          'Precondition failed'
+          '/launches?precondition=true', returnURL,
+          t('channel_connection_refused', 'This channel could not be connected to the workspace.'), true
         );
         return;
       }
 
       if (data.status === HttpStatusCode.NotAcceptable) {
-        const { msg, returnURL } = await data.json();
-        navigateOrShow(`/launches?msg=${msg}`, returnURL, msg);
+        const { msg, message, returnURL } = await data.json();
+        const reason = msg || message || 'Could not add provider';
+        navigateOrShow(`/launches?msg=${encodeURIComponent(reason)}`, returnURL, reason, true);
         return;
       }
 

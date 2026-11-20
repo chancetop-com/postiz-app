@@ -439,16 +439,8 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
           const locked = type === 'draft' && state === 'PUBLISHED';
           return {
             ...channelRow(p),
-            // a channel with nothing to choose says what it stays
             ...(locked
-              ? {
-                  status:
-                    state === 'PUBLISHED'
-                      ? t('channel_stays_published', 'Stays published')
-                      : state === 'DRAFT'
-                      ? t('channel_stays_draft', 'Stays a draft')
-                      : t('channel_stays_scheduled', 'Stays scheduled'),
-                }
+              ? { status: t('channel_stays_published', 'Stays published') }
               : {}),
             locked,
             // a channel that would go out right away starts ticked only when
@@ -553,10 +545,10 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                   channels={rows}
                   confirmLabel={(ids) => {
                     // the ticked channels the save moves to another state
-                    const moving = existingPosts.filter(
+                    const moving = editorChannels.filter(
                       (p) => ids.includes(p.integration) && asItIs(p) !== type
                     );
-                    if (!moving.length) {
+                    if (type === 'update' || !moving.length) {
                       return t(
                         'just_update_post_details',
                         'Just update the post details'

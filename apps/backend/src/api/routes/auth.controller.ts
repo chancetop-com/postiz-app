@@ -215,6 +215,11 @@ export class AuthController {
     }
 
     response.header('auth', activate.jwt);
+    if ('organizations' in activate && activate.organizations?.length) {
+      return response
+        .status(200)
+        .json({ can: true, organizations: activate.organizations });
+    }
     if (
       typeof activate.addedOrg !== 'boolean' &&
       activate.addedOrg?.organizationId

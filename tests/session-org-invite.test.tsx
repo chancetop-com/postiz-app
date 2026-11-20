@@ -23,6 +23,7 @@ const location = {
 
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(query.value),
+  useParams: () => ({ code: 'activation-code' }),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
@@ -59,6 +60,7 @@ vi.mock('@gitroom/frontend/components/auth/providers/wallet.provider', () => ({
 }));
 
 import LayoutContext from '@gitroom/frontend/components/layout/layout.context';
+import { AfterActivate } from '@gitroom/frontend/components/auth/after.activate';
 import { Login } from '@gitroom/frontend/components/auth/login';
 
 const reply = (body: unknown, headers: Record<string, string> = {}, status = 200) =>
@@ -100,6 +102,21 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+});
+
+it('selects an active workspace explicitly after activating an account with legacy invitation data', async () => {
+  const organizations = [{ id: 'personal', name: 'Personal' }, { id: 'team', name: 'Invited team' }];
+  const api = vi.fn(async (url: string, init: RequestInit) => {
+    if (url === '/auth/activate') return reply({ can: true, organizations }, { auth: 'activated' });
+    expect(url).toBe('/user/change-org');
+    expect(JSON.parse(init.body as string)).toEqual({ id: 'team' });
+    return reply({}, { showorg: 'team' });
+  });
+  vi.stubGlobal('fetch', api);
+  const view = render(<LayoutContext><AfterActivate /></LayoutContext>);
+  fireEvent.click(await view.findByRole('button', { name: 'Invited team' }));
+  await waitFor(() => expect(location.href).toBe('/launches?onboarding=true'));
+  expect(window.sessionStorage.getItem('showorg')).toBe('team');
 });
 
 describe('a signed-in tab accepting an invitation', () => {

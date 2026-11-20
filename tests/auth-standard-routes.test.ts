@@ -72,7 +72,7 @@ const build = ({
       id: 'org-new',
       users: [{ user: { id: 'user-new', email: 'new@example.test' } }],
     }),
-    acceptedInvitation: vi
+    activeInviteMembership: vi
       .fn()
       .mockResolvedValue({ organizationId: 'org-invited' }),
     addUserToOrg: vi.fn().mockResolvedValue({ organizationId: 'org-invited' }),
@@ -285,7 +285,8 @@ describe('register and activate', () => {
     };
     const organizationService = {
       addUserToOrg,
-      acceptedInvitation: vi
+      activationInvitation: vi.fn(),
+      activeInviteMembership: vi
         .fn()
         .mockResolvedValue({ organizationId: 'org-invited' }),
     };
@@ -299,7 +300,7 @@ describe('register and activate', () => {
     );
     return {
       service,
-      acceptedInvitation: organizationService.acceptedInvitation,
+      activationInvitation: organizationService.activationInvitation,
       addUserToOrg,
       controller: new AuthController(
         service,
@@ -353,11 +354,9 @@ describe('register and activate', () => {
         activated: false,
         inviteId: 'invite-1',
       };
-      const { controller, acceptedInvitation, addUserToOrg } =
+      const { controller, activationInvitation, addUserToOrg } =
         activationService(user);
-      acceptedInvitation.mockResolvedValue(
-        active ? { organizationId: 'org-invited' } : false
-      );
+      activationInvitation.mockResolvedValue({ addedOrg: active ? { organizationId: 'org-invited' } : false });
       const { response, headers } = recordedResponse();
       await controller.activate(
         { cookies: {}, headers: {} } as never,
@@ -365,11 +364,23 @@ describe('register and activate', () => {
         undefined as never,
         response as never
       );
-      expect(acceptedInvitation).toHaveBeenCalledWith(user.id, user.inviteId);
+      expect(activationInvitation).toHaveBeenCalledWith(user.id, user.inviteId);
       expect(addUserToOrg).not.toHaveBeenCalled();
       expect(headers.showorg).toBe(active ? 'org-invited' : undefined);
     }
   );
+
+  it('lets an upgraded account choose among active legacy memberships when the invite has no stored target', async () => {
+    const user = { id: 'user-1', email: 'merchant@example.test', activated: false, inviteId: 'old-invite' };
+    const { controller, activationInvitation } = activationService(user);
+    const organizations = [{ id: 'personal', name: 'Personal' }, { id: 'team', name: 'Team' }];
+    activationInvitation.mockResolvedValue({ addedOrg: false, organizations });
+    const { response, headers, state } = recordedResponse();
+    await controller.activate({ cookies: {}, headers: {} } as never, AuthChecker.signJWT(user), undefined as never, response as never);
+    expect(state.body).toEqual({ can: true, organizations });
+    expect(headers.showorg).toBeUndefined();
+    expect(headers.onboarding).toBeUndefined();
+  });
 
   it('does not emit showorg on activation for another recipient', async () => {
     const { controller, addUserToOrg } = activationService({
@@ -544,7 +555,7 @@ const loginWithInvite = async (
   const organizationService = {
     createOrgAndUser: vi.fn(),
     addUserToOrg,
-    acceptedInvitation: vi
+    activeInviteMembership: vi
       .fn()
       .mockResolvedValue({ organizationId: 'org-invited' }),
     getCount: vi.fn().mockResolvedValue(0),

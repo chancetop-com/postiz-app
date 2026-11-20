@@ -2,12 +2,14 @@
 
 import React, { FC, useCallback } from 'react';
 import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
-import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
-import { clearSessionAuth } from '@gitroom/frontend/components/layout/layout.context';
+import {
+  clearSessionAuth,
+  useLegacySession,
+} from '@gitroom/frontend/components/layout/layout.context';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 export const LogoutComponent: FC<{ isIcon?: boolean }> = ({ isIcon }) => {
-  const fetch = useFetch();
+  const hasLegacySession = useLegacySession();
   const { isGeneral } = useVariables();
   const t = useT();
 
@@ -24,9 +26,9 @@ export const LogoutComponent: FC<{ isIcon?: boolean }> = ({ isIcon }) => {
       if (typeof window !== 'undefined') {
         clearSessionAuth();
       }
-      window.location.href = '/auth/login';
+      window.location.href = hasLegacySession ? '/auth/logout' : '/auth/login';
     }
-  }, []);
+  }, [hasLegacySession, t]);
   return (
     <>
       <div className="cursor-pointer" onClick={logout}>

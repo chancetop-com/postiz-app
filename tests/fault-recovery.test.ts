@@ -75,7 +75,7 @@ describe('unknown publish results are classified, never silently retried', () =>
 
   it('marks a timed-out publish as unconfirmed and never re-runs it', () => {
     const timeoutBranch = POST_WORKFLOW.slice(
-      POST_WORKFLOW.indexOf("if (handle.type === 'timeout')"),
+      POST_WORKFLOW.indexOf("if (handle.type === 'timeout' || handle.type === 'unconfirmed')"),
       POST_WORKFLOW.indexOf("// for other errors, change state")
     );
     expect(timeoutBranch).toContain('await markUnconfirmed(err);');

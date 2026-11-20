@@ -48,12 +48,12 @@ export class OrganizationService {
     );
   }
 
-  acceptedInvitation(userId: string, inviteId: string, orgId?: string) {
-    return this._organizationRepository.acceptedInvitation(
-      userId,
-      inviteId,
-      orgId
-    );
+  activeInviteMembership(userId: string, orgId: string) {
+    return this._organizationRepository.activeInviteMembership(userId, orgId);
+  }
+
+  activationInvitation(userId: string, inviteId: string) {
+    return this._organizationRepository.activationInvitation(userId, inviteId);
   }
 
   addUserToOrg(
