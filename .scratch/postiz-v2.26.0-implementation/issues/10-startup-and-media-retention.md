@@ -26,8 +26,8 @@ nginx/PM2 三进程启动、数据与媒体保留、重复启动幂等及连接/
 | 项 | 值 |
 | --- | --- |
 | 执行起点 | `0eee97b6b`（`postiz-v2.26.0-integration` tip） |
-| 并入集成分支 | `392987d4` merge ticket 10（含 05/07/09/11/12；仅频道 UI/凭证与 Temporal 连续性改动，schema/启动/媒体路径未变） |
-| 构建源提交（干净） | `4e6f889d7a18b42775d0d3816571bfc329834e00`（合并后重新生成 k8s 上下文） |
+| 并入集成分支 | `392987d4` merge ticket 10（含 05/07/09/11/12；频道 UI/凭证与 Temporal 连续性改动）；其后 `5ce284c8` 再并入 ticket 13（仅测试/证据，无产品代码或 schema/启动/媒体路径变化） |
+| 构建源提交（干净） | `4e6f889d7a18b42775d0d3816571bfc329834e00`（合并后重新生成 k8s 上下文，含 ticket 13 之前的集成代码） |
 | 构建上下文 | `k8s/BUILD_CONTEXT_MANIFEST.json` 的 `sourceCommit` 与上述一致、`worktreeState=clean`、991 个生成文件、sha256 `f8745dfb…`；`prepare-build-context.sh --check` 通过 |
 | 镜像 | `postiz-ticket10:4e6f889d7a18`，image ID `sha256:286c8698a69488088e372e413475956245075d4628511624c5d729290adbd3ee`，`linux/arm64` |
 | 证据提交 | 本分支 tip（本 Answer 所在提交） |
