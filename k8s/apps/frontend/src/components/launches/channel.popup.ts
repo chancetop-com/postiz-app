@@ -83,11 +83,8 @@ export const buildChannelRelayUrl = (
  * A standalone window keeps the recorded behaviour and navigates in place.
  * Both the add and the reconnect entries use this.
  */
-export const openChannelOAuth = (
-  oauthUrl: string,
-  options: { embedded?: boolean } = {}
-): 'popup' | 'window' => {
-  if (options.embedded ?? isEmbeddedInIframe()) {
+export const openChannelOAuth = (oauthUrl: string): 'popup' | 'window' => {
+  if (isEmbeddedInIframe()) {
     window.open(
       buildChannelRelayUrl(oauthUrl, {
         auth: window.sessionStorage.getItem('auth'),

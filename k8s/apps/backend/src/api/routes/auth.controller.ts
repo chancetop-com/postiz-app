@@ -29,6 +29,7 @@ import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id'
 import * as Sentry from '@sentry/nestjs';
 import { FarcasterProvider } from '@gitroom/nestjs-libraries/integrations/social/farcaster.provider';
 import { AttributionService } from '@gitroom/nestjs-libraries/services/attribution/attribution.service';
+import { ORG_INVITE_HEADER } from '@gitroom/helpers/auth/org.invite';
 
 @ApiTags('Auth')
 @Controller('/auth')
@@ -46,7 +47,7 @@ export class AuthController {
    * signature, role and expiry before any org id is trusted.
    */
   private getOrgInvite(req: Request) {
-    const header = req.headers?.['org-invite'];
+    const header = req.headers?.[ORG_INVITE_HEADER];
     return this._authService.getOrgFromCookie(
       (Array.isArray(header) ? header[0] : header) || req?.cookies?.org
     );
@@ -199,19 +200,27 @@ export class AuthController {
 
   @Post('/activate')
   async activate(
+    @Req() req: Request,
     @Body('code') code: string,
     @Body('datafast_visitor_id') datafast_visitor_id: string,
     @Res({ passthrough: false }) response: Response
   ) {
     const activate = await this._authService.activate(
       code,
-      datafast_visitor_id
+      datafast_visitor_id,
+      this.getOrgInvite(req)
     );
     if (!activate) {
       return response.status(200).json({ can: false });
     }
 
-    response.header('auth', activate);
+    response.header('auth', activate.jwt);
+    if (
+      typeof activate.addedOrg !== 'boolean' &&
+      activate.addedOrg?.organizationId
+    ) {
+      response.header('showorg', activate.addedOrg.organizationId);
+    }
     response.header('onboarding', 'true');
 
     return response.status(200).json({ can: true });

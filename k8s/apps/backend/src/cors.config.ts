@@ -1,11 +1,12 @@
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import { ORG_INVITE_HEADER } from '@gitroom/helpers/auth/org.invite';
 
 /**
  * Browser clients keep `auth`, `showorg` and `impersonate` in the current
  * tab's sessionStorage instead of relying on cookies. They must be allowed on
  * requests and readable from responses even when the backend is on another
- * origin. Keep this list shared with `main.ts` so a deployment change cannot
- * silently break the merchant iframe session.
+ * origin. App startup passes this same object to Nest, so the list has one
+ * source for every deployment.
  */
 export const getCorsOptions = (): CorsOptions => ({
   ...(!process.env.NOT_SECURED ? { credentials: true } : {}),
@@ -16,7 +17,7 @@ export const getCorsOptions = (): CorsOptions => ({
     'showorg',
     'impersonate',
     'oauth-state-token',
-    'org-invite',
+    ORG_INVITE_HEADER,
     'x-postiz-org',
     'x-postiz-include-deleted',
     'x-copilotkit-runtime-client-gql-version',

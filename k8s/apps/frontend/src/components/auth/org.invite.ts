@@ -11,8 +11,12 @@
  * sends an unsigned organization id. Because no cookie is shared, accepting in
  * one tab cannot move another tab to the invited organization.
  */
-export const ORG_INVITE_KEY = 'org-invite';
-export const ORG_INVITE_HEADER = 'org-invite';
+import {
+  ORG_INVITE_KEY,
+  ORG_INVITE_HEADER,
+} from '@gitroom/helpers/auth/org.invite';
+
+export { ORG_INVITE_KEY, ORG_INVITE_HEADER };
 
 const sessionStorageOrNull = () =>
   typeof window === 'undefined' ? null : window.sessionStorage;

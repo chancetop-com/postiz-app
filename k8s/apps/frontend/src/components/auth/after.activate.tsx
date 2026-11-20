@@ -7,6 +7,10 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import useCookie from 'react-use-cookie';
+import {
+  clearOrgInvite,
+  orgInviteHeaders,
+} from '@gitroom/frontend/components/auth/org.invite';
 export const AfterActivate = () => {
   const fetch = useFetch();
   const params = useParams();
@@ -31,9 +35,11 @@ export const AfterActivate = () => {
         }),
         headers: {
           'Content-Type': 'application/json',
+          ...orgInviteHeaders(),
         },
       });
       if (response.headers.get('onboarding')) {
+        clearOrgInvite();
         return;
       }
       const { can } = await response.json();

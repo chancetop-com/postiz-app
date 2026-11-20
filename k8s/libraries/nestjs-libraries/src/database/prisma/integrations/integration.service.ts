@@ -34,6 +34,7 @@ import {
   EncryptionService,
   integrationEncryptedFields,
 } from '@gitroom/nestjs-libraries/services/encryption.service';
+import { isReusableRefreshCredential } from '@gitroom/nestjs-libraries/integrations/refresh.credential';
 
 dayjs.extend(utc);
 
@@ -399,6 +400,8 @@ export class IntegrationService {
   // Same reuse rule as the per-channel refresh: wait briefly for the parallel
   // writer, then accept only a rotated, unexpired credential of the same
   // channel. A broken channel never becomes "fresh" by reading it again.
+  // The batch retries faster (250/500 ms) because it must not stall a whole
+  // pass; the per-channel path waits 1/2 s inside its own workflow.
   private async reuseParallelRefresh(integration: Integration) {
     for (let attempt = 0; attempt < 3; attempt++) {
       const stored = await this._integrationRepository.getIntegrationById(
@@ -406,19 +409,7 @@ export class IntegrationService {
         integration.id
       );
 
-      if (
-        stored &&
-        !stored.refreshNeeded &&
-        !stored.inBetweenSteps &&
-        !stored.deletedAt &&
-        stored.internalId === integration.internalId &&
-        stored.providerIdentifier === integration.providerIdentifier &&
-        stored.refreshToken &&
-        stored.refreshToken !== integration.refreshToken &&
-        stored.token !== integration.token &&
-        stored.tokenExpiration &&
-        stored.tokenExpiration.getTime() > Date.now()
-      ) {
+      if (isReusableRefreshCredential(stored, integration)) {
         return true;
       }
 

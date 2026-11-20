@@ -6,6 +6,8 @@ import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
 import { useDecisionModal } from '@gitroom/frontend/components/layout/new-modal';
 import { useReturnUrl } from '@gitroom/frontend/app/(app)/auth/return.url.component';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
+import { clearOrgInvite } from '@gitroom/frontend/components/auth/org.invite';
+
 export default function LayoutContext(params: { children: ReactNode }) {
   if (params?.children) {
     // eslint-disable-next-line react/no-children-prop
@@ -23,11 +25,14 @@ export function setCookie(cname: string, cvalue: string, exdays: number) {
   document.cookie = cname + '=' + cvalue + ';' + expires + ';path=/';
 }
 
-function clearSessionAuth() {
+export function clearSessionAuth() {
   if (typeof window === 'undefined') return;
   window.sessionStorage.removeItem('auth');
   window.sessionStorage.removeItem('showorg');
   window.sessionStorage.removeItem('impersonate');
+  // An invitation is scoped to the identity that received it. Keeping it
+  // across logout/401 would attach the next sign-in to the old invitee's org.
+  clearOrgInvite();
 }
 
 function LayoutContextInner(params: { children: ReactNode }) {
@@ -62,9 +67,16 @@ function LayoutContextInner(params: { children: ReactNode }) {
           window.sessionStorage.setItem('showorg', showOrg);
         }
       }
-      if (impersonate) {
+      if (impersonate !== null) {
         if (typeof window !== 'undefined') {
-          window.sessionStorage.setItem('impersonate', impersonate);
+          if (impersonate) {
+            window.sessionStorage.setItem('impersonate', impersonate);
+          } else {
+            // /user/impersonate answers an empty header to stop impersonating.
+            window.sessionStorage.removeItem('impersonate');
+            // A legacy shared cookie must not win the fallback after reload.
+            setCookie('impersonate', '', -10);
+          }
         }
       }
       if (logout) {
