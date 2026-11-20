@@ -6,6 +6,10 @@
 
 **Status:** resolved
 
+**Assignee:** chancetio (agent implement-spec)
+
+**Claimed:** 2026-11-20
+
 **Source:** [升级规格](../../postiz-v2.26.0-wayfinder/spec.md) · [逐流程验收决定](../../postiz-v2.26.0-wayfinder/issues/04-flow-acceptance.md#answer) · [既有交付标准](../../postiz-v2.26.0-wayfinder/../postiz-stable-merge/issues/09-acceptance-execution-handoff.md#answer)
 
 - [x] 在同一最终修订从根目录用 pnpm 运行完整测试、前端/API/orchestrator 类型检查、lint 和构建。核对 K8s 上下文、实际镜像和三进程；记录提交、命令、用例数及结果。57 个文件、542 项通过仅作升级前基线。
@@ -16,10 +20,11 @@
 
 ## Answer
 
-2026-11-20 完成。最终分支 `codex/ticket-14-final-report`；构建源提交
-`b596737423c73427a7a5bc6aef8de3d46dac9118`；记录本 Answer 前的交付提交
-`1b75bbdc9267cfb219e04d2e085ad60db8ac3472`；本 Answer 提交后的最终 HEAD 以
-`git rev-parse HEAD` 为准。未推送、未部署、未改集群，未 squash。
+2026-11-20 完成。最终分支 `codex/ticket-14-final-report`；交付提交（最终修订）
+`8afa7003aff581b514998e269b02b14763e69941`；构建源提交
+`b596737423c73427a7a5bc6aef8de3d46dac9118`；合入集成分支的合并提交 `ed8628db…`
+（父提交 `b7c069fc` + `8afa7003`，`--no-ff`，仅文档/证据变化，产品代码 0 差异）。
+未推送、未部署、未改集群，未 squash。
 
 ### 本地门槛
 
@@ -38,6 +43,11 @@
 
 测试门在 `b5967374` 上执行；此后只增加证据、报告和本 Answer，产品源码/构建输入未再变化。
 构建首次中止是既有 Next.js 16.4.2 的升级提示（工具自身要求重试），不是代码失败；未改依赖版本。
+合并后在 `ed8628db` 上重跑 `pnpm typecheck`（exit 0）、`pnpm lint`（**0 errors / 696 warnings**，
+exit 0）与 `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTimeout=20000`
+（**64 文件 / 695 通过 / 0 失败 / 0 跳过**，exit 0），结果与 `b5967374` 一致。主检出的 `.env`
+含 `NOT_SECURED=true`；命令前加 `NOT_SECURED=` 将其覆盖为未定义，保持既有 Copilot 断言有效。
+按指示未重建 Docker 镜像，镜像与运行时证据沿用 `b5967374` 的构建。
 
 ### 本地证据矩阵
 
