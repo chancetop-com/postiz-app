@@ -4,7 +4,11 @@
 
 **Blocked by:** [01 合入固定版本并跑通候选版](01-merge-and-run-candidate.md)
 
-**Status:** resolved (local image rehearsal 74 PASS / 0 FAIL / 1 UNVERIFIED; nothing published or deployed)
+**Status:** resolved
+
+**Assignee:** chancetio (agent implement-spec)
+
+**Claimed:** 2026-11-20
 
 **Source:** [升级规格](../../postiz-v2.26.0-wayfinder/spec.md) · [启动与索引核查](../../postiz-v2.26.0-wayfinder/assets/upgrade-data.md)
 
@@ -90,4 +94,18 @@ nginx/PM2 三进程启动、数据与媒体保留、重复启动幂等及连接/
 2. **启动同步会顺带 generate**：entrypoint 的 `pnpm run prisma-db-push` 在 `db push` 后还执行 Prisma generate（root 脚本未加 `--skip-generate`），写入镜像内的客户端；数据库同步仍在应用命令之前完成。这是既有根脚本行为，不是新增升级脚本。
 3. **`k8s/Dockerfile.runtime` 未验证**：`k8s/.dockerignore` 排除 `node_modules`、`apps/backend/dist`、`apps/orchestrator/dist`、`apps/frontend/.next`，准备器也删除/排除这些路径，仓库没有把 Linux 构建产物放入 `k8s/` 的步骤；宿主 `node_modules` 是 macOS 硬链接副本，复制进 Linux 镜像无效。构建尝试 exit 1，日志在 `evidence/70-runtime-image-build.log`，未用其它镜像替代。
 4. 未验证：真实部署的 PostgreSQL/Redis/Temporal 版本与 namespace、真实 PVC/Secret、KMS/真实渠道、真实媒体文件；旧 schema 来自 `838843077`，不声称覆盖线上扩展或数据形态；未升级 PostgreSQL 大版本；新文件通过应用 `LocalStorage`（HTTP 上传路由使用的同一实现）写入，不是带认证的 multipart 请求（HTTP 路由归票 13）。
+
+### 合并记录与门
+
+| 项 | 值 |
+| --- | --- |
+| 合并提交 | `7527f3a355e1c8119128a849619cf1d4bf2d715f`，父提交 `53deb040`（集成分支）与 `13f1bdc5`（ticket 10 分支 tip） |
+| 冲突 | 无（`53deb040` 是分支祖先）；`--no-ff` 合入，合并树与 `13f1bdc5` 一致 |
+| 祖先校验 | `53deb040`、`13f1bdc5`、`392987d4`、`5ce284c8`、`4e6f889d` 均为合并后 HEAD 祖先 |
+| 冲突标记 | 全树无 `<<<<<<<` / `=======` / `>>>>>>>` |
+| `pnpm typecheck` | exit 0（frontend `next typegen` + backend + orchestrator） |
+| `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTimeout=20000` | exit 0；**64 files / 695 tests passed** |
+| 未推送/未部署 | 无 push、无镜像推送、无 rollout；Build 未启用 |
+
+合并后复核确认：镜像 `postiz-ticket10:4e6f889d7a18`（ID `sha256:286c8698…`）来自干净上下文 `4e6f889d`；PostgreSQL 15.19 上由旧 schema `838843077` 建立 200,007 / 80,003 / 50,001 行样本，五索引使 281→286，锁等待 9.7 s、启动同步 33.1 s、纯净索引重建 290 ms；28/28 摘要同步前后与重启后一致，schema 差异 35/0/5；旧媒体与新媒体重启后仍可读；重复启动幂等；连接失败与需数据丢失确认的同步均 exit 1 且 API/worker 未启动。`k8s/Dockerfile.runtime` 因 `.dockerignore` 排除必需产物仍未验证（限制见上）。
 
