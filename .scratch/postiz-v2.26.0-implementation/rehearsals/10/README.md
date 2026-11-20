@@ -87,3 +87,36 @@ is the per-assertion result. No registry login, push or deployment is performed.
   versions. Temporal, KMS and real channels are out of scope for this ticket.
 - The image is local: the image ID is meaningful for this Docker daemon only.
   There is no registry digest because nothing was pushed.
+
+## Findings from the run
+
+- **Temporal testing attributes.** `temporalio/auto-setup` registers
+  `CustomStringField`/`CustomTextField` "for testing". Together with the
+  backend's `organizationId`/`postId` that exceeds the substitute's 3-Text
+  limit, so the backend cannot listen (the API stays 502 while PM2 says
+  `online`). The rehearsal removes the two unused testing attributes after the
+  default namespace exists and before the application starts, then proves the
+  real startup add path registers both attributes. The deployment Temporal
+  already has an attribute budget; ticket 12/13 should check the real namespace
+  budget. This is an environment/substitute finding, not a database/media
+  regression.
+- **Startup sync also generates the client.** The entrypoint's
+  `pnpm run prisma-db-push` runs `prisma db push` and then Prisma generate
+  (no `--skip-generate`), which writes the client inside the image after the
+  schema is in sync. The database sync still finishes first and the application
+  command waits for it; this is existing root-script behaviour, not a new
+  delivery script.
+- **Inactive runtime image.** `k8s/Dockerfile.runtime` cannot be built from the
+  prepared context: `k8s/.dockerignore` excludes `node_modules`,
+  `apps/backend/dist`, `apps/orchestrator/dist` and `apps/frontend/.next`, the
+  preparer deletes or excludes the same paths, and no repository script
+  produces Linux build artifacts into `k8s/`. The host `node_modules` is a
+  macOS hardlink copy, so copying it into a Linux image would be invalid. The
+  build attempt and exact error are in `evidence/70-runtime-image-build.log`;
+  it is recorded as unverified and was not used as a substitute for the
+  source-built image.
+- **HTTP multipart upload.** The new file is written through the application's
+  own `LocalStorage` class (the same implementation the HTTP upload routes
+  call), not through an authenticated multipart request. Ticket 13 covers the
+  HTTP route; this ticket's evidence is about the mounted volume and retention.
+

@@ -188,11 +188,14 @@ docker run -d --name "$PG" --network "$NET" \
   -c deadlock_timeout=200ms \
   -c log_line_prefix='%m [%p] ' \
   -c max_connections=200 >/dev/null || die "could not start PostgreSQL"
-for _ in $(seq 1 60); do
+for _ in $(seq 1 180); do
   docker exec "$PG" pg_isready -U "$PG_USER" -d "$PG_DB" >/dev/null 2>&1 && break
   sleep 1
 done
-docker exec "$PG" pg_isready -U "$PG_USER" -d "$PG_DB" >/dev/null 2>&1 || die "PostgreSQL did not become ready"
+if ! docker exec "$PG" pg_isready -U "$PG_USER" -d "$PG_DB" >/dev/null 2>&1; then
+  docker logs "$PG" > "$EVIDENCE/00-postgres-startup.log" 2>&1 || true
+  die "PostgreSQL did not become ready (see evidence/00-postgres-startup.log)"
+fi
 docker exec "$PG" psql -U "$PG_USER" -d "$PG_DB" -tAc 'select version()' > "$EVIDENCE/00-postgres-version.txt" 2>&1
 record PASS "isolated PostgreSQL 15 is ready" "$(cat "$EVIDENCE/00-postgres-version.txt")"
 
@@ -231,10 +234,49 @@ for _ in $(seq 1 120); do
   sleep 2
 done
 if [ "$TEMPORAL_READY" -eq 1 ]; then
+  NAMESPACE_READY=0
+  for _ in $(seq 1 90); do
+    if docker exec "$TEMPORAL" temporal operator namespace describe --namespace default \
+      --address "$TEMPORAL:7233" >/dev/null 2>&1; then
+      NAMESPACE_READY=1
+      break
+    fi
+    sleep 2
+  done
   docker logs "$TEMPORAL" > "$EVIDENCE/01-temporal.log" 2>&1 || true
-  docker exec "$TEMPORAL" tctl --address "$TEMPORAL:7233" --namespace default namespace describe default \
-    > "$EVIDENCE/01-temporal-namespace.txt" 2>&1 || true
-  record PASS "isolated Temporal server and default namespace are ready" "temporalio/auto-setup:1.28.1"
+  docker exec "$TEMPORAL" temporal operator namespace describe --namespace default \
+    --address "$TEMPORAL:7233" > "$EVIDENCE/01-temporal-namespace.txt" 2>&1 || true
+  if [ "$NAMESPACE_READY" -eq 1 ]; then
+    record PASS "isolated Temporal server and default namespace are ready" "temporalio/auto-setup:1.28.1"
+  else
+    record FAIL "isolated Temporal server and default namespace are ready" "namespace not found"
+  fi
+
+  # auto-setup adds CustomStringField/CustomTextField "for testing". Together
+  # with the backend's organizationId/postId that exceeds Temporal's 3-Text
+  # limit on a fresh substitute namespace; the deployment Temporal already has
+  # its attribute budget. Remove the two unused testing attributes so the real
+  # startup add path can run, and record it as an environment adjustment.
+  ATTRIBUTES_CLEAN=0
+  for _ in $(seq 1 30); do
+    docker exec "$TEMPORAL" temporal operator search-attribute remove --name CustomStringField --yes \
+      --address "$TEMPORAL:7233" --namespace default > /dev/null 2>&1 || true
+    docker exec "$TEMPORAL" temporal operator search-attribute remove --name CustomTextField --yes \
+      --address "$TEMPORAL:7233" --namespace default > /dev/null 2>&1 || true
+    docker exec "$TEMPORAL" temporal operator search-attribute list \
+      --address "$TEMPORAL:7233" --namespace default > "$EVIDENCE/01-temporal-search-attributes-before.txt" 2>&1 || true
+    if ! grep -qE 'CustomStringField|CustomTextField' "$EVIDENCE/01-temporal-search-attributes-before.txt" && \
+       grep -q 'WorkflowId' "$EVIDENCE/01-temporal-search-attributes-before.txt"; then
+      ATTRIBUTES_CLEAN=1
+      break
+    fi
+    sleep 2
+  done
+  if [ "$ATTRIBUTES_CLEAN" -eq 1 ]; then
+    record PASS "the substitute Temporal has no leftover testing Text attributes"
+  else
+    record FAIL "the substitute Temporal has no leftover testing Text attributes"
+  fi
 else
   docker logs "$TEMPORAL" > "$EVIDENCE/01-temporal.log" 2>&1 || true
   record FAIL "isolated Temporal server and default namespace are ready"
@@ -470,16 +512,26 @@ for _ in $(seq 1 15); do
   docker exec "$TEMPORAL" tctl --address "$TEMPORAL:7233" --namespace default \
     taskqueue describe --taskqueue main --taskqueuetype workflow \
     > "$EVIDENCE/03-worker-pollers.txt" 2>&1 || true
-  if grep -qi 'main' "$EVIDENCE/03-worker-pollers.txt" && grep -qiE 'identity|poller' "$EVIDENCE/03-worker-pollers.txt"; then
+  if grep -qi 'poller identity' "$EVIDENCE/03-worker-pollers.txt" && \
+     grep -q '@' "$EVIDENCE/03-worker-pollers.txt"; then
     POLLERS=1
     break
   fi
   sleep 2
 done
 if [ "$POLLERS" -eq 1 ]; then
-  record PASS "the Temporal main task queue has live pollers" "$(grep -ciE 'identity|poller' "$EVIDENCE/03-worker-pollers.txt") line(s)"
+  record PASS "the Temporal main task queue has live pollers" "$(grep -c '@' "$EVIDENCE/03-worker-pollers.txt") poller row(s)"
 else
   record FAIL "the Temporal main task queue has live pollers"
+fi
+
+docker exec "$TEMPORAL" temporal operator search-attribute list \
+  --address "$TEMPORAL:7233" --namespace default > "$EVIDENCE/03-temporal-search-attributes-post.txt" 2>&1 || true
+if grep -q 'organizationId' "$EVIDENCE/03-temporal-search-attributes-post.txt" && \
+   grep -q 'postId' "$EVIDENCE/03-temporal-search-attributes-post.txt"; then
+  record PASS "the backend registered organizationId and postId on the substitute Temporal"
+else
+  record FAIL "the backend registered organizationId and postId on the substitute Temporal"
 fi
 
 # Startup ordering from the timestamped container log.

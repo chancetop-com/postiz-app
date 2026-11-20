@@ -1,0 +1,10 @@
+head=1d53b0a7383b926d42d22509d37815fb1a3857a5
+manifest.sourceCommit=1d53b0a7383b926d42d22509d37815fb1a3857a5
+manifest.worktreeState=clean
+manifest.sha256=a4a53b4a2458516ffcbd5ca8e1b6549bfbbc070b8f200861ec789e8276e1f7d2
+image=postiz-ticket10:1d53b0a7383b
+image.id=sha256:3a778d56af1ba5fc71e14235cb8637ed4e4d2ec0b6cb586c53e52cc8a28275ba
+image.arch=linux/arm64
+old-schema.commit=838843077 (feat: merge upstream stable v2.25.3)
+old-schema.sha256=fc4f5ca720425c3b071a1f46030713d9af8729b4472aba9f77d1684b40df772d
+seed.sha256=1be15a77fb84ddc56abfb58a7134f6d20b8ce61a9a79163dd59f4c5fc2899a0e

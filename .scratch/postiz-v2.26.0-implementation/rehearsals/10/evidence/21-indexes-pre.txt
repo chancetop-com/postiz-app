@@ -1,0 +1,7 @@
+Errors_createdAt_platform_idx	MISSING
+Notifications_organizationId_createdAt_deletedAt_idx	MISSING
+Post_organizationId_publishDate_idx	MISSING
+Post_publishDate_state_deletedAt_parentPostId_integrationId_idx	MISSING
+User_providerId_providerName_idx	MISSING
+indexes.total	281
+indexes.on_post	17

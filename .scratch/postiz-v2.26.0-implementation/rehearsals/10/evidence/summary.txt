@@ -1,0 +1,89 @@
+Ticket 10 rehearsal summary — 2026-11-20T11:25:40Z
+image=postiz-ticket10:1d53b0a7383b id=sha256:3a778d56af1ba5fc71e14235cb8637ed4e4d2ec0b6cb586c53e52cc8a28275ba arch=linux/arm64
+source=1d53b0a7383b926d42d22509d37815fb1a3857a5 worktree=clean
+sample: size.database_bytes	139648359 size.post_table_bytes	93118464 size.post_heap_bytes	50069504 size.notifications_table_bytes	19595264 size.errors_table_bytes	14245888 size.user_table_bytes	147456 rows.post	200007 rows.notifications	80003 rows.errors	50001 rows.user	3 rows.organization	2 rows.user_organization	4 rows.integration	5 rows.media	4 server.version	PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit 
+startup sync duration (incl. controlled lock): sync_log_since=2026-11-20T11:23:28Z sync_start=2026-11-20T11:23:28.563842762Z sync_done=2026-11-20T11:23:59.709201346Z sync_ms=31146 
+index build benchmark (copy of upgraded sample):
+Post_organizationId_publishDate_idx|170.857 ms
+Post_publishDate_state_deletedAt_parentPostId_integrationId_idx|292.838 ms
+Notifications_organizationId_createdAt_deletedAt_idx|91.235 ms
+User_providerId_providerName_idx|2.636 ms
+Errors_createdAt_platform_idx|18.180 ms
+writer wait: Timing is on. UPDATE 1 Time: 24.031 ms writer_update_time=24.031 ms create_index_time=358.732 ms 
+result: PASS=74 FAIL=0 UNVERIFIED=1
+
+PASS|the build context was prepared from HEAD|
+PASS|the build context was prepared from a clean worktree|
+PASS|isolated PostgreSQL 15 is ready|PostgreSQL 15.19 (Debian 15.19-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+PASS|isolated Redis is ready|redis:7-alpine
+PASS|isolated Temporal server and default namespace are ready|temporalio/auto-setup:1.28.1
+PASS|the substitute Temporal has no leftover testing Text attributes|
+PASS|the candidate schema creates the five expected index names|
+PASS|the v2.25.3 schema was pushed with the pinned Prisma CLI|Prisma schema loaded from ../rehearsal/old-schema.prisma
+PASS|synthetic old data was inserted|
+PASS|the old schema has 281 indexes|
+PASS|the old database has none of the five new indexes|
+PASS|sample size|posts=200007 db_bytes=139648359 indexes=281
+PASS|a legacy media file was placed in the real uploads volume|sha256=c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77
+PASS|a writer transaction holds RowExclusiveLock on Post before startup|
+PASS|the startup sync reported success|container started at 2026-11-20T11:23:28Z
+PASS|the startup sync waited on the locked Post table|
+PASS|the sync duration includes the controlled lock wait|31146ms
+PASS|the API answers /api/ 200|App is running!
+PASS|three consecutive /api/ requests answer 200|
+PASS|the frontend answers through nginx|root=307 final=200
+PASS|the frontend response contains the Next.js application shell|
+PASS|the worker health route reaches Temporal|{"status":"ok"}
+PASS|three PM2 processes are online|
+PASS|the Temporal main task queue has live pollers|1 poller row(s)
+PASS|the backend registered organizationId and postId on the substitute Temporal|
+PASS|the sync line appears before the API starts|sync=15 backend=512
+PASS|the sync line appears before the worker starts|sync=15 worker=196
+PASS|the entrypoint then launched the real application command|
+PASS|the API logs its successful start|
+PASS|every row keeps its primary key and column digest|
+PASS|all five new indexes exist after the sync|
+PASS|the schema now has 286 indexes (281 + 5)|
+PASS|the five index definitions match the candidate reference|
+PASS|the sync added no column/table definitions (removed lines)|
+PASS|the sync added exactly 35 dump lines (5 index blocks)|
+PASS|the added definitions are exactly five CREATE INDEX statements|
+PASS|the added schema defines Post_organizationId_publishDate_idx|
+PASS|the added schema defines Post_publishDate_state_deletedAt_parentPostId_integrationId_idx|
+PASS|the added schema defines Notifications_organizationId_createdAt_deletedAt_idx|
+PASS|the added schema defines User_providerId_providerName_idx|
+PASS|the added schema defines Errors_createdAt_platform_idx|
+PASS|the old media row still points at its uploads path|
+PASS|nginx serves the legacy media file|
+PASS|the legacy file bytes did not change|
+PASS|nginx serves the legacy thumbnail|
+PASS|a new file was uploaded through the app's LocalStorage|http://localhost:5000/uploads/2026/11/20/08d2b92f51e2b9bb46ca6cbf415104125.png
+PASS|nginx serves the new upload|
+PASS|the uploaded file bytes match|
+PASS|the second start syncs and becomes ready|api=200
+PASS|the second sync reports the database as already in sync|
+PASS|the second sync runs no further DDL|
+PASS|the second start leaves every row digest unchanged|
+PASS|the second start leaves the five index definitions unchanged|
+PASS|the second start leaves the schema unchanged|
+PASS|the legacy file is still served after the restart|
+PASS|the new upload is still served after the restart|
+PASS|the new upload bytes survive the restart|
+PASS|three PM2 processes are online after the restart|
+PASS|a write that overlaps CREATE INDEX waits and then succeeds|writer_time=24.031 ms
+PASS|the benchmark copy ends with 286 indexes|
+PASS|an unreachable database exits non-zero|exit=1
+PASS|the connection failure is surfaced by Prisma|
+PASS|the entrypoint reports the failed sync|
+PASS|the entrypoint refuses to start the application|
+PASS|the API never starts after a failed sync|
+PASS|the worker never starts after a failed sync|
+PASS|the failed connection start leaves the data unchanged|
+PASS|a sync that needs --accept-data-loss exits non-zero|exit=1
+PASS|Prisma asked for data-loss acceptance and did not get it|
+PASS|the entrypoint refuses to start the application|
+PASS|the API never starts after a refused sync|
+PASS|the worker never starts after a refused sync|
+PASS|the failed sync left the structure unchanged|0 changed lines
+PASS|the refused sync leaves the copied data unchanged|
+UNVERIFIED|the inactive runtime image was not built|k8s/Dockerfile.runtime needs prebuilt artifacts this repo does not produce (exit=1)

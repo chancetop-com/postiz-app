@@ -1,0 +1,5 @@
+Timing is on.
+UPDATE 1
+Time: 24.031 ms
+writer_update_time=24.031 ms
+create_index_time=358.732 ms
