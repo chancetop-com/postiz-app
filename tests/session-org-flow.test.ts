@@ -264,10 +264,14 @@ describe('accepting an invitation from an existing tab session', () => {
     };
   };
 
-  const build = (addUserToOrg: any) => {
+  const build = (addUserToOrg: any, active = true) => {
     const auth = new AuthService(
       {} as never,
-      { addUserToOrg } as never,
+      {
+        addUserToOrg,
+        acceptedInvitation: async () =>
+          active && { organizationId: 'org-invited' },
+      } as never,
       {} as never,
       {} as never,
       {} as never,
@@ -353,6 +357,21 @@ describe('accepting an invitation from an existing tab session', () => {
     expect(addUserToOrg).toHaveBeenCalledTimes(1);
     expect(recorded.body).toEqual({ id: 'org-invited' });
     expect(recorded.headers.showorg).toBe('org-invited');
+  });
+
+  it('ignores an accepted invitation after its membership was removed or disabled', async () => {
+    const { controller } = build(vi.fn().mockResolvedValue(false), false);
+    const recorded = response();
+    await controller.joinOrg(
+      {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        inviteId: 'invite-1',
+      } as never,
+      invite(),
+      recorded.res as never
+    );
+    expect(recorded.headers.showorg).toBeUndefined();
   });
 
   it('does not join an invitation addressed to another account', async () => {

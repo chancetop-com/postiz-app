@@ -5,10 +5,14 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { IntegrationRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.repository';
+import {
+  IntegrationRepository,
+  ConnectLinkBinding,
+} from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.repository';
 import { IntegrationManager } from '@gitroom/nestjs-libraries/integrations/integration.manager';
 import {
   AnalyticsData,
+  AuthTokenDetails,
   SocialProvider,
 } from '@gitroom/nestjs-libraries/integrations/social/social.integrations.interface';
 import { Integration, Organization } from '@prisma/client';
@@ -35,6 +39,26 @@ import {
   integrationEncryptedFields,
 } from '@gitroom/nestjs-libraries/services/encryption.service';
 import { isReusableRefreshCredential } from '@gitroom/nestjs-libraries/integrations/refresh.credential';
+
+interface ConnectPage {
+  id: string;
+  name: string;
+  username?: string;
+  pageId?: string;
+  locationName?: string;
+  accountName?: string;
+  picture?: string | { data: { url: string } };
+  address?: string;
+  subscriberCount?: string;
+}
+
+interface PendingConnectSelection {
+  token: string;
+  auth: AuthTokenDetails;
+  pages: ConnectPage[];
+  timezone: number;
+  authorizedAt: number;
+}
 
 dayjs.extend(utc);
 
@@ -119,7 +143,8 @@ export class IntegrationService {
     isBetweenSteps = false,
     refresh?: string,
     timezone?: number,
-    customInstanceDetails?: string
+    customInstanceDetails?: string,
+    binding?: ConnectLinkBinding
   ) {
     const uploadedPicture = picture
       ? picture?.indexOf('imagedelivery.net') > -1
@@ -146,7 +171,8 @@ export class IntegrationService {
       isBetweenSteps,
       refresh,
       timezone,
-      customInstanceDetails
+      customInstanceDetails,
+      binding
     );
   }
 
@@ -571,7 +597,7 @@ export class IntegrationService {
     );
   }
 
-  private async loadConnectLink(token: string) {
+  async loadConnectLink(token: string) {
     const link = JSON.parse(
       (await ioRedis.get(`connectLink:${token}`)) || 'null'
     ) as {
@@ -609,17 +635,18 @@ export class IntegrationService {
   // dashboard, the platform sends them back to /integrations/social/:provider.
   // The link stays valid until it expires, so they can come back and try again
   async startConnectLink(token: string) {
-    const { org, integration, redirectUrl } = await this.loadConnectLink(token);
+    const { integration } = await this.loadConnectLink(token);
     const provider = this._integrationManager.getSocialIntegration(integration);
 
     try {
       const { codeVerifier, state, url } = await provider.generateAuthUrl();
 
-      await ioRedis.set(`organization:${state}`, org, 'EX', 3600);
-      await ioRedis.set(`login:${state}`, codeVerifier, 'EX', 3600);
-      if (redirectUrl) {
-        await ioRedis.set(`redirect:${state}`, redirectUrl, 'EX', 3600);
-      }
+      await ioRedis.set(
+        `connectOAuth:${state}`,
+        JSON.stringify({ token, codeVerifier }),
+        'EX',
+        3600
+      );
 
       return { url };
     } catch (err) {
@@ -628,6 +655,131 @@ export class IntegrationService {
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+
+  async stageConnectLinkPages(
+    token: string,
+    state: string,
+    provider: SocialProvider,
+    auth: AuthTokenDetails,
+    timezone: number
+  ) {
+    const load =
+      'pages' in provider
+        ? provider.pages
+        : 'companies' in provider
+        ? provider.companies
+        : undefined;
+    if (typeof load !== 'function')
+      throw new HttpException('Page selection is unavailable', 400);
+    const listed: ConnectPage[] = await load.call(provider, auth.accessToken);
+    const pages = listed.map(
+      ({
+        id,
+        name,
+        username,
+        pageId,
+        locationName,
+        accountName,
+        picture,
+        address,
+        subscriberCount,
+      }) => ({
+        id,
+        name,
+        username,
+        pageId,
+        locationName,
+        accountName,
+        picture,
+        address,
+        subscriberCount,
+      })
+    );
+    const id = 'selection-' + randomBytes(24).toString('hex');
+    const selection: PendingConnectSelection = {
+      token,
+      auth,
+      pages,
+      timezone,
+      authorizedAt: Date.now(),
+    };
+    const value = await this._encryptionService.encrypt(
+      JSON.stringify(selection)
+    );
+    await ioRedis.set(`connectSelection:${state}:${id}`, value, 'EX', 3600);
+    return { id, inBetweenSteps: true, publicSelection: true, pages };
+  }
+
+  async completeConnectLinkPage(
+    state: string,
+    id: string,
+    selectedId: string,
+    getLimit: (org: string) => Promise<number | undefined>
+  ) {
+    const key = `connectSelection:${state}:${id}`;
+    const value = await ioRedis.get(key);
+    if (!value)
+      throw new HttpException(
+        'This page selection expired. Open the connection link again.',
+        400
+      );
+    const pending: PendingConnectSelection = JSON.parse(
+      await this._encryptionService.decrypt(value)
+    );
+    const link = await this.loadConnectLink(pending.token);
+    const provider = this._integrationManager.getSocialIntegration(
+      link.integration
+    );
+    const page = pending.pages.find((item) => String(item.id) === selectedId);
+    if (!page || !provider.fetchPageInformation)
+      throw new HttpException('Select an available page', 400);
+
+    // Only pass the page metadata originally returned by this provider.
+    const info = await provider.fetchPageInformation(pending.auth.accessToken, {
+      ...page,
+      page: page.id,
+    });
+    if (!info.id || !info.access_token)
+      throw new HttpException('Could not confirm this page', 400);
+    const channelLimit = await getLimit(link.org);
+    if (!(await ioRedis.del(key)))
+      throw new HttpException('This selection was already used', 400);
+    const { auth, authorizedAt, timezone } = pending;
+    try {
+      const bound = await this.createOrUpdateIntegration(
+        auth.additionalSettings,
+        !!provider.oneTimeToken,
+        link.org,
+        info.name,
+        info.picture,
+        'social',
+        String(info.id),
+        link.integration,
+        info.access_token,
+        auth.refreshToken,
+        auth.expiresIn
+          ? Math.max(
+              1,
+              auth.expiresIn - Math.floor((Date.now() - authorizedAt) / 1000)
+            )
+          : undefined,
+        info.username,
+        false,
+        undefined,
+        timezone,
+        undefined,
+        { rootInternalId: String(auth.id), channelLimit }
+      );
+      this._refreshIntegrationService
+        .startRefreshWorkflow(link.org, bound.id, provider)
+        .catch(console.error);
+    } catch (err) {
+      // The original consent link still bounds the lifetime of a retry.
+      await ioRedis.set(key, value, 'EX', 3600);
+      throw err;
+    }
+    return { success: true };
   }
 
   async checkAnalytics(

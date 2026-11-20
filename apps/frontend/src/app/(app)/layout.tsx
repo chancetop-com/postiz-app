@@ -103,7 +103,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <Plausible
               domain={!!process.env.IS_GENERAL ? 'postiz.com' : 'gitroom.com'}
             >
-              <LayoutContext>
+              <LayoutContext hasLegacySession={cookieStore.has('auth')}>
                 <UtmSaver />
                 {children}
               </LayoutContext>

@@ -190,6 +190,7 @@ describe('the two-step callback keeps the link destination', () => {
   const api = (routes: {
     pages: any[];
     returnURL?: string;
+    publicSelection?: boolean;
     authenticated?: number;
     public?: number;
   }) => {
@@ -201,6 +202,7 @@ describe('the two-step callback keeps the link destination', () => {
           JSON.stringify({
             id: 'integration-1',
             inBetweenSteps: true,
+            publicSelection: routes.publicSelection,
             pages: routes.pages,
             ...(routes.returnURL ? { returnURL: routes.returnURL } : {}),
           }),
@@ -262,6 +264,24 @@ describe('the two-step callback keeps the link destination', () => {
     expect(calls.map((call) => call.url)).toEqual([
       '/integrations/social-connect/facebook',
       '/integrations/provider/integration-1/connect',
+      '/integrations/public/provider/integration-1/connect',
+    ]);
+  });
+
+  it('uses the signed link state for a signed-in recipient', async () => {
+    window.sessionStorage.setItem('auth', 'jwt-b');
+    const calls = api({
+      publicSelection: true,
+      pages: [
+        { id: 'page-2', name: 'Brand page', picture: { data: { url: '' } } },
+      ],
+    });
+    const view = renderContinue('facebook');
+    fireEvent.click(await view.findByText('Brand page'));
+    fireEvent.click(view.getByText('Save'));
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    expect(calls.map(({ url }) => url)).toEqual([
+      '/integrations/social-connect/facebook',
       '/integrations/public/provider/integration-1/connect',
     ]);
   });
@@ -378,6 +398,20 @@ describe('the callback in an ordinary window', () => {
       expect(push).toHaveBeenCalledWith('/launches?msg=Payment required')
     );
     expect(close).not.toHaveBeenCalled();
+  });
+
+  it('returns an authorization failure without letting its message alter the merchant query', async () => {
+    const returnURL = 'https://merchant.example/done?keep=1';
+    vi.stubGlobal(
+      'fetch',
+      respond(409, { returnURL, message: 'Missing read & write' })
+    );
+    renderContinue();
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        returnURL + '&msg=Missing%20read%20%26%20write'
+      )
+    );
   });
 
   it('honours a returnURL without leaving a popup behind', async () => {

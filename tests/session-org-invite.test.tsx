@@ -27,7 +27,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@gitroom/react/helpers/variable.context', () => ({
-  useVariables: () => ({ backendUrl: '', isGeneral }),
+  useVariables: () => ({ backendUrl: '', isGeneral, isSecured: true }),
 }));
 
 vi.mock('@gitroom/react/translation/get.transation.service.client', () => ({
@@ -67,9 +67,9 @@ const reply = (body: unknown, headers: Record<string, string> = {}, status = 200
     headers: { 'content-type': 'application/json', ...headers },
   });
 
-const renderLogin = () =>
+const renderLogin = (hasLegacySession = false) =>
   render(
-    <LayoutContext>
+    <LayoutContext hasLegacySession={hasLegacySession}>
       <Login />
     </LayoutContext>
   );
@@ -125,6 +125,18 @@ describe('a signed-in tab accepting an invitation', () => {
     expect(window.sessionStorage.getItem('auth')).toBe('jwt-a');
     expect(window.localStorage.length).toBe(0);
     expect(document.cookie).not.toContain('showorg=');
+  });
+
+  it('uses a legacy cookie session for an invitation in a tab without an auth header', async () => {
+    query.value = 'org=signed-invite';
+    const request = vi.fn(async () =>
+      reply({ id: 'org-b' }, { showorg: 'org-b' })
+    );
+    vi.stubGlobal('fetch', request);
+    renderLogin(true);
+    await waitFor(() => expect(location.href).toBe('/launches'));
+    expect(joinCalls(request)[0][1]).toMatchObject({ credentials: 'include' });
+    expect(window.sessionStorage.getItem('showorg')).toBe('org-b');
   });
 
   it('returns to a stored returnUrl after accepting the invitation', async () => {

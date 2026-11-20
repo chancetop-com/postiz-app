@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useCallback } from 'react';
+import { createContext, ReactNode, useCallback, useContext } from 'react';
 import { FetchWrapperComponent } from '@gitroom/helpers/utils/custom.fetch';
 import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
 import { useDecisionModal } from '@gitroom/frontend/components/layout/new-modal';
@@ -8,10 +8,14 @@ import { useReturnUrl } from '@gitroom/frontend/app/(app)/auth/return.url.compon
 import { useVariables } from '@gitroom/react/helpers/variable.context';
 import { clearOrgInvite } from '@gitroom/frontend/components/auth/org.invite';
 
-export default function LayoutContext(params: { children: ReactNode }) {
+const LegacySession = createContext(false);
+export const useLegacySession = () => useContext(LegacySession);
+
+type LayoutProps = { children: ReactNode; hasLegacySession?: boolean };
+
+export default function LayoutContext(params: LayoutProps) {
   if (params?.children) {
-    // eslint-disable-next-line react/no-children-prop
-    return <LayoutContextInner children={params.children} />;
+    return <LayoutContextInner {...params} />;
   }
   return <></>;
 }
@@ -35,9 +39,9 @@ export function clearSessionAuth() {
   clearOrgInvite();
 }
 
-function LayoutContextInner(params: { children: ReactNode }) {
+function LayoutContextInner(params: LayoutProps) {
   const returnUrl = useReturnUrl();
-  const { backendUrl, isGeneral } = useVariables();
+  const { backendUrl, isGeneral, isSecured } = useVariables();
   const decision = useDecisionModal();
   const afterRequest = useCallback(
     async (url: string, options: RequestInit, response: Response) => {
@@ -115,8 +119,7 @@ function LayoutContextInner(params: { children: ReactNode }) {
           await deleteDialog(
             "This feature is not available during the trial. You can end the trial now: your plan's first payment is charged today instead of at the end of the trial. Only an admin or the super admin of the organization can end the trial and pay.",
             'End trial and pay now',
-            'Trial',
-
+            'Trial'
           )
         ) {
           window.open('/billing?finishTrial=true', '_blank');
@@ -150,8 +153,22 @@ function LayoutContextInner(params: { children: ReactNode }) {
     []
   );
   return (
-    <FetchWrapperComponent baseUrl={backendUrl} afterRequest={afterRequest}>
-      {params?.children || <></>}
-    </FetchWrapperComponent>
+    <LegacySession.Provider value={!!params.hasLegacySession}>
+      <FetchWrapperComponent
+        baseUrl={backendUrl}
+        afterRequest={afterRequest}
+        beforeRequest={async (_url, options) =>
+          params.hasLegacySession &&
+          isSecured &&
+          !options.credentials &&
+          typeof window !== 'undefined' &&
+          !window.sessionStorage.getItem('auth')
+            ? { ...options, credentials: 'include' }
+            : options
+        }
+      >
+        {params.children}
+      </FetchWrapperComponent>
+    </LegacySession.Provider>
   );
 }

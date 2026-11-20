@@ -72,6 +72,9 @@ const build = ({
       id: 'org-new',
       users: [{ user: { id: 'user-new', email: 'new@example.test' } }],
     }),
+    acceptedInvitation: vi
+      .fn()
+      .mockResolvedValue({ organizationId: 'org-invited' }),
     addUserToOrg: vi.fn().mockResolvedValue({ organizationId: 'org-invited' }),
     getCount: vi.fn().mockResolvedValue(0),
   };
@@ -280,7 +283,12 @@ describe('register and activate', () => {
       getUserByEmail: vi.fn().mockResolvedValue(user),
       activateUser: vi.fn(),
     };
-    const organizationService = { addUserToOrg };
+    const organizationService = {
+      addUserToOrg,
+      acceptedInvitation: vi
+        .fn()
+        .mockResolvedValue({ organizationId: 'org-invited' }),
+    };
     const service = new AuthService(
       userService as never,
       organizationService as never,
@@ -291,6 +299,7 @@ describe('register and activate', () => {
     );
     return {
       service,
+      acceptedInvitation: organizationService.acceptedInvitation,
       addUserToOrg,
       controller: new AuthController(
         service,
@@ -334,6 +343,33 @@ describe('register and activate', () => {
     expect(headers.auth).toBeTruthy();
     expect(headers.showorg).toBe('org-invited');
   });
+
+  it.each([true, false])(
+    'restores only an active accepted membership in a fresh activation tab (active=%s)',
+    async (active) => {
+      const user = {
+        id: 'user-1',
+        email: 'merchant@example.test',
+        activated: false,
+        inviteId: 'invite-1',
+      };
+      const { controller, acceptedInvitation, addUserToOrg } =
+        activationService(user);
+      acceptedInvitation.mockResolvedValue(
+        active ? { organizationId: 'org-invited' } : false
+      );
+      const { response, headers } = recordedResponse();
+      await controller.activate(
+        { cookies: {}, headers: {} } as never,
+        AuthChecker.signJWT(user),
+        undefined as never,
+        response as never
+      );
+      expect(acceptedInvitation).toHaveBeenCalledWith(user.id, user.inviteId);
+      expect(addUserToOrg).not.toHaveBeenCalled();
+      expect(headers.showorg).toBe(active ? 'org-invited' : undefined);
+    }
+  );
 
   it('does not emit showorg on activation for another recipient', async () => {
     const { controller, addUserToOrg } = activationService({
@@ -508,6 +544,9 @@ const loginWithInvite = async (
   const organizationService = {
     createOrgAndUser: vi.fn(),
     addUserToOrg,
+    acceptedInvitation: vi
+      .fn()
+      .mockResolvedValue({ organizationId: 'org-invited' }),
     getCount: vi.fn().mockResolvedValue(0),
   };
   const userService = {

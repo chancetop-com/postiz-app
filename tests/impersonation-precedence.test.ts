@@ -134,6 +134,29 @@ describe('other impersonation readers', () => {
       {} as never
     );
 
+  it('expires the legacy domain cookie when the administrator stops impersonating', async () => {
+    vi.stubEnv('FRONTEND_URL', 'https://dashboard.example.com');
+    vi.stubEnv('NOT_SECURED', '');
+    const response = { clearCookie: vi.fn(), header: vi.fn() };
+    try {
+      await controller().setImpersonate(
+        { ...admin } as never,
+        '',
+        response as never
+      );
+      expect(response.clearCookie).toHaveBeenCalledWith('impersonate', {
+        domain: '.example.com',
+        path: '/',
+        secure: true,
+        httpOnly: true,
+        sameSite: 'none',
+      });
+      expect(response.header).toHaveBeenCalledWith('impersonate', '');
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('/user/self reads the tab header first', async () => {
     const self = await controller().getSelf(
       { ...admin } as never,

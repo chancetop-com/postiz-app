@@ -28,6 +28,7 @@ import { IntegrationRepository } from '@gitroom/nestjs-libraries/database/prisma
 import { IntegrationManager } from '@gitroom/nestjs-libraries/integrations/integration.manager';
 import { EncryptionService } from '@gitroom/nestjs-libraries/services/encryption.service';
 import type { CreatePostDto } from '@gitroom/nestjs-libraries/dtos/posts/create.post.dto';
+import { selectedChannels } from '@gitroom/frontend/components/new-launch/selected.channels';
 import type { Post } from '@prisma/client';
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -336,42 +337,36 @@ suite('selected-channel posts', () => {
     await prisma.$disconnect();
   });
 
-  it('save as draft moves only the ticked channel; the sibling payload keeps it', async () => {
+  it('save as draft sends only checked editor values and leaves sibling schedules running', async () => {
     started = [];
     const beforeA2 = await snapshot(ids.a2);
     const beforeA3 = await snapshot(ids.a3);
     const beforeB1 = await snapshot(ids.b1);
 
-    // what the editor sends when A1 is ticked and A2/A3 are not:
-    // A1 as draft, A2 (QUEUE) as the schedule that keeps its own date, A3
-    // (DRAFT) as the draft that keeps it.
-    await service.createPost(orgA, request('draft', [
+    const edits = [
+      { integration: { id: ids.ia1 }, postId: ids.a1, content: 'a-one edited' },
       {
-        integration: ids.ia1,
-        group: (await postById(ids.a1)).group,
-        postId: ids.a1,
-        content: 'a-one edited',
-        date: future(24),
-      },
-    ]), 'WEB');
-    await service.createPost(orgA, request('schedule', [
-      {
-        integration: ids.ia2,
-        group: (await postById(ids.a2)).group,
+        integration: { id: ids.ia2 },
         postId: ids.a2,
-        content: beforeA2.content,
-        date: new Date(beforeA2.publishDate),
+        content: 'unchecked unsaved edit',
       },
-    ]), 'WEB');
-    await service.createPost(orgA, request('draft', [
       {
-        integration: ids.ia3,
-        group: (await postById(ids.a3)).group,
+        integration: { id: ids.ia3 },
         postId: ids.a3,
-        content: beforeA3.content,
-        date: new Date(beforeA3.publishDate),
+        content: 'another unchecked edit',
       },
-    ]), 'WEB');
+    ];
+    const selected = selectedChannels(edits, new Set([ids.ia1]));
+    const payload = await Promise.all(
+      selected.map(async ({ integration, postId, content }) => ({
+        integration: integration.id,
+        postId,
+        content,
+        group: (await postById(postId)).group,
+        date: future(24),
+      }))
+    );
+    await service.createPost(orgA, request('draft', payload), 'WEB');
 
     const a1 = await postById(ids.a1);
     expect(a1.state).toBe('DRAFT');
@@ -380,10 +375,7 @@ suite('selected-channel posts', () => {
     expect(await snapshot(ids.a2)).toEqual(beforeA2);
     expect(await snapshot(ids.a3)).toEqual(beforeA3);
     expect(await snapshot(ids.b1)).toEqual(beforeB1);
-    // the draft is not queued, the unticked sibling keeps its own schedule
-    await until(() => started.length >= 1);
-    expect(started.filter((run) => run.postId === ids.a1)).toHaveLength(0);
-    expect(started.filter((run) => run.postId === ids.a2)).toHaveLength(1);
+    expect(started).toHaveLength(0);
   });
 
   it('post now publishes the ticked channel only', async () => {

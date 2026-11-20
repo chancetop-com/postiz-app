@@ -17,6 +17,7 @@ import {
 
 interface TwoStepState {
   integrationId: string;
+  publicSelection: boolean;
   onboarding: boolean;
   pages: any[];
   returnURL?: string;
@@ -79,7 +80,7 @@ export const ContinueIntegration: FC<{
     }
     if (provider === 'x') {
       return {
-        state: searchParams.oauth_token || '',
+        state: searchParams.oauth_token || searchParams.denied || '',
         code: searchParams.oauth_verifier || '',
         refresh: searchParams.refresh || '',
       };
@@ -98,7 +99,9 @@ export const ContinueIntegration: FC<{
       return {
         ...searchParams,
         state: searchParams.state || '',
-        code: searchParams.code + '&&&&' + searchParams.device_id,
+        code: searchParams.code
+          ? searchParams.code + '&&&&' + searchParams.device_id
+          : '',
       };
     }
 
@@ -113,7 +116,7 @@ export const ContinueIntegration: FC<{
       };
     }
 
-    return searchParams;
+    return { ...searchParams, code: searchParams.code || '' };
   }, []);
 
   useEffect(() => {
@@ -166,15 +169,24 @@ export const ContinueIntegration: FC<{
         data.status !== HttpStatusCode.Created
       ) {
         errorData = errorData || (await data.json().catch(() => ({})));
-        setErrorMessage(
-          errorData.message || errorData.msg || 'Could not add provider'
-        );
+        const message =
+          errorData.message || errorData.msg || 'Could not add provider';
+        if (errorData.returnURL) {
+          navigateOrShow(
+            `/launches?msg=${encodeURIComponent(message)}`,
+            errorData.returnURL,
+            message
+          );
+          return;
+        }
+        setErrorMessage(message);
         setError(true);
         return;
       }
 
       const {
         inBetweenSteps,
+        publicSelection,
         id,
         onboarding: resOnboarding,
         pages,
@@ -212,9 +224,10 @@ export const ContinueIntegration: FC<{
       }
 
       // If it's a two-step provider, show the selection UI inline
-      if (inBetweenSteps && !searchParams.refresh) {
+      if (inBetweenSteps && (publicSelection || !searchParams.refresh)) {
         setTwoStepState({
           integrationId: id,
+          publicSelection: !!publicSelection,
           onboarding,
           pages: pages || [],
           returnURL,
@@ -242,9 +255,10 @@ export const ContinueIntegration: FC<{
       try {
         // Use public or authenticated endpoint based on the flow
         const logged = !!window.sessionStorage.getItem('auth');
-        const endpoint = logged
-          ? `/integrations/provider/${twoStepState.integrationId}/connect`
-          : `/integrations/public/provider/${twoStepState.integrationId}/connect`;
+        const endpoint =
+          logged && !twoStepState.publicSelection
+            ? `/integrations/provider/${twoStepState.integrationId}/connect`
+            : `/integrations/public/provider/${twoStepState.integrationId}/connect`;
 
         const body = JSON.stringify({ ...modifiedParams, ...data });
         let response: Response;
@@ -263,7 +277,11 @@ export const ContinueIntegration: FC<{
 
         // Logged into another organization than the one the channel is added
         // to (a connect link or an invite link): save it by the connection state
-        if (logged && response.status === HttpStatusCode.NotFound) {
+        if (
+          logged &&
+          !twoStepState.publicSelection &&
+          response.status === HttpStatusCode.NotFound
+        ) {
           response = await fetch(
             `/integrations/public/provider/${twoStepState.integrationId}/connect`,
             {
@@ -281,6 +299,16 @@ export const ContinueIntegration: FC<{
           // Keep the popup on the selection: the binding was not written, so
           // reporting completion here would show a connection that does not
           // exist. The chooser stays usable for another attempt.
+          if (twoStepState.publicSelection && twoStepState.returnURL) {
+            const message =
+              errorData.message || 'Could not complete channel selection';
+            navigateOrShow(
+              `/launches?msg=${encodeURIComponent(message)}`,
+              twoStepState.returnURL,
+              message
+            );
+            return;
+          }
           setTwoStepError(
             errorData.message ||
               t(

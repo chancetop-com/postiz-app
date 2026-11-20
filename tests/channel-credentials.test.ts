@@ -8,6 +8,7 @@ import { IntegrationRepository } from '@gitroom/nestjs-libraries/database/prisma
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
 import { RefreshIntegrationService } from '@gitroom/nestjs-libraries/integrations/refresh.integration.service';
 import { IntegrationManager } from '@gitroom/nestjs-libraries/integrations/integration.manager';
+import { BadBody } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import { InstagramProvider } from '@gitroom/nestjs-libraries/integrations/social/instagram.provider';
 import { InstagramStandaloneProvider } from '@gitroom/nestjs-libraries/integrations/social/instagram.standalone.provider';
 import { LinkedinProvider } from '@gitroom/nestjs-libraries/integrations/social/linkedin.provider';
@@ -386,6 +387,42 @@ describe('rotating credentials of already-bound channels', () => {
     expect(instagram.tokenExpiration).toBe(previousExpiry);
     expect(instagram.refreshNeeded).toBe(true);
     expect(notifications).toHaveLength(1);
+  });
+
+  it('rotates LinkedIn credentials only for live siblings in the same organization', async () => {
+    const store = createStore();
+    const root = 'linkedin-account';
+    const channel = (org: string) =>
+      row({
+        organizationId: org,
+        rootInternalId: root,
+        providerIdentifier: 'linkedin-page',
+      });
+    const own = channel('org-1'),
+      sibling = channel('org-1'),
+      other = channel('org-2'),
+      deleted = channel('org-1');
+    deleted.deletedAt = new Date();
+    store.rows.push(own, sibling, other, deleted);
+    const { repository } = makeService(store, {});
+    await repository.createOrUpdateIntegration(
+      undefined,
+      true,
+      'org-1',
+      own.name,
+      undefined,
+      'social',
+      own.internalId,
+      'linkedin-page',
+      'new-token',
+      'new-refresh'
+    );
+    expect([own.token, sibling.token, other.token, deleted.token]).toEqual([
+      'new-token',
+      'new-token',
+      'old-access-token',
+      'old-access-token',
+    ]);
   });
 
   it('keeps the same account on another organization untouched', async () => {
@@ -921,6 +958,35 @@ describe('provider-specific credential reads', () => {
     vi.stubGlobal('fetch', fetchMock);
     return calls;
   };
+
+  it('reports an already published Instagram container with an unknown media ID for manual verification', async () => {
+    const provider = new InstagramProvider();
+    const platform = vi
+      .spyOn(provider as any, 'fetch')
+      .mockImplementation(async (url) => {
+        if (String(url).includes('media_publish?'))
+          throw new BadBody('instagram', '', '', 'action is blocked');
+        if (String(url).includes('/container-A?'))
+          return { json: async () => ({ status_code: 'PUBLISHED' }) };
+        throw new Error('Unexpected request');
+      });
+    await expect(
+      provider.finalizePost(
+        'test-token',
+        {
+          postType: 'single',
+          type: 'graph.facebook.com',
+          containers: ['container-A'],
+        },
+        row() as any
+      )
+    ).rejects.toMatchObject({
+      type: 'bad_body',
+      nonRetryable: true,
+      message: expect.stringContaining('could not be confirmed'),
+    });
+    expect(platform).toHaveBeenCalledTimes(2);
+  });
 
   it('reads an old Instagram single token as the whole access token', async () => {
     const calls = instagramFetch();
@@ -1846,6 +1912,46 @@ databaseSuite('real PostgreSQL credential matrix', () => {
 
   const raw = (id: string) =>
     prisma.integration.findUniqueOrThrow({ where: { id } });
+
+  it('serializes public bindings competing for the final channel slot', async () => {
+    const org = 'ticket11-quota-' + pid;
+    await prisma.organization.create({ data: { id: org, name: 'Quota test' } });
+    try {
+      const bind = (id: string) =>
+        repository.createOrUpdateIntegration(
+          undefined,
+          false,
+          org,
+          id,
+          undefined,
+          'social',
+          id,
+          'youtube',
+          'token',
+          undefined,
+          undefined,
+          undefined,
+          false,
+          undefined,
+          undefined,
+          undefined,
+          { rootInternalId: 'root', channelLimit: 1 }
+        );
+      const results = await Promise.allSettled([bind('first'), bind('second')]);
+      expect(
+        results.filter(({ status }) => status === 'fulfilled')
+      ).toHaveLength(1);
+      expect(results.find(({ status }) => status === 'rejected')).toMatchObject(
+        { reason: { status: 400 } }
+      );
+      expect(
+        await prisma.integration.count({ where: { organizationId: org } })
+      ).toBe(1);
+    } finally {
+      await prisma.integration.deleteMany({ where: { organizationId: org } });
+      await prisma.organization.delete({ where: { id: org } });
+    }
+  });
 
   it('lists every old binding from the repository, page and public API without credentials', async () => {
     const rows = await repository.getIntegrationsList(orgA);

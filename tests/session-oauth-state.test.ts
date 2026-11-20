@@ -229,7 +229,10 @@ describe('standard OAuth state validation', () => {
     delete process.env.NOT_SECURED;
     const addUserToOrg = vi.fn().mockResolvedValue(false);
     const { service } = build(
-      { addUserToOrg },
+      {
+        addUserToOrg,
+        acceptedInvitation: async () => ({ organizationId: 'org-invited' }),
+      },
       { id: 'user-1', email: 'merchant@example.test', inviteId: 'invite-1' }
     );
 

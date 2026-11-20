@@ -141,6 +141,7 @@ model UsedCodes {
 }
 
 model UserOrganization {
+  inviteId       String?
   id             String       @id @default(uuid())
   userId         String
   organizationId String

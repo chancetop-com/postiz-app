@@ -880,6 +880,7 @@
   "post_now_choose_channels": "请选择要立即发布的频道。",
   "schedule_post_choose_channels": "请选择要安排的频道。",
   "update_post_choose_channels": "请选择要发布或重新安排的频道。",
+  "channel_popup_blocked": "请允许此网站打开弹窗，然后重试。",
   "unticked_channels_saved_note": "未勾选的频道会保留原状态，但您的编辑仍会保存。",
   "published": "已发布",
   "scheduled": "已安排",

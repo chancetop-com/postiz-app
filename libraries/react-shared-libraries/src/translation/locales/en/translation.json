@@ -882,6 +882,7 @@
   "post_now_choose_channels": "Choose the channels to post now.",
   "schedule_post_choose_channels": "Choose the channels to schedule.",
   "update_post_choose_channels": "Choose the channels to post or reschedule.",
+  "channel_popup_blocked": "Allow pop-ups for this site and try again.",
   "unticked_channels_saved_note": "Unticked channels keep their status, but your edits are still saved to them.",
   "published": "Published",
   "scheduled": "Scheduled",

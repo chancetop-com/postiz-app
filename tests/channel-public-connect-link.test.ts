@@ -257,13 +257,11 @@ describe('start and retry', () => {
 
     expect(first.url).toBe('https://platform.example/oauth?state=state-1');
     expect(second.url).toBe('https://platform.example/oauth?state=state-2');
-    expect(redis.store.get('organization:state-1')?.value).toBe('org-a');
-    expect(redis.store.get('organization:state-2')?.value).toBe('org-a');
-    expect(redis.store.get('login:state-1')?.value).toBe('verifier-1');
-    expect(redis.store.get('login:state-2')?.value).toBe('verifier-2');
-    expect(redis.store.get('redirect:state-1')?.value).toBe(
-      'https://merchant.example/done?keep=1'
-    );
+    for (const n of [1, 2]) {
+      expect(
+        JSON.parse(redis.store.get(`connectOAuth:state-${n}`)!.value)
+      ).toEqual({ token, codeVerifier: `verifier-${n}` });
+    }
     // retrying inside the hour does not consume the link
     expect(redis.store.get(`connectLink:${token}`)?.value).toBe(before);
   });
@@ -366,6 +364,115 @@ describe('the provider callback', () => {
       } as any)
     ).rejects.toMatchObject({ status: 400 });
     expect(integrationService.createOrUpdateIntegration).not.toHaveBeenCalled();
+  });
+});
+
+describe('link-bound page selection', () => {
+  const setup = async () => {
+    const auth = {
+      id: 'root',
+      name: 'Account',
+      username: 'account',
+      accessToken: 'root-token',
+      refreshToken: 'refresh',
+    };
+    const platform = {
+      ...provider(),
+      identifier: 'youtube',
+      isBetweenSteps: true,
+      authenticate: vi.fn(async () => auth),
+      pages: vi.fn(async () => [
+        { id: 'page-1', name: 'One', access_token: 'private' },
+      ]),
+      fetchPageInformation: vi.fn(async () => ({
+        id: 'page-1',
+        name: 'One',
+        access_token: 'page-token',
+        username: 'one',
+        picture: '',
+      })),
+    };
+    const mgr = {
+      ...manager(['youtube']),
+      getSocialIntegration: () => platform,
+    };
+    const repo = repository();
+    repo.createOrUpdateIntegration.mockResolvedValue({ id: 'bound' });
+    const refresh = {
+      startRefreshWorkflow: vi.fn().mockResolvedValue(undefined),
+    };
+    const instance = new IntegrationService(
+      repo as never,
+      {} as never,
+      mgr,
+      {} as never,
+      refresh as never,
+      {} as never,
+      {
+        encrypt: async (s: string) => s,
+        decrypt: async (s: string) => s,
+      } as never
+    );
+    const quota = {
+      check: async () => ({ can: () => true }),
+      getPackageOptions: async () => ({ options: { channel: 1 } }),
+    };
+    const controller = new NoAuthIntegrationsController(
+      mgr,
+      instance,
+      refresh as never,
+      { getOrgById: async () => ({ id: 'org-a' }) } as never,
+      quota as never
+    );
+    const returnURL = 'https://merchant.example/done?keep=1';
+    const { url } = await create(instance, 'youtube', returnURL);
+    const token = url.split('/').pop()!;
+    const callback = (state: string, route = 'youtube', code = 'consent') =>
+      controller.connectSocialMedia(route, { state, code, timezone: '0' });
+    return { token, returnURL, platform, repo, controller, callback };
+  };
+
+  it('allows an abandoned chooser to restart and commits only the confirmed page', async () => {
+    const { token, repo, controller, callback, platform } = await setup();
+    await controller.startConnectLink(token);
+    await expect(callback('state-1', 'facebook')).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(platform.authenticate).not.toHaveBeenCalled();
+    const first = await callback('state-1');
+    expect(first.pages).toEqual([{ id: 'page-1', name: 'One' }]);
+    await controller.startConnectLink(token);
+    const second = await callback('state-2');
+    expect(repo.createOrUpdateIntegration).not.toHaveBeenCalled();
+    await expect(
+      controller.saveProviderPage(first.id, { state: 'state-2', id: 'page-1' })
+    ).rejects.toMatchObject({ status: 400 });
+    await controller.saveProviderPage(second.id, {
+      state: 'state-2',
+      id: 'page-1',
+    });
+    expect(repo.createOrUpdateIntegration.mock.calls[0]).toEqual(
+      expect.arrayContaining([
+        'org-a',
+        'page-1',
+        'page-token',
+        { rootInternalId: 'root', channelLimit: undefined },
+      ])
+    );
+    await expect(
+      controller.saveProviderPage(second.id, { state: 'state-2', id: 'page-1' })
+    ).rejects.toMatchObject({ status: 400 });
+    expect(repo.createOrUpdateIntegration).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns the configured address on a cancelled provider callback', async () => {
+    const { token, returnURL, controller, callback, platform } = await setup();
+    await controller.startConnectLink(token);
+    await expect(callback('state-1', 'youtube', '')).rejects.toMatchObject({
+      status: 400,
+      response: { returnURL },
+    });
+    expect(platform.authenticate).not.toHaveBeenCalled();
   });
 });
 

@@ -52,6 +52,58 @@ export class NoAuthIntegrationsController {
     @Param('integration') integration: string,
     @Body() body: ConnectIntegrationDto
   ) {
+    const stateKey = `connectOAuth:${body.state}`;
+    const value = await ioRedis.get(stateKey);
+    if (!value) return this.finishOAuth(integration, body);
+    const { token, codeVerifier } = JSON.parse(value);
+    const link = await this._integrationService.loadConnectLink(token);
+    if (integration !== link.integration || !(await ioRedis.del(stateKey))) {
+      throw new HttpException(
+        'Invalid connection state for this provider',
+        400
+      );
+    }
+    try {
+      if (!body.code)
+        throw new HttpException('Authorization was cancelled', 400);
+      return await this.finishOAuth(integration, body, {
+        ...link,
+        token,
+        codeVerifier,
+      });
+    } catch (err) {
+      if (!link.redirectUrl) throw err;
+      const status =
+        err instanceof HttpException
+          ? err.getStatus()
+          : err instanceof NotEnoughScopes
+          ? 409
+          : 500;
+      const message =
+        err instanceof HttpException || err instanceof NotEnoughScopes
+          ? err.message
+          : 'Could not connect the channel';
+      throw new HttpException({ message, returnURL: link.redirectUrl }, status);
+    }
+  }
+
+  private async channelLimit(org: string) {
+    if (!process.env.STRIPE_PUBLISHABLE_KEY) return undefined;
+    const { options, subscription } =
+      await this._permissionsService.getPackageOptions(org);
+    return Math.max(options.channel || 0, subscription?.totalChannels || 0);
+  }
+
+  private async finishOAuth(
+    integration: string,
+    body: ConnectIntegrationDto,
+    link?: {
+      org: string;
+      token: string;
+      codeVerifier: string;
+      redirectUrl?: string;
+    }
+  ) {
     if (
       !this._integrationManager
         .getAllowedSocialsIntegrations()
@@ -63,7 +115,9 @@ export class NoAuthIntegrationsController {
     const integrationProvider =
       this._integrationManager.getSocialIntegration(integration);
 
-    const getCodeVerifier = integrationProvider.customFields
+    const getCodeVerifier = link
+      ? link.codeVerifier
+      : integrationProvider.customFields
       ? 'none'
       : await ioRedis.get(`login:${body.state}`);
     if (!getCodeVerifier) {
@@ -74,14 +128,14 @@ export class NoAuthIntegrationsController {
       );
     }
 
-    const organization = await ioRedis.get(`organization:${body.state}`);
-    if (!organization) {
-      throw new Error('Organization not found');
-    }
-
+    const organization =
+      link?.org ?? (await ioRedis.get(`organization:${body.state}`));
+    if (!organization) throw new HttpException('Organization not found', 400);
     const org = await this._organizationService.getOrgById(organization);
+    if (!org || org.deletedAt)
+      throw new HttpException('Organization not found', 404);
 
-    if (!integrationProvider.customFields) {
+    if (!link && !integrationProvider.customFields) {
       await ioRedis.del(`login:${body.state}`);
     }
 
@@ -93,7 +147,9 @@ export class NoAuthIntegrationsController {
       await ioRedis.del(`external:${body.state}`);
     }
 
-    const refresh = await ioRedis.get(`refresh:${body.state}`);
+    const refresh = link
+      ? undefined
+      : await ioRedis.get(`refresh:${body.state}`);
     if (refresh) {
       await ioRedis.del(`refresh:${body.state}`);
     }
@@ -120,7 +176,7 @@ export class NoAuthIntegrationsController {
           {
             code: body.code,
             codeVerifier: getCodeVerifier,
-            refresh: body.refresh,
+            refresh: link ? undefined : body.refresh,
           },
           details ? JSON.parse(details) : undefined
         );
@@ -221,6 +277,26 @@ export class NoAuthIntegrationsController {
       throw new HttpException('', 412);
     }
 
+    if (link && integrationProvider.isBetweenSteps) {
+      const pending = await this._integrationService.stageConnectLinkPages(
+        link.token,
+        body.state,
+        integrationProvider,
+        {
+          id,
+          name: validName,
+          accessToken,
+          refreshToken,
+          expiresIn,
+          username,
+          picture,
+          additionalSettings,
+        },
+        +body.timezone
+      );
+      return { ...pending, onboarding: false, returnURL: link.redirectUrl };
+    }
+
     if (refresh && String(id) !== String(refresh)) {
       // A reconnect that returns a different id is either the wrong account or
       // a channel migrating to another provider (MIGRATE_PROVIDERS) - the two
@@ -260,7 +336,7 @@ export class NoAuthIntegrationsController {
         expiresIn,
         username,
         refresh ? false : integrationProvider.isBetweenSteps,
-        body.refresh,
+        link ? undefined : body.refresh,
         +body.timezone,
         details
           ? AuthService.fixedEncryption(details)
@@ -272,7 +348,8 @@ export class NoAuthIntegrationsController {
           ? AuthService.fixedEncryption(
               Buffer.from(body.code, 'base64').toString()
             )
-          : undefined
+          : undefined,
+        ...(link ? [{ channelLimit: await this.channelLimit(org.id) }] : [])
       );
 
     this._refreshIntegrationService
@@ -284,6 +361,12 @@ export class NoAuthIntegrationsController {
     // Fetch pages if this is a two-step provider and not a refresh
     let pages: any[] = [];
     if (integrationProvider.isBetweenSteps && !refresh) {
+      await ioRedis.set(
+        `pendingIntegration:${body.state}`,
+        createUpdate.id,
+        'EX',
+        3600
+      );
       try {
         // Check which method the provider uses (pages or companies)
         const fetchMethod =
@@ -321,7 +404,8 @@ export class NoAuthIntegrationsController {
       await ioRedis.del(`webhookUrl:${body.state}`);
     }
 
-    const returnURL = await ioRedis.get(`redirect:${body.state}`);
+    const returnURL =
+      link?.redirectUrl ?? (await ioRedis.get(`redirect:${body.state}`));
     if (returnURL) {
       await ioRedis.del(`redirect:${body.state}`);
     }
@@ -360,14 +444,36 @@ export class NoAuthIntegrationsController {
       throw new Error('Invalid state');
     }
 
-    const organization = await ioRedis.get(`organization:${body.state}`);
-    if (!organization) {
-      throw new Error('Organization not found');
+    if (id.startsWith('selection-')) {
+      return this._integrationService.completeConnectLinkPage(
+        body.state,
+        id,
+        String(body.page ?? body.id),
+        (org) => this.channelLimit(org)
+      );
     }
-
-    const org = await this._organizationService.getOrgById(organization);
-
-    return this._integrationService.saveProviderPage(org.id, id, body);
+    const organization = await ioRedis.get(`organization:${body.state}`);
+    const pendingKey = `pendingIntegration:${body.state}`;
+    if (
+      !organization ||
+      (await ioRedis.get(pendingKey)) !== id ||
+      !(await ioRedis.del(pendingKey))
+    ) {
+      throw new HttpException(
+        'This selection expired. Open the connection link again.',
+        400
+      );
+    }
+    try {
+      return await this._integrationService.saveProviderPage(
+        organization,
+        id,
+        body
+      );
+    } catch (err) {
+      await ioRedis.set(pendingKey, id, 'EX', 3600);
+      throw err;
+    }
   }
 
   // The page of a connect link (POST /public/v1/integrations/connect), the

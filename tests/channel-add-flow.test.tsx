@@ -21,8 +21,9 @@ vi.mock('next/navigation', () => ({
 vi.mock('@gitroom/react/helpers/variable.context', () => ({
   useVariables: () => variables,
 }));
+const showToast = vi.fn();
 vi.mock('@gitroom/react/toaster/toaster', () => ({
-  useToaster: () => ({ show: vi.fn() }),
+  useToaster: () => ({ show: showToast }),
 }));
 const closeAll = vi.fn();
 vi.mock('@gitroom/frontend/components/layout/new-modal', () => ({
@@ -91,6 +92,7 @@ beforeEach(() => {
   relaySearch = '';
   push.mockReset();
   closeAll.mockReset();
+  showToast.mockReset();
   window.sessionStorage.clear();
   variables = { isGeneral: false, extensionId: '', backendUrl: '' };
 });
@@ -207,7 +209,6 @@ describe('adding a channel inside the parent application iframe', () => {
 
   it('leaves the iframe in place when the popup is blocked', async () => {
     const location = stubLocation();
-    // baseline: a blocked popup is not reopened or retried, the modal still closes
     vi.spyOn(window, 'open').mockImplementation((() => null) as any);
     vi.stubGlobal(
       'fetch',
@@ -223,7 +224,13 @@ describe('adding a channel inside the parent application iframe', () => {
     const { container } = renderAdd();
     clickTile(container, '/icons/platforms/linkedin.png');
 
-    await waitFor(() => expect(closeAll).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith(
+        expect.stringContaining('pop-ups'),
+        'warning'
+      )
+    );
+    expect(closeAll).not.toHaveBeenCalled();
     expect(location.href).toBe('http://localhost:4200/launches');
   });
 

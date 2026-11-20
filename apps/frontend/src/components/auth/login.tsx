@@ -1,6 +1,7 @@
 'use client';
 
 import { useForm, SubmitHandler, FormProvider } from 'react-hook-form';
+import { useLegacySession } from '@gitroom/frontend/components/layout/layout.context';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import Link from 'next/link';
 import { Button } from '@gitroom/react/form/button';
@@ -31,6 +32,7 @@ type Inputs = {
   provider: 'LOCAL';
 };
 export function Login() {
+  const hasLegacySession = useLegacySession();
   const t = useT();
   const searchParams = useSearchParams();
   const inviteFromUrl = searchParams?.get('org') || null;
@@ -65,7 +67,10 @@ export function Login() {
     if (!invite || typeof window === 'undefined') {
       return;
     }
-    if (!window.sessionStorage.getItem('auth') || acceptingInvite.current) {
+    if (
+      (!window.sessionStorage.getItem('auth') && !hasLegacySession) ||
+      acceptingInvite.current
+    ) {
       return;
     }
 
@@ -88,7 +93,7 @@ export function Login() {
         acceptingInvite.current = false;
       }
     })();
-  }, [invite, fetchData, isGeneral, getAndClear]);
+  }, [invite, fetchData, isGeneral, getAndClear, hasLegacySession]);
   const resolver = useMemo(() => {
     return classValidatorResolver(LoginUserDto);
   }, []);

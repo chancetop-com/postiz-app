@@ -404,6 +404,27 @@ export class OrganizationRepository {
     });
   }
 
+  async acceptedInvitation(
+    userId: string,
+    inviteId: string,
+    organizationId?: string
+  ) {
+    const membership = await this._userOrg.model.userOrganization.findFirst({
+      where: {
+        userId,
+        disabled: false,
+        organization: { deletedAt: null },
+        // Older memberships lack inviteId. A signed target and the user's
+        // matching inviteId still identify the existing membership.
+        ...(organizationId
+          ? { organizationId, OR: [{ inviteId }, { inviteId: null }] }
+          : { inviteId }),
+      },
+      select: { organizationId: true },
+    });
+    return membership || false;
+  }
+
   async addUserToOrg(
     userId: string,
     id: string,
@@ -450,24 +471,19 @@ export class OrganizationRepository {
       return false;
     }
 
-    const create = await this._userOrg.model.userOrganization.create({
-      data: {
-        role,
-        userId,
-        organizationId: orgId,
-      },
-    });
-
     await this._user.model.user.update({
       where: {
         id: userId,
       },
       data: {
         inviteId: id,
+        organizations: {
+          create: { role, organizationId: orgId, inviteId: id },
+        },
       },
     });
 
-    return create;
+    return { organizationId: orgId };
   }
 
   async createOrgAndUser(
