@@ -6,6 +6,10 @@
 
 **Status:** resolved
 
+**Assignee:** chancetio (agent implement-spec)
+
+**Claimed:** 2026-11-20
+
 **Source:** [升级规格](../../postiz-v2.26.0-wayfinder/spec.md) · [在途任务与队列兼容](../../postiz-v2.26.0-wayfinder/assets/upgrade-data.md)
 
 - [x] 用候选 bundle 回放定制 v2.25.3 的隔离历史及既有更早样本，覆盖 V101/V102、V112 和旧子任务，记录 bundle 及样本版本。
@@ -15,7 +19,17 @@
 
 ## Answer
 
-2026-11-20，分支 `codex/ticket-12-temporal-continuity`（实现提交 `06229790`，合入集成分支 `40190719`）。候选版本既能回放旧历史，也能在真实隔离 Temporal 中由编译后的候选 worker 接续执行。演练位于 `.scratch/postiz-v2.26.0-implementation/rehearsals/12/`，只替换平台与邮件边界；产品代码未改。
+2026-11-20 合入 `postiz-v2.26.0-integration`。候选版本既能回放旧历史，也能在真实隔离 Temporal 中由编译后的候选 worker 接续执行，无业务取舍需上报。演练位于 `.scratch/postiz-v2.26.0-implementation/rehearsals/12/`，只替换平台与邮件边界；产品代码未改。
+
+### 引用
+
+| 项 | 值 |
+| --- | --- |
+| 执行起点 | `129d9c41`（`postiz-v2.26.0-integration`，工作区干净） |
+| 票分支 | `codex/ticket-12-temporal-continuity` @ `f350f60b`（实现 `06229790`、文档 `476aeb8b`） |
+| 合并提交 | `84d6c401`，父提交 `129d9c41` 与 `f350f60b` |
+| 合并方式 | `git merge --no-ff`；无冲突、无冲突标记；02–11 行为未改 |
+| 祖先校验 | `06229790`、`476aeb8b`、`f350f60b`、`129d9c41` 均为 HEAD 祖先 |
 
 ### 回放（bundle 与样本版本）
 
@@ -45,6 +59,8 @@
 | `compat-provider-queue` | `COMPAT_WORKFLOW_QUEUES=bluesky` 时 `bluesky` 有 workflow poller（7）且 `main` 有（9），未列出的 `x` 为 0；workflow task queue 为 `bluesky` 的旧 V102 完成并发布 ×1；无 compat 时 provider 队列仍为 activity-only |
 | `missing-scan` | `missingPostWorkflow` 首轮扫描：已删除、已 PUBLISHED、扫描加载后被其他 worker 改成 PUBLISHED 的三类帖子均不派发；仍为 QUEUE 的过期帖以 `post_<postId>` signalWithStart V112 并发布 ×1 |
 
+平台/邮件替身总账：V101 `post` 1；V102 `post` 1 + `postComment` 1；重复父子 `post` 2；V112 pending/check/finalize 1/1/1、阻塞 `post` 0；refresh 1；邮件 2；compat `post` 1；missing scan `postPending` 1。全部指向合成 `bluesky` 渠道，无重复调用；除有意重复的子任务外没有第二次发布。V101、V102（根/评论）与 V112 的 `publishDate` ISO 串执行前后一致，V112 组织 `timezone=480`/`Asia/Shanghai` 未在工作流侧换算。
+
 维护扫描的“二次读取”用预加载钩子模拟并发状态变化：仓库首次查询后把标记帖改为 PUBLISHED，activity 的 `getPostState` 读回 PUBLISHED 后跳过；同一 activity 对仍为 QUEUE 的帖子派发 V112。
 
 ### 载荷、队列与业务 ID
@@ -59,7 +75,7 @@
 | 命令 | 结果 |
 | --- | --- |
 | `pnpm typecheck` | 通过（frontend / backend / orchestrator） |
-| `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTimeout=20000` | 62 文件 / 672 用例通过，13 跳过（含本票新增 6 条结构断言） |
+| `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTimeout=20000` | **63 文件 / 685 用例全部通过**（0 skipped，含本票新增 `tests/temporal-inflight-continuity.test.ts` 6 条结构断言） |
 | `run.mjs replay` | 16/16 |
 | `run.mjs live` | 8/8 场景、94/94 断言 |
 | `run.mjs all` | replay + live 均通过 |
