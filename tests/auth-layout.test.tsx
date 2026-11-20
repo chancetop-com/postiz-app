@@ -30,6 +30,10 @@ vi.mock('next/dynamic', () => ({
   default: () => () => null,
 }));
 
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 vi.mock('@gitroom/frontend/components/ui/logo-text.component', () => ({
   LogoTextComponent: () => <span>logo text</span>,
 }));

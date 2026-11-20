@@ -113,6 +113,7 @@ const bootMain = async (): Promise<Boot> => {
     use: vi.fn(),
     useGlobalPipes: vi.fn(),
     useGlobalFilters: vi.fn(),
+    getHttpServer: vi.fn(() => ({})),
   };
   let releaseListen: () => void = () => {};
   const listened = new Promise<void>((resolve) => {
