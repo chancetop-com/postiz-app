@@ -31,7 +31,13 @@ const ChannelList = () => {
   return (
     <ul>
       {data.map((integration: any) => (
-        <li key={integration.id}>{integration.identifier}</li>
+        <li
+          key={integration.id}
+          data-internal-id={integration.internalId}
+          data-refresh-needed={String(!!integration.refreshNeeded)}
+        >
+          {integration.identifier}
+        </li>
       ))}
     </ul>
   );
@@ -108,6 +114,64 @@ describe('a channel list refreshed by the popup message', () => {
         'linkedin',
         'instagram-standalone',
       ])
+    );
+  });
+
+  it('reads the refreshed status from the binding list, never from a credential', async () => {
+    let integrations = [
+      {
+        id: 'integration-1',
+        internalId: 'synthetic-linkedin-account',
+        identifier: 'linkedin',
+        refreshNeeded: true,
+      },
+      {
+        id: 'integration-2',
+        internalId: 'synthetic-tumblr-account',
+        identifier: 'tumblr',
+        refreshNeeded: false,
+      },
+    ];
+    const payloads: Array<Record<string, unknown>> = [];
+    const fetchMock = vi.fn(async () => {
+      payloads.push({ integrations });
+      return new Response(JSON.stringify({ integrations }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { container } = renderList();
+    await waitFor(() =>
+      expect(listings(container)).toEqual(['linkedin', 'tumblr'])
+    );
+
+    const items = Array.from(container.querySelectorAll('li'));
+    expect(items[0].getAttribute('data-internal-id')).toBe(
+      'synthetic-linkedin-account'
+    );
+    expect(items[0].getAttribute('data-refresh-needed')).toBe('true');
+    expect(items[1].getAttribute('data-internal-id')).toBe(
+      'synthetic-tumblr-account'
+    );
+    expect(items[1].getAttribute('data-refresh-needed')).toBe('false');
+
+    // the page render path only receives the list fields it renders; the
+    // credential columns the repository omits are not in the payload
+    const serialized = JSON.stringify(payloads);
+    expect(serialized).not.toContain('synthetic-access');
+    expect(serialized).not.toContain('synthetic-refresh');
+
+    integrations = [
+      { ...integrations[0], refreshNeeded: false },
+      integrations[1],
+    ];
+    announce();
+
+    await waitFor(() =>
+      expect(
+        container
+          .querySelectorAll('li')[0]
+          .getAttribute('data-refresh-needed')
+      ).toBe('false')
     );
   });
 });

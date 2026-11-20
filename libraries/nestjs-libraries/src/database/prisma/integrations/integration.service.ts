@@ -353,6 +353,14 @@ export class IntegrationService {
       const data = await this.refreshToken(provider, integration.refreshToken!);
 
       if (!data) {
+        // A per-channel refresh may have rotated this row between the batch
+        // snapshot and our own provider call. The provider then rejects the
+        // old refresh token even though the channel is healthy; reuse the
+        // winner instead of flagging a channel the merchant just fixed.
+        if (await this.reuseParallelRefresh(integration)) {
+          continue;
+        }
+
         const flagged = await this._integrationRepository.refreshNeeded(
           integration.organizationId,
           integration.id
@@ -386,6 +394,40 @@ export class IntegrationService {
         expiresIn
       );
     }
+  }
+
+  // Same reuse rule as the per-channel refresh: wait briefly for the parallel
+  // writer, then accept only a rotated, unexpired credential of the same
+  // channel. A broken channel never becomes "fresh" by reading it again.
+  private async reuseParallelRefresh(integration: Integration) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const stored = await this._integrationRepository.getIntegrationById(
+        integration.organizationId,
+        integration.id
+      );
+
+      if (
+        stored &&
+        !stored.refreshNeeded &&
+        !stored.inBetweenSteps &&
+        !stored.deletedAt &&
+        stored.internalId === integration.internalId &&
+        stored.providerIdentifier === integration.providerIdentifier &&
+        stored.refreshToken &&
+        stored.refreshToken !== integration.refreshToken &&
+        stored.token !== integration.token &&
+        stored.tokenExpiration &&
+        stored.tokenExpiration.getTime() > Date.now()
+      ) {
+        return true;
+      }
+
+      if (attempt < 2) {
+        await timer(250 * (attempt + 1));
+      }
+    }
+
+    return false;
   }
 
   async disableChannel(org: string, id: string) {
