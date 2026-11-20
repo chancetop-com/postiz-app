@@ -64,19 +64,12 @@ export class AuthService {
           userAgent
         );
 
-        this._attributionService
-          .lead(create.users[0].user, body.attribution)
-          .catch((err) => {});
+        this._recordLead(create.users[0].user, body.attribution);
 
-        const addedOrg =
-          addToOrg && typeof addToOrg !== 'boolean'
-            ? await this._organizationService.addUserToOrg(
-                create.users[0].user.id,
-                addToOrg.id,
-                addToOrg.orgId,
-                addToOrg.role
-              )
-            : false;
+        const addedOrg = await this.acceptInvite(
+          create.users[0].user,
+          this.asOrgInvite(addToOrg)
+        );
 
         const obj = { addedOrg, jwt: await this.signJwt(create.users[0].user) };
         await this._emailService.sendEmailSync(
@@ -98,15 +91,10 @@ export class AuthService {
       // unactivated. Activation remains required to actually use it: the throw
       // below (and the auth middleware) keep an unactivated user out until they
       // verify their email.
-      const addedOrg =
-        addToOrg && typeof addToOrg !== 'boolean'
-          ? await this._organizationService.addUserToOrg(
-              user.id,
-              addToOrg.id,
-              addToOrg.orgId,
-              addToOrg.role
-            )
-          : false;
+      const addedOrg = await this.acceptInvite(
+        user,
+        this.asOrgInvite(addToOrg)
+      );
 
       if (!user.activated) {
         throw new Error('User is not activated');
@@ -122,16 +110,81 @@ export class AuthService {
       userAgent
     );
 
-    const addedOrg =
-      addToOrg && typeof addToOrg !== 'boolean'
-        ? await this._organizationService.addUserToOrg(
-            user.id,
-            addToOrg.id,
-            addToOrg.orgId,
-            addToOrg.role
-          )
-        : false;
+    const addedOrg = await this.acceptInvite(
+      user,
+      this.asOrgInvite(addToOrg)
+    );
     return { addedOrg, jwt: await this.signJwt(user) };
+  }
+
+  private asOrgInvite(
+    addToOrg?: boolean | { orgId: string; role: 'USER' | 'ADMIN'; id: string }
+  ) {
+    return addToOrg && typeof addToOrg !== 'boolean' ? addToOrg : false;
+  }
+
+  /**
+   * Accept a signed team invitation for one account.
+   *
+   * Every issued invitation names its recipient. The signed payload alone is a
+   * bearer token, so the email must match the account that is actually signing
+   * in (case-insensitively). An invitation without a recipient email cannot be
+   * matched to an account and is not honoured.
+   *
+   * `inviteId` is written on the user when the membership is created. Seeing it
+   * again for the same invitation means this account already accepted it --
+   * notably an unactivated user whose membership was recorded before the
+   * activation gate. Re-presenting that still-valid invitation selects the
+   * invited organisation for this tab, while a different invitation for an
+   * existing member changes nothing.
+   */
+  async acceptInvite(
+    user: { id: string; email?: string | null; inviteId?: string | null },
+    invite: false | { email?: string; orgId: string; role: 'USER' | 'ADMIN'; id: string }
+  ) {
+    if (!invite || !this.inviteMatchesEmail(invite, user.email)) {
+      return false;
+    }
+
+    const addedOrg = await this._organizationService.addUserToOrg(
+      user.id,
+      invite.id,
+      invite.orgId,
+      invite.role
+    );
+
+    if (typeof addedOrg !== 'boolean') {
+      return addedOrg;
+    }
+
+    if (user.inviteId && user.inviteId === invite.id) {
+      return { organizationId: invite.orgId };
+    }
+
+    return false;
+  }
+
+  async joinOrg(
+    user: { id: string; email?: string | null; inviteId?: string | null },
+    token?: string
+  ) {
+    const invite = this.getOrgFromCookie(token);
+    if (!invite) {
+      return false;
+    }
+
+    return this.acceptInvite(user, invite);
+  }
+
+  private inviteMatchesEmail(
+    invite: { email?: string },
+    email?: string | null
+  ) {
+    if (!invite.email || !email) {
+      return false;
+    }
+
+    return invite.email.toLowerCase() === email.toLowerCase();
   }
 
   public getOrgFromCookie(cookie?: string) {
@@ -204,9 +257,7 @@ export class AuthService {
       (err) => {}
     );
 
-    this._attributionService
-      .lead(create.users[0].user, body.attribution)
-      .catch((err) => {});
+    this._recordLead(create.users[0].user, body.attribution);
 
     await NewsletterService.register(providerUser.email);
 
@@ -219,6 +270,14 @@ export class AuthService {
     }
 
     return create.users[0].user;
+  }
+
+  private _recordLead(
+    user: Pick<User, 'id' | 'email' | 'name' | 'lastName'>,
+    attribution?: Record<string, string>
+  ) {
+    // Attribution is best-effort and must never fail registration.
+    this._attributionService.lead(user, attribution).catch(() => undefined);
   }
 
   private async _track(
@@ -272,7 +331,11 @@ export class AuthService {
     return this._userService.updatePassword(user.id, body.password);
   }
 
-  async activate(code: string, tracking: string) {
+  async activate(
+    code: string,
+    tracking: string,
+    invite?: boolean | { email?: string; orgId: string; role: 'USER' | 'ADMIN'; id: string }
+  ) {
     const user = AuthChecker.verifyJWT(code) as {
       id: string;
       activated: boolean;
@@ -283,11 +346,21 @@ export class AuthService {
       if (getUserAgain.activated) {
         return false;
       }
+
+      // A valid team invitation presented in the activation tab is accepted
+      // now. The membership was usually recorded before the activation gate;
+      // `acceptInvite` then recognises the same invitation via `inviteId` so
+      // this tab still receives showorg for the invited organisation.
+      const addedOrg = await this.acceptInvite(
+        getUserAgain,
+        this.asOrgInvite(invite)
+      );
+
       await this._userService.activateUser(user.id);
       user.activated = true;
       this._track('register', user.email, tracking).catch((err) => {});
       await NewsletterService.register(user.email);
-      return this.signJwt(user as any);
+      return { jwt: await this.signJwt(user as any), addedOrg };
     }
 
     return false;
@@ -376,15 +449,10 @@ export class AuthService {
       // Existing user signing in via OAuth while holding a valid team invite.
       // This path bypasses routeAuth, so join the inviting org here too (OAuth
       // accounts are always activated, so there is no activation gate to clear).
-      const addedOrg =
-        addToOrg && typeof addToOrg !== 'boolean'
-          ? await this._organizationService.addUserToOrg(
-              checkExists.id,
-              addToOrg.id,
-              addToOrg.orgId,
-              addToOrg.role
-            )
-          : false;
+      const addedOrg = await this.acceptInvite(
+        checkExists,
+        this.asOrgInvite(addToOrg)
+      );
       return { jwt: await this.signJwt(checkExists), addedOrg };
     }
 

@@ -150,18 +150,28 @@ describe('opening a channel OAuth from the dashboard', () => {
     return opened;
   };
 
+  // The helper decides from window.self !== window.top. Shadow `top` for the
+  // duration of one call so both branches are exercised without an iframe.
+  const stubEmbedded = (embedded: boolean) => {
+    Object.defineProperty(window, 'top', {
+      configurable: true,
+      value: embedded ? {} : window,
+    });
+  };
+
   afterEach(() => {
     vi.restoreAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).top;
     window.sessionStorage.clear();
   });
 
   it('navigates the current window in a standalone window', () => {
     const location = stubLocation();
     const opened = openSpy();
+    stubEmbedded(false);
 
-    const mode = openChannelOAuth('https://provider.example/oauth', {
-      embedded: false,
-    });
+    const mode = openChannelOAuth('https://provider.example/oauth');
 
     expect(mode).toBe('window');
     expect(location.href).toBe('https://provider.example/oauth');
@@ -171,13 +181,12 @@ describe('opening a channel OAuth from the dashboard', () => {
   it('opens the relay popup with the tab session inside the iframe', () => {
     const location = stubLocation();
     const opened = openSpy();
+    stubEmbedded(true);
     window.sessionStorage.setItem('auth', 'jwt-a');
     window.sessionStorage.setItem('showorg', 'org-a');
     window.sessionStorage.setItem('impersonate', 'imp-a');
 
-    const mode = openChannelOAuth('https://provider.example/oauth?x=1', {
-      embedded: true,
-    });
+    const mode = openChannelOAuth('https://provider.example/oauth?x=1');
 
     expect(mode).toBe('popup');
     expect(location.href).toBe('http://localhost:4200/launches');

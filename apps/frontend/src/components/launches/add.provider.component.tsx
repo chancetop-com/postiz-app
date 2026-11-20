@@ -16,10 +16,7 @@ import { object, string } from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { web3List } from '@gitroom/frontend/components/launches/web3/web3.list';
 import { isAllowedAddChannel } from '@gitroom/frontend/components/launches/allowed.channels';
-import {
-  isEmbeddedInIframe,
-  openChannelOAuth,
-} from '@gitroom/frontend/components/launches/channel.popup';
+import { openChannelOAuth } from '@gitroom/frontend/components/launches/channel.popup';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import clsx from 'clsx';
 import { PlatformIcon } from '@gitroom/frontend/components/ui/platform.icon.component';
@@ -642,8 +639,7 @@ export const AddProviderComponent: FC<{
           // popup reports completion to this window so the list can refresh.
           // Ordinary browser windows keep navigating in place.
           if (
-            openChannelOAuth(url, { embedded: isEmbeddedInIframe() }) ===
-            'popup'
+            openChannelOAuth(url) === 'popup'
           ) {
             modal.closeAll();
           }

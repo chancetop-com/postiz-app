@@ -78,9 +78,7 @@ describe('reconnecting an existing channel', () => {
   it('goes through the shared window choice instead of a fixed popup', () => {
     // the helper navigates a standalone window and opens the relay only
     // inside the parent application iframe (covered in channel-popup-contract)
-    expect(reconnect).toContain(
-      'openChannelOAuth(url, { embedded: isEmbeddedInIframe() })'
-    );
+    expect(reconnect).toContain('openChannelOAuth(url)');
     expect(reconnect).not.toContain('window.open');
     expect(reconnect).not.toContain('window.location.href');
   });
@@ -221,8 +219,8 @@ describe('the default deployment keeps reading old credentials in plain text', (
     expect(integrationService).toContain('reuseParallelRefresh(');
     // notification only when the update actually flipped refreshNeeded
     expect(integrationService).toContain('if (flagged) {');
-    // the per-channel path has the same guard
-    expect(refreshService).toContain('stored.refreshToken !== integration.refreshToken');
+    // the per-channel path uses the same reuse predicate from one helper
+    expect(refreshService).toContain('isReusableRefreshCredential(');
     expect(refreshService).toContain('if (flagged) {');
   });
 });

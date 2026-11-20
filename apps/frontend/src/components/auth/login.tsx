@@ -23,6 +23,7 @@ import { useVariables } from '@gitroom/react/helpers/variable.context';
 import { FarcasterProvider } from '@gitroom/frontend/components/auth/providers/farcaster.provider';
 import WalletProvider from '@gitroom/frontend/components/auth/providers/wallet.provider';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { useReturnUrl } from '@gitroom/frontend/app/(app)/auth/return.url.component';
 type Inputs = {
   email: string;
   password: string;
@@ -47,6 +48,7 @@ export function Login() {
     billingEnabled,
     genericOauth,
   } = useVariables();
+  const { getAndClear } = useReturnUrl();
   const fetchData = useFetch();
 
   // Keep the signed invite in this tab only. It survives the password form
@@ -80,12 +82,13 @@ export function Login() {
         }
         clearOrgInvite();
         setPendingInvite(null);
-        window.location.href = isGeneral ? '/launches' : '/analytics';
+        window.location.href =
+          getAndClear() || (isGeneral ? '/launches' : '/analytics');
       } catch {
         acceptingInvite.current = false;
       }
     })();
-  }, [invite, fetchData, isGeneral]);
+  }, [invite, fetchData, isGeneral, getAndClear]);
   const resolver = useMemo(() => {
     return classValidatorResolver(LoginUserDto);
   }, []);

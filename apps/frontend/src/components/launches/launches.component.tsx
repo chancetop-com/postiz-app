@@ -46,7 +46,6 @@ import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { Input } from '@gitroom/react/form/input';
 import { Button } from '@gitroom/react/form/button';
 import {
-  isEmbeddedInIframe,
   openChannelOAuth,
   subscribeToChannelUpdates,
 } from '@gitroom/frontend/components/launches/channel.popup';
@@ -624,7 +623,7 @@ export const LaunchesComponent = () => {
             }
           )
         ).json();
-        openChannelOAuth(url, { embedded: isEmbeddedInIframe() });
+        openChannelOAuth(url);
       },
     []
   );
