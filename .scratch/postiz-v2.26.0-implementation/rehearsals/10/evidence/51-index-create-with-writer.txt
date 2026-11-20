@@ -1,3 +1,3 @@
 Timing is on.
 CREATE INDEX
-Time: 358.732 ms
+Time: 907.958 ms

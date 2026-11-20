@@ -25,11 +25,12 @@ nginx/PM2 三进程启动、数据与媒体保留、重复启动幂等及连接/
 
 | 项 | 值 |
 | --- | --- |
-| 执行起点 | `0eee97b6b`（`postiz-v2.26.0-integration` tip，已合并，无冲突） |
-| 构建源提交（干净） | `1d53b0a7383b926d42d22509d37815fb1a3857a5` |
-| 构建上下文 | `k8s/BUILD_CONTEXT_MANIFEST.json` 的 `sourceCommit` 与上述一致、`worktreeState=clean`、991 个生成文件；`prepare-build-context.sh --check` 通过 |
-| 镜像 | `postiz-ticket10:1d53b0a7383b`，image ID `sha256:3a778d56af1ba5fc71e14235cb8637ed4e4d2ec0b6cb586c53e52cc8a28275ba`，`linux/arm64` |
-| 证据提交 | 本分支 tip（本 Answer 所在提交；构建源提交之外的改动只有 `.scratch` 证据/文档） |
+| 执行起点 | `0eee97b6b`（`postiz-v2.26.0-integration` tip） |
+| 并入集成分支 | `392987d4` merge ticket 10（含 05/07/09/11/12；仅频道 UI/凭证与 Temporal 连续性改动，schema/启动/媒体路径未变） |
+| 构建源提交（干净） | `4e6f889d7a18b42775d0d3816571bfc329834e00`（合并后重新生成 k8s 上下文） |
+| 构建上下文 | `k8s/BUILD_CONTEXT_MANIFEST.json` 的 `sourceCommit` 与上述一致、`worktreeState=clean`、991 个生成文件、sha256 `f8745dfb…`；`prepare-build-context.sh --check` 通过 |
+| 镜像 | `postiz-ticket10:4e6f889d7a18`，image ID `sha256:286c8698a69488088e372e413475956245075d4628511624c5d729290adbd3ee`，`linux/arm64` |
+| 证据提交 | 本分支 tip（本 Answer 所在提交） |
 | 未推送/未部署 | 没有 registry digest；Build/rollout/kubectl 均未执行 |
 
 构建：`./k8s/prepare-build-context.sh` → `./k8s/build-local.sh --tag postiz-ticket10:<sha>`（`k8s/Dockerfile`，Node 22.23.4 / pnpm 10.6.1 / Prisma 6.5.0）。镜像内 Node/pnpm/Prisma 与三个真实入口路径均实测存在；HEALTHCHECK 仍为 `/api/`。`k8s/Dockerfile.runtime` 也做了真实构建尝试，但按下面的“未验证”记录，未用其它镜像替代。
@@ -42,14 +43,14 @@ nginx/PM2 三进程启动、数据与媒体保留、重复启动幂等及连接/
 
 | 索引（精确列序） | 启动 DDL 耗时 | 纯净重建耗时（升级样本副本） |
 | --- | --- | --- |
-| `Errors_createdAt_platform_idx` (`createdAt, platform`) | 159.651 ms | 18.180 ms |
-| `Notifications_organizationId_createdAt_deletedAt_idx` (`organizationId, createdAt, deletedAt`) | 112.312 ms | 91.235 ms |
-| `Post_publishDate_state_deletedAt_parentPostId_integrationId_idx` (`publishDate, state, deletedAt, parentPostId, integrationId, organizationId, creationMethod`) | 22,946.284 ms | 292.838 ms |
-| `Post_organizationId_publishDate_idx` (`organizationId, publishDate`) | 178.808 ms | 170.857 ms |
-| `User_providerId_providerName_idx` (`providerId, providerName`) | 1.701 ms | 2.636 ms |
+| `Errors_createdAt_platform_idx` (`createdAt, platform`) | 121.542 ms | 38.993 ms |
+| `Notifications_organizationId_createdAt_deletedAt_idx` (`organizationId, createdAt, deletedAt`) | 91.546 ms | 168.842 ms |
+| `Post_publishDate_state_deletedAt_parentPostId_integrationId_idx` (`publishDate, state, deletedAt, parentPostId, integrationId, organizationId, creationMethod`) | 23,985.050 ms | 290.648 ms |
+| `Post_organizationId_publishDate_idx` (`organizationId, publishDate`) | 281.299 ms | 164.705 ms |
+| `User_providerId_providerName_idx` (`providerId, providerName`) | 6.085 ms | 8.704 ms |
 
-- 启动同步总时长 31,146 ms（11:23:28.563 → 11:23:59.709 UTC）；其中 `Post` 上的受控 `RowExclusiveLock` 使首个 Post 索引等待 **9,589 ms**（日志另有一条 204 ms 等待）。纯净重建在升级样本副本上进行，不混入等待时间。
-- 同一副本上用并发写验证建索引期间的写阻塞：`UPDATE` 等待 **409.605 ms** 后成功，`CREATE INDEX` 为 520.841 ms（另一次运行 24.031 ms / 358.732 ms）；索引均为普通 btree、非唯一、列序与上表一致。
+- 启动同步总时长 33,051 ms（12:02:33.414 → 12:03:06.465 UTC）；其中 `Post` 上的受控 `RowExclusiveLock` 使首个 Post 索引等待 **9,713 ms**（日志另有一条 202 ms 等待）。纯净重建在升级样本副本上进行，不混入等待时间。
+- 同一副本上用并发写验证建索引期间的写阻塞：`UPDATE` 等待 **775.526 ms** 后成功，`CREATE INDEX` 为 907.958 ms；索引均为普通 btree、非唯一、列序与上表一致。
 - Prisma 生成的精确名称包括被截断的 `Post_publishDate_state_deletedAt_parentPostId_integrationId_idx`（63 字符）；五个定义与从候选 schema 新建的参考库逐字一致。
 
 ### 数据与媒体保留
@@ -71,7 +72,7 @@ nginx/PM2 三进程启动、数据与媒体保留、重复启动幂等及连接/
 结构 `pg_dump --schema-only` 前后差异为 **35 行新增、0 行删除、恰好 5 条 `CREATE INDEX`**，没有表/列/约束变化。`deletedAt` 计数保持（Post 2062、Notifications 793），3 个用户中 2 个有 IANA `timezoneName`。
 
 媒体：创建真实命名卷挂载 `/uploads`，旧文件 `uploads/2025/01/launch.png` 及其缩略图经 nginx 均 200，字节 sha256 `c414cd0e…`；经应用自己的 `LocalStorage` 上传新文件
-`http://localhost:5000/uploads/2026/11/20/08d2b92f51e2b9bb46ca6cbf415104125.png`，nginx 200 且字节一致；`docker restart` 后旧文件、新文件均仍 200 且新文件字节不变，三个 PM2 进程仍 online。
+`http://localhost:5000/uploads/2026/11/20/7f11c91065b55420610811615b2caf611f.png`，nginx 200 且字节一致；`docker restart` 后旧文件、新文件均仍 200 且新文件字节不变，三个 PM2 进程仍 online。
 
 ### 幂等与失败退出
 
@@ -81,7 +82,7 @@ nginx/PM2 三进程启动、数据与媒体保留、重复启动幂等及连接/
 | 数据库不可达 | 容器 exit **1**；Prisma `P1001`；entrypoint 打印 `schema sync FAILED` 与 `refusing to start: sh -c nginx && pm2-runtime …`；无 `Backend started successfully`、无 worker 监听；主库数据摘要不变 |
 | 同步需要数据丢失确认 | 在升级库副本上加入有行的未管理表；`db push` 要求 `--accept-data-loss`，容器 exit **1**、拒绝启动，API/worker 未启动；结构 diff 0 行、副本数据摘要不变 |
 
-启动顺序在带时间戳的日志中核实：`[startup-sync]` 15 行 → 同步完成 15 行 → worker 196 行 → backend 512 行（首次）；API 在同步完成约 12 秒后开始监听。worker 在 Temporal `main` 队列有实际 poller，并成功注册 `organizationId`/`postId` 搜索属性。
+启动顺序在带时间戳的日志中核实：`[startup-sync]` 15 行 → 同步完成 15 行 → worker 213 行 → backend 525 行（首次）；API 在同步完成约 13 秒后开始监听。worker 在 Temporal `main` 队列有实际 poller，并成功注册 `organizationId`/`postId` 搜索属性。
 
 ### 发现与边界
 

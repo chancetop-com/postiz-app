@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "imageTag": "postiz-ticket10:1d53b0a7383b",
-  "imageId": "sha256:3a778d56af1ba5fc71e14235cb8637ed4e4d2ec0b6cb586c53e52cc8a28275ba",
-  "builtAt": "2026-11-20T10:35:11Z",
+  "imageTag": "postiz-ticket10:4e6f889d7a18",
+  "imageId": "sha256:286c8698a69488088e372e413475956245075d4628511624c5d729290adbd3ee",
+  "builtAt": "2026-11-20T11:57:34Z",
   "published": false,
   "registryDigest": null,
   "note": "Local candidate image. No registry digest exists because nothing was pushed; the image ID is local to this Docker daemon.",
   "target": { "os": "linux", "architecture": "arm64" },
   "source": {
-    "commit": "1d53b0a7383b926d42d22509d37815fb1a3857a5",
+    "commit": "4e6f889d7a18b42775d0d3816571bfc329834e00",
     "ref": "codex/ticket-10-startup-media",
     "worktreeState": "clean",
-    "currentHead": "1d53b0a7383b926d42d22509d37815fb1a3857a5",
+    "currentHead": "4e6f889d7a18b42775d0d3816571bfc329834e00",
     "contextMatchesHead": true,
-    "buildContextManifest": { "path": "k8s/BUILD_CONTEXT_MANIFEST.json", "sha256": "a4a53b4a2458516ffcbd5ca8e1b6549bfbbc070b8f200861ec789e8276e1f7d2" }
+    "buildContextManifest": { "path": "k8s/BUILD_CONTEXT_MANIFEST.json", "sha256": "f8745dfb729ed4926b2631531da7213ff652f6007d1a0cbd3c19002adf41515a" }
   },
   "inputs": {
     "lockfile": { "path": "pnpm-lock.yaml", "sha256": "169f86648aac02d890dde183be9c38a71166d4e3624f3e7622347e3d41422801" },

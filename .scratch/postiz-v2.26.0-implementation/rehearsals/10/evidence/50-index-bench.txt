@@ -1,5 +1,5 @@
-Post_organizationId_publishDate_idx|170.857 ms
-Post_publishDate_state_deletedAt_parentPostId_integrationId_idx|292.838 ms
-Notifications_organizationId_createdAt_deletedAt_idx|91.235 ms
-User_providerId_providerName_idx|2.636 ms
-Errors_createdAt_platform_idx|18.180 ms
+Post_organizationId_publishDate_idx|164.705 ms
+Post_publishDate_state_deletedAt_parentPostId_integrationId_idx|290.648 ms
+Notifications_organizationId_createdAt_deletedAt_idx|168.842 ms
+User_providerId_providerName_idx|8.704 ms
+Errors_createdAt_platform_idx|38.993 ms

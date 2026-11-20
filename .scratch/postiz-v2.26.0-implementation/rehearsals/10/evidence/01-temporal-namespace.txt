@@ -1,5 +1,5 @@
   NamespaceInfo.Name                    default
-  NamespaceInfo.Id                      5682d591-7b7a-48b9-a423-bf036a530ca0
+  NamespaceInfo.Id                      d26f63c7-85e1-401f-a26d-ed6311f2c061
   NamespaceInfo.Description             Default namespace for Temporal Server.
   NamespaceInfo.OwnerEmail               
   NamespaceInfo.State                   Registered
@@ -14,4 +14,4 @@
   FailoverHistory                       []
   Config.HistoryArchivalUri              
   Config.VisibilityArchivalUri           
-  Config.CustomSearchAttributeAliases   map[]
+  Config.CustomSearchAttributeAliases   map[Bool01:CustomBoolField Datetime01:CustomDatetimeField Double01:CustomDoubleField Int01:CustomIntField Keyword09:CustomKeywordField Text02:CustomStringField Text03:CustomTextField]

@@ -1,5 +1,5 @@
 Prisma schema loaded from libraries/nestjs-libraries/src/database/prisma/schema.prisma
 Datasource "db": PostgreSQL database "postiz_candidate_ref", schema "public" at "t10-pg:5432"
 
-🚀  Your database is now in sync with your Prisma schema. Done in 1.05s
+🚀  Your database is now in sync with your Prisma schema. Done in 649ms
 

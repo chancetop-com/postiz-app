@@ -1,33 +1,33 @@
                  Name                    Type    
+  HistoryLength                       Int        
   BuildIds                            KeywordList
-  HistorySizeBytes                    Int        
-  RootRunId                           Keyword    
-  TemporalNamespaceDivision           Keyword    
-  ParentWorkflowId                    Keyword    
-  StateTransitionCount                Int        
-  TaskQueue                           Keyword    
-  ExecutionStatus                     Keyword    
-  WorkflowType                        Keyword    
-  TemporalWorkerDeployment            Keyword    
-  ExecutionDuration                   Int        
+  StartTime                           Datetime   
   RunId                               Keyword    
-  ExecutionTime                       Datetime   
-  TemporalSchedulePaused              Bool       
+  HistorySizeBytes                    Int        
   BinaryChecksums                     KeywordList
+  WorkflowType                        Keyword    
   TemporalWorkflowVersioningBehavior  Keyword    
-  TemporalChangeVersion               KeywordList
+  ExecutionDuration                   Int        
+  RootRunId                           Keyword    
+  ExecutionTime                       Datetime   
+  TemporalWorkerDeployment            Keyword    
+  TemporalScheduledById               Keyword    
+  WorkflowId                          Keyword    
   TemporalWorkerDeploymentVersion     Keyword    
   BatcherUser                         Keyword    
-  ParentRunId                         Keyword    
-  TemporalScheduledStartTime          Datetime   
-  WorkflowId                          Keyword    
-  StartTime                           Datetime   
-  TemporalScheduledById               Keyword    
+  ExecutionStatus                     Keyword    
   TemporalPauseInfo                   KeywordList
-  RootWorkflowId                      Keyword    
-  HistoryLength                       Int        
-  CloseTime                           Datetime   
   BatcherNamespace                    Keyword    
+  ParentWorkflowId                    Keyword    
+  ParentRunId                         Keyword    
+  RootWorkflowId                      Keyword    
+  TemporalSchedulePaused              Bool       
+  TemporalChangeVersion               KeywordList
+  TemporalNamespaceDivision           Keyword    
+  TaskQueue                           Keyword    
+  StateTransitionCount                Int        
+  TemporalScheduledStartTime          Datetime   
+  CloseTime                           Datetime   
   CustomDoubleField                   Double     
   CustomBoolField                     Bool       
   CustomIntField                      Int        
