@@ -1,0 +1,1311 @@
+{
+  "ticket": 12,
+  "generatedAt": "2026-11-20T10:27:52.846Z",
+  "node": "v22.23.4",
+  "scenarios": [
+    {
+      "id": "v101-sleep-takeover",
+      "description": "A V101 execution created by the old bundle sleeps until its publish date; the candidate worker takes over the same workflow/run, publishes with the blocking postSocial contract, writes the result back and leaves the publish date unchanged.",
+      "startedAt": "2026-11-20T10:27:53.647Z",
+      "observations": [
+        {
+          "name": "old execution before hand-over",
+          "value": {
+            "workflowId": "post_post-mwou5ejx-3",
+            "runId": "01a1f87f-a0e7-7803-956f-1ff2f85c95a6",
+            "type": "postWorkflowV101"
+          }
+        },
+        {
+          "name": "published row",
+          "value": {
+            "id": "post-mwou5ejx-3",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T10:28:00.709Z",
+            "releaseId": "stub-post-5979-1",
+            "releaseURL": "https://stub.invalid/stub-post-5979-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwou5ei8-1\",\"name\":\"org-mwou5ei8-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou5ei8-1.png\"}]"
+          }
+        },
+        {
+          "name": "execution after hand-over",
+          "value": {
+            "workflowId": "post_post-mwou5ejx-3",
+            "runId": "01a1f87f-a0e7-7803-956f-1ff2f85c95a6",
+            "type": "postWorkflowV101",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "organizationId": "org_org-mwou5ei8-1",
+              "postId": "post-mwou5ejx-3",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+d8d11b8ff078663da8ddcfdbbd74f76a02b19392b1a9cc652b6f83dce79faf61",
+                "unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"
+              ]
+            }
+          }
+        },
+        {
+          "name": "history after hand-over",
+          "value": {
+            "eventCount": 54,
+            "lastEvent": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+            "activities": [
+              {
+                "activity": "getPostsList",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "postSocial",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "updatePost",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "inAppNotification",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "sendWebhooks",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "internalPlugs",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "globalPlugs",
+                "taskQueue": "bluesky"
+              }
+            ]
+          }
+        },
+        {
+          "name": "publish calls",
+          "value": [
+            "post"
+          ]
+        },
+        {
+          "name": "payload contract",
+          "value": {
+            "id": "post-mwou5ejx-3",
+            "message": "Synthetic V101 post waiting for hand-over",
+            "settings": {},
+            "media": [
+              {
+                "path": "<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/12/work/uploads/uploads/rehearsal12/org-mwou5ei8-1.png",
+                "readable": true,
+                "bytes": 70,
+                "sha256": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+                "id": "media_org-mwou5ei8-1",
+                "type": "image"
+              }
+            ]
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "state is PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "publish date is not rewritten",
+          "ok": true,
+          "actual": "2026-11-20T10:28:00.709Z",
+          "expected": "2026-11-20T10:28:00.709Z"
+        },
+        {
+          "name": "releaseId written",
+          "ok": true,
+          "actual": true,
+          "detail": "stub-post-5979-1"
+        },
+        {
+          "name": "releaseURL written",
+          "ok": true,
+          "actual": true,
+          "detail": "https://stub.invalid/stub-post-5979-1"
+        },
+        {
+          "name": "workflow id is unchanged",
+          "ok": true,
+          "actual": "post_post-mwou5ejx-3",
+          "expected": "post_post-mwou5ejx-3"
+        },
+        {
+          "name": "run id is unchanged (same execution)",
+          "ok": true,
+          "actual": "01a1f87f-a0e7-7803-956f-1ff2f85c95a6",
+          "expected": "01a1f87f-a0e7-7803-956f-1ff2f85c95a6"
+        },
+        {
+          "name": "workflow type stays V101",
+          "ok": true,
+          "actual": "postWorkflowV101",
+          "expected": "postWorkflowV101"
+        },
+        {
+          "name": "workflow task queue stays main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "post business id remains a search attribute",
+          "ok": true,
+          "actual": "post-mwou5ejx-3",
+          "expected": "post-mwou5ejx-3"
+        },
+        {
+          "name": "execution completed normally",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        },
+        {
+          "name": "blocking postSocial ran on the provider queue",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "pending contract was not used by V101",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "exactly one publish attempt",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "old path uses blocking post",
+          "ok": true,
+          "actual": "post",
+          "expected": "post"
+        },
+        {
+          "name": "publish targets the bound channel",
+          "ok": true,
+          "actual": "int_org-mwou5ei8-1",
+          "expected": "int_org-mwou5ei8-1"
+        },
+        {
+          "name": "publish uses the stored credential",
+          "ok": true,
+          "actual": "synthetic-token-org-mwou5ei8-1",
+          "expected": "synthetic-token-org-mwou5ei8-1"
+        },
+        {
+          "name": "payload message matches the DB content",
+          "ok": true,
+          "actual": "Synthetic V101 post waiting for hand-over",
+          "expected": "Synthetic V101 post waiting for hand-over"
+        },
+        {
+          "name": "payload media bytes match the legacy file",
+          "ok": true,
+          "actual": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+          "expected": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77"
+        },
+        {
+          "name": "provider read the whole image",
+          "ok": true,
+          "actual": 70,
+          "expected": 70
+        }
+      ]
+    },
+    {
+      "id": "v102-delayed-comment",
+      "description": "A V102 execution created by the old bundle keeps its schedule timer, then publishes the root and, after the stored one-minute comment delay, the comment through the old postComment activity.",
+      "startedAt": "2026-11-20T10:28:17.930Z",
+      "observations": [
+        {
+          "name": "root published",
+          "value": {
+            "id": "post-mwou5xa6-6",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T10:28:23.981Z",
+            "releaseId": "stub-post-6076-1",
+            "releaseURL": "https://stub.invalid/stub-post-6076-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwou5x8t-4\",\"name\":\"org-mwou5x8t-4.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou5x8t-4.png\"}]"
+          }
+        },
+        {
+          "name": "comment published",
+          "value": {
+            "id": "post-mwou5xac-8",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T10:28:23.981Z",
+            "releaseId": "stub-post-6076-2",
+            "releaseURL": "https://stub.invalid/stub-post-6076-2",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwou5x8t-4\",\"name\":\"org-mwou5x8t-4.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou5x8t-4.png\"}]"
+          }
+        },
+        {
+          "name": "comment calls",
+          "value": [
+            {
+              "postId": "stub-post-6076-1",
+              "message": "Synthetic delayed comment",
+              "at": "2026-11-20T10:29:43.429Z"
+            }
+          ]
+        },
+        {
+          "name": "measured comment delay (ms)",
+          "value": 60790
+        },
+        {
+          "name": "history",
+          "value": {
+            "eventCount": 77,
+            "lastEvent": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+            "activities": [
+              {
+                "activity": "getPostsList",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "isCommentable",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "postSocial",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "updatePost",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "inAppNotification",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "postComment",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "updatePost",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "sendWebhooks",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "internalPlugs",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "globalPlugs",
+                "taskQueue": "bluesky"
+              }
+            ]
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "root publish once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "comment state is PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "root publish date is not rewritten",
+          "ok": true,
+          "actual": "2026-11-20T10:28:23.981Z",
+          "expected": "2026-11-20T10:28:23.981Z"
+        },
+        {
+          "name": "comment keeps the same scheduled date",
+          "ok": true,
+          "actual": "2026-11-20T10:28:23.981Z",
+          "expected": "2026-11-20T10:28:23.981Z"
+        },
+        {
+          "name": "exactly one comment call",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "comment is posted under the root platform id",
+          "ok": true,
+          "actual": "stub-post-6076-1",
+          "expected": "stub-post-6076-1"
+        },
+        {
+          "name": "comment payload is the delayed DB row",
+          "ok": true,
+          "actual": "Synthetic delayed comment",
+          "expected": "Synthetic delayed comment"
+        },
+        {
+          "name": "comment respected the one-minute delay",
+          "ok": true,
+          "actual": true,
+          "detail": "measured 60790ms"
+        },
+        {
+          "name": "postComment ran on the provider queue",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "updatePost wrote both rows back",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "execution completed normally",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ]
+    },
+    {
+      "id": "v102-repeat-child",
+      "description": "A V102 parent created by the old bundle starts a V102 repeat child; the candidate consumes both the parent and the child on the same old definition. The interval is negative only to make the repeat timer due immediately; the startChild branch is unchanged.",
+      "startedAt": "2026-11-20T10:29:45.106Z",
+      "observations": [
+        {
+          "name": "repeat child execution",
+          "value": {
+            "workflowId": "post_post-mwou7sk0-11_Ol5R6GkYG1",
+            "runId": "01a1f881-92e4-71bc-9537-2f559b43b6bc",
+            "type": "postWorkflowV102",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "startTime": "2026-11-20T10:30:03.748Z"
+          }
+        },
+        {
+          "name": "publish calls",
+          "value": [
+            {
+              "method": "post"
+            },
+            {
+              "method": "post"
+            }
+          ]
+        },
+        {
+          "name": "parent history child starts",
+          "value": [
+            {
+              "workflowType": "postWorkflowV102",
+              "workflowId": "post_post-mwou7sk0-11_Ol5R6GkYG1"
+            }
+          ]
+        },
+        {
+          "name": "root row after repeat",
+          "value": {
+            "id": "post-mwou7sk0-11",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T10:29:51.168Z",
+            "releaseId": "stub-post-7072-2",
+            "releaseURL": "https://stub.invalid/stub-post-7072-2",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwou7sif-9\",\"name\":\"org-mwou7sif-9.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou7sif-9.png\"}]"
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "child type is the old V102",
+          "ok": true,
+          "actual": "postWorkflowV102",
+          "expected": "postWorkflowV102"
+        },
+        {
+          "name": "child id uses the repeat prefix",
+          "ok": true,
+          "actual": true,
+          "detail": "post_post-mwou7sk0-11_Ol5R6GkYG1"
+        },
+        {
+          "name": "parent and child each published once",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "both generations used the old blocking contract",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "parent recorded a V102 child",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "parent completed normally",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        },
+        {
+          "name": "root remains PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        }
+      ]
+    },
+    {
+      "id": "v112-pending-finalize",
+      "description": "A new V112 execution takes the provider through postPending, checkPostStatus and finalizePost exactly once, writes the finalize result back and keeps the requested publish date and timezone untouched.",
+      "startedAt": "2026-11-20T10:30:09.119Z",
+      "observations": [
+        {
+          "name": "published row",
+          "value": {
+            "id": "post-mwou8b41-14",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T10:30:12.217Z",
+            "releaseId": "stub-pending-7191-1",
+            "releaseURL": "https://stub.invalid/stub-pending-7191-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwou8b1o-12\",\"name\":\"org-mwou8b1o-12.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou8b1o-12.png\"}]"
+          }
+        },
+        {
+          "name": "pending/finalize calls",
+          "value": {
+            "pending": 1,
+            "checks": 1,
+            "finalizes": 1,
+            "blocking": 0
+          }
+        },
+        {
+          "name": "pending payload",
+          "value": {
+            "id": "post-mwou8b41-14",
+            "message": "Synthetic V112 pending post",
+            "settings": {},
+            "media": [
+              {
+                "path": "<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/12/work/uploads/uploads/rehearsal12/org-mwou8b1o-12.png",
+                "readable": true,
+                "bytes": 70,
+                "sha256": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+                "id": "media_org-mwou8b1o-12",
+                "type": "image"
+              }
+            ]
+          }
+        },
+        {
+          "name": "execution",
+          "value": {
+            "workflowId": "post_post-mwou8b41-14",
+            "runId": "01a1f881-eb98-7edb-98c9-1a69e5a0956e",
+            "type": "postWorkflowV112",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwou8b41-14",
+              "organizationId": "org_org-mwou8b1o-12",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"
+              ]
+            }
+          }
+        },
+        {
+          "name": "history activity queues",
+          "value": [
+            {
+              "activity": "getPost",
+              "taskQueue": "main"
+            },
+            {
+              "activity": "getPostsList",
+              "taskQueue": "main"
+            },
+            {
+              "activity": "postSocialPending",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "checkPostStatus",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "finalizePost",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "updatePost",
+              "taskQueue": "main"
+            },
+            {
+              "activity": "inAppNotification",
+              "taskQueue": "main"
+            },
+            {
+              "activity": "sendWebhooks",
+              "taskQueue": "main"
+            },
+            {
+              "activity": "internalPlugs",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "globalPlugs",
+              "taskQueue": "bluesky"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "state is PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "publish date is not converted by the workflow",
+          "ok": true,
+          "actual": "2026-11-20T10:30:12.217Z",
+          "expected": "2026-11-20T10:30:12.217Z"
+        },
+        {
+          "name": "pending accepted exactly once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "status checked exactly once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "finalize ran exactly once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "V112 did not use the blocking activity",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "releaseId is the finalize result",
+          "ok": true,
+          "actual": "stub-pending-7191-1",
+          "expected": "stub-pending-7191-1"
+        },
+        {
+          "name": "releaseURL is the finalize result",
+          "ok": true,
+          "actual": "https://stub.invalid/stub-pending-7191-1",
+          "expected": "https://stub.invalid/stub-pending-7191-1"
+        },
+        {
+          "name": "payload message matches the DB content",
+          "ok": true,
+          "actual": "Synthetic V112 pending post",
+          "expected": "Synthetic V112 pending post"
+        },
+        {
+          "name": "payload media is the local legacy image",
+          "ok": true,
+          "actual": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+          "expected": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77"
+        },
+        {
+          "name": "new starts use V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "workflow id keeps the post id",
+          "ok": true,
+          "actual": "post_post-mwou8b41-14",
+          "expected": "post_post-mwou8b41-14"
+        },
+        {
+          "name": "workflow queue is main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "post id search attribute written",
+          "ok": true,
+          "actual": "post-mwou8b41-14",
+          "expected": "post-mwou8b41-14"
+        },
+        {
+          "name": "postPending ran on the provider queue",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "checkPostStatus ran on the provider queue",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "finalizePost ran on the provider queue",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "database write-back ran on main",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "execution completed normally",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ]
+    },
+    {
+      "id": "refresh-backlog",
+      "description": "An old refreshTokenWorkflow created before the hand-over wakes on its expiry timer; the candidate executes the decorated refreshToken activity, decrypts the enc:v1: credentials and stores the rotated tokens.",
+      "startedAt": "2026-11-20T10:30:28.594Z",
+      "observations": [
+        {
+          "name": "old refresh execution",
+          "value": {
+            "workflowId": "refresh_int_org-mwou8q2b-15",
+            "runId": "01a1f881-f4d8-7bba-86c1-404b688bd192",
+            "type": "refreshTokenWorkflow",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+d8d11b8ff078663da8ddcfdbbd74f76a02b19392b1a9cc652b6f83dce79faf61"
+              ]
+            }
+          }
+        },
+        {
+          "name": "provider refresh call",
+          "value": {
+            "at": "2026-11-20T10:30:49.080Z",
+            "pid": 7290,
+            "method": "providerRefreshToken",
+            "refreshToken": "synthetic-refresh-org-mwou8q2b-15",
+            "accessToken": "synthetic-refreshed-access-7290-1",
+            "rotatedRefreshToken": "synthetic-refreshed-refresh-7290-1"
+          }
+        },
+        {
+          "name": "stored credentials after refresh",
+          "value": {
+            "tokenPrefix": "enc:v1:d1dcf",
+            "refreshPrefix": "enc:v1:d1dcf",
+            "tokenExpiration": "2026-11-20T11:30:49.081Z",
+            "refreshNeeded": false
+          }
+        },
+        {
+          "name": "refresh history activities",
+          "value": [
+            {
+              "activity": "getIntegrationsById",
+              "taskQueue": "main"
+            },
+            {
+              "activity": "getIntegrationsById",
+              "taskQueue": "main"
+            },
+            {
+              "activity": "refreshToken",
+              "taskQueue": "main"
+            },
+            {
+              "activity": "getIntegrationsById",
+              "taskQueue": "main"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "refresh type",
+          "ok": true,
+          "actual": "refreshTokenWorkflow",
+          "expected": "refreshTokenWorkflow"
+        },
+        {
+          "name": "refresh workflow id",
+          "ok": true,
+          "actual": "refresh_int_org-mwou8q2b-15",
+          "expected": "refresh_int_org-mwou8q2b-15"
+        },
+        {
+          "name": "refresh runs on main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "candidate decrypted the stored refresh token before the provider call",
+          "ok": true,
+          "actual": "synthetic-refresh-org-mwou8q2b-15",
+          "expected": "synthetic-refresh-org-mwou8q2b-15"
+        },
+        {
+          "name": "plaintext token replaced with an enc:v1: value",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "rotated refresh token stored encrypted",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "token expiration moved forward",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "channel is not flagged for reconnect",
+          "ok": true,
+          "actual": false,
+          "expected": false
+        },
+        {
+          "name": "decorated refreshToken activity was scheduled on main",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "getIntegrationsById also ran on main",
+          "ok": true,
+          "actual": true
+        }
+      ]
+    },
+    {
+      "id": "legacy-email-drain",
+      "description": "A pre-existing send_email singleton with one queued message is drained by the candidate through the old sendEmail activity on main; a second signal is appended and both recipients receive exactly one message.",
+      "startedAt": "2026-11-20T10:30:49.496Z",
+      "observations": [
+        {
+          "name": "pre-existing singleton",
+          "value": {
+            "workflowId": "send_email",
+            "runId": "01a1f882-45af-7a40-b409-b2349acf82f9",
+            "type": "sendEmailWorkflow"
+          }
+        },
+        {
+          "name": "emails",
+          "value": [
+            {
+              "to": "backlog-one@synthetic.invalid",
+              "subject": "Synthetic backlog one"
+            },
+            {
+              "to": "backlog-two@synthetic.invalid",
+              "subject": "Synthetic backlog two"
+            }
+          ]
+        },
+        {
+          "name": "singleton after drain",
+          "value": {
+            "workflowId": "send_email",
+            "runId": "01a1f882-45af-7a40-b409-b2349acf82f9",
+            "type": "sendEmailWorkflow",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"
+              ]
+            }
+          }
+        },
+        {
+          "name": "email history",
+          "value": {
+            "eventCount": 26,
+            "signals": [
+              "sendEmail"
+            ],
+            "activities": [
+              {
+                "activity": "sendEmail",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "sendEmail",
+                "taskQueue": "main"
+              }
+            ]
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "exactly two emails sent",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "both queued recipients received one message",
+          "ok": true,
+          "actual": [
+            "backlog-one@synthetic.invalid",
+            "backlog-two@synthetic.invalid"
+          ],
+          "expected": [
+            "backlog-one@synthetic.invalid",
+            "backlog-two@synthetic.invalid"
+          ]
+        },
+        {
+          "name": "no recipient received a duplicate",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "old singleton type is kept",
+          "ok": true,
+          "actual": "sendEmailWorkflow",
+          "expected": "sendEmailWorkflow"
+        },
+        {
+          "name": "old singleton queue is main",
+          "ok": true,
+          "actual": "main",
+          "expected": "main"
+        },
+        {
+          "name": "singleton is still running",
+          "ok": true,
+          "actual": "RUNNING",
+          "expected": "RUNNING"
+        },
+        {
+          "name": "sendEmail activity ran on main",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "no per-email workflow was involved in the old singleton",
+          "ok": true,
+          "actual": true
+        }
+      ]
+    },
+    {
+      "id": "compat-provider-queue",
+      "description": "With COMPAT_WORKFLOW_QUEUES=bluesky the candidate polls the provider queue for workflows as well as activities, so a V102 execution whose workflow task queue is bluesky completes; an unlisted provider queue stays activity-only.",
+      "startedAt": "2026-11-20T10:31:00.818Z",
+      "observations": [
+        {
+          "name": "workflow pollers",
+          "value": {
+            "main": 15,
+            "bluesky": 11,
+            "x": 0
+          }
+        },
+        {
+          "name": "published row",
+          "value": {
+            "id": "post-mwou9exr-19",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T10:31:03.331Z",
+            "releaseId": "stub-post-7373-1",
+            "releaseURL": "https://stub.invalid/stub-post-7373-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwou9exf-17\",\"name\":\"org-mwou9exf-17.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou9exf-17.png\"}]"
+          }
+        },
+        {
+          "name": "execution",
+          "value": {
+            "workflowId": "post_post-mwou9exr-19",
+            "runId": "01a1f882-a74a-7f2c-aa58-aee19fde4cc5",
+            "type": "postWorkflowV102",
+            "status": "COMPLETED",
+            "taskQueue": "bluesky",
+            "searchAttributes": {
+              "postId": "post-mwou9exr-19",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"
+              ],
+              "organizationId": "org_org-mwou9exf-17"
+            }
+          }
+        },
+        {
+          "name": "history activities",
+          "value": [
+            {
+              "activity": "getPostsList",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "postSocial",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "updatePost",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "inAppNotification",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "sendWebhooks",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "internalPlugs",
+              "taskQueue": "bluesky"
+            },
+            {
+              "activity": "globalPlugs",
+              "taskQueue": "bluesky"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "main has a workflow poller",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "compat-listed provider queue has a workflow poller",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "unlisted provider queue stays activity-only",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "state is PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "workflow type is old V102",
+          "ok": true,
+          "actual": "postWorkflowV102",
+          "expected": "postWorkflowV102"
+        },
+        {
+          "name": "workflow task queue is the compat provider queue",
+          "ok": true,
+          "actual": "bluesky",
+          "expected": "bluesky"
+        },
+        {
+          "name": "blocking publish ran on the provider queue",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "execution completed normally",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        },
+        {
+          "name": "one publish",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "blocking contract used",
+          "ok": true,
+          "actual": "post",
+          "expected": "post"
+        }
+      ]
+    },
+    {
+      "id": "missing-scan",
+      "description": "The hourly maintenance scan re-reads each candidate before dispatching: a deleted post and an already-published post start nothing, a post published by another worker after the scan loaded it is skipped, and a still-QUEUE post starts V112 and publishes.",
+      "startedAt": "2026-11-20T10:31:16.718Z",
+      "observations": [
+        {
+          "name": "live stale post published",
+          "value": {
+            "id": "post-mwou9r7b-22",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T09:31:16.727Z",
+            "releaseId": "stub-pending-7418-1",
+            "releaseURL": "https://stub.invalid/stub-pending-7418-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwou9r73-20\",\"name\":\"org-mwou9r73-20.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou9r73-20.png\"}]"
+          }
+        },
+        {
+          "name": "race post row",
+          "value": {
+            "id": "post-mwou9r7i-28",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T09:31:16.727Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwou9r73-20\",\"name\":\"org-mwou9r73-20.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal12/org-mwou9r73-20.png\"}]"
+          }
+        },
+        {
+          "name": "dispatched execution",
+          "value": {
+            "workflowId": "post_post-mwou9r7b-22",
+            "runId": "f50f9f00-d797-407b-8429-d4ada655ba6f",
+            "type": "postWorkflowV112",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "postId": "post-mwou9r7b-22",
+              "organizationId": "org_org-mwou9r73-20",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+b7e2f9de4c5667012089edf5f6e64f31468b3d772bcfa864e7526275934aa80f"
+              ]
+            }
+          }
+        },
+        {
+          "name": "race execution",
+          "value": {
+            "workflowId": "post_post-mwou9r7i-28",
+            "error": "workflow not found for ID: post_post-mwou9r7i-28"
+          }
+        },
+        {
+          "name": "deleted execution",
+          "value": {
+            "workflowId": "post_post-mwou9r7c-24",
+            "error": "workflow not found for ID: post_post-mwou9r7c-24"
+          }
+        },
+        {
+          "name": "already published execution",
+          "value": {
+            "workflowId": "post_post-mwou9r7h-26",
+            "error": "workflow not found for ID: post_post-mwou9r7h-26"
+          }
+        },
+        {
+          "name": "publish calls",
+          "value": [
+            "postPending"
+          ]
+        },
+        {
+          "name": "dispatched history",
+          "value": {
+            "lastEvent": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+            "activities": [
+              {
+                "activity": "getPost",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "getPostsList",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "postSocialPending",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "checkPostStatus",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "finalizePost",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "updatePost",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "inAppNotification",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "sendWebhooks",
+                "taskQueue": "main"
+              },
+              {
+                "activity": "internalPlugs",
+                "taskQueue": "bluesky"
+              },
+              {
+                "activity": "globalPlugs",
+                "taskQueue": "bluesky"
+              }
+            ]
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "live QUEUE post published",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "race post was marked PUBLISHED after the scan loaded it",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "scan dispatched V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "scan used the post business id",
+          "ok": true,
+          "actual": "post_post-mwou9r7b-22",
+          "expected": "post_post-mwou9r7b-22"
+        },
+        {
+          "name": "scan did not dispatch the race post",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "scan did not dispatch the deleted post",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "scan did not dispatch the already published post",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "only the live post published",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "scan race hook ran",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "dispatched V112 completed",
+          "ok": true,
+          "actual": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+          "expected": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED"
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "environment": {
+    "database": "postgresql://postiz-local:***@localhost:5432/postiz-ticket-12",
+    "redis": "redis://localhost:6379/12",
+    "temporalAddress": "localhost:7233",
+    "temporalNamespace": "postiz-ticket-12",
+    "namespaceCreated": false,
+    "runningWorkflowsTerminatedAtStart": 6,
+    "uploadDirectory": "<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/12/work/uploads",
+    "candidateBundle": {
+      "workflowsPath": "apps/orchestrator/src/workflows/index.ts",
+      "bundleSha256": "f2fe43cd155d86272a68e785df5b610d5b09ae1a68eaf226475ddbc8b262a0ee",
+      "replayedAt": "2026-11-20T10:23:18.160Z",
+      "replayedAgainst": {
+        "commit": "40190719df65a815e0622cc4a6355031b735f59d",
+        "branch": "codex/ticket-12-temporal-continuity",
+        "dirtyFiles": 3
+      },
+      "fixtureProvenance": {
+        "generatedAt": "2026-11-11T13:15:27.229Z",
+        "legacyCommit": "6fdf7cb53543fa28a470ad63e7619e8b98bcee43",
+        "legacyBundleSha256": "028e69b6f80804d0ac6afd4b881847ba089e4ff189ba543e0695918899c20ded",
+        "patchedBundleSha256": "6983fd53ff4f9c8fc8bbc66fb20cfcb8d7896512b73242263fe97d8b7f17d3c0",
+        "lockfileSha256": "caba97c3e0351d85580979737e06f22ca825039605b232b49d51f1e2c2929197"
+      },
+      "totals": {
+        "histories": 16,
+        "replayed": 16,
+        "failed": 0
+      },
+      "fixtureGenerationRevision": {
+        "workflowsPath": "apps/orchestrator/src/workflows/index.ts",
+        "commit": "5fc45bfdb664364dd5b0d78762c3f96cce5465c4",
+        "branch": "codex/ticket-14-temporal-replay",
+        "dirtyFiles": 8
+      }
+    },
+    "compiledWorkflows": "<repo>/apps/orchestrator/dist/apps/orchestrator/src/workflows/index.js",
+    "stubProvider": {
+      "identifier": "bluesky",
+      "encryptionProvider": "local"
+    }
+  },
+  "finishedAt": "2026-11-20T10:31:25.526Z",
+  "ok": true
+}

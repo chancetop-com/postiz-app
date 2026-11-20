@@ -1,0 +1,3 @@
+# Worker logs, uploaded fixtures and the per-run call ledger stay local.
+# evidence/ and results/ hold the synthetic observations worth committing.
+work/
