@@ -268,6 +268,13 @@ export class UsersController {
       getOrgFromCookie.role
     );
 
+    // The session lives in this tab's sessionStorage, so the switch is a
+    // response header (read by LayoutContext) rather than a shared cookie.
+    // Only a genuinely new membership emits it; a repeated accept does not.
+    if (typeof addedOrg !== 'boolean') {
+      response.header('showorg', addedOrg.organizationId);
+    }
+
     response.status(200).json({
       id: typeof addedOrg !== 'boolean' ? addedOrg.organizationId : null,
     });

@@ -59,10 +59,13 @@ const recordedResponse = () => {
   return { response, headers, cookies, state };
 };
 
-const build = ({ user = null as any } = {}) => {
+const build = ({
+  user = null as any,
+  providerManager = {} as any,
+} = {}) => {
   const userService = {
     getUserByEmail: vi.fn().mockResolvedValue(user),
-    getUserByProvider: vi.fn().mockResolvedValue(null),
+    getUserByProvider: vi.fn().mockResolvedValue(user),
   };
   const organizationService = {
     createOrgAndUser: vi.fn().mockResolvedValue({
@@ -85,7 +88,7 @@ const build = ({ user = null as any } = {}) => {
       userService as never,
       organizationService as never,
       emailService as never,
-      {} as never,
+      providerManager as never,
       {} as never,
       attributionService as never
     ),
@@ -323,5 +326,345 @@ describe('standard OAuth login state round trip', () => {
 
     expect(state.status).toBe(400);
     expect(checkExists).not.toHaveBeenCalled();
+  });
+});
+
+const inviteToken = (overrides: Record<string, unknown> = {}) =>
+  AuthChecker.signJWT({
+    email: 'merchant@example.test',
+    role: 'USER',
+    orgId: 'org-invited',
+    timeLimit: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    id: 'invite-1',
+    ...overrides,
+  });
+
+const passwordUser = (overrides: Record<string, unknown> = {}) => ({
+  id: 'user-1',
+  email: 'merchant@example.test',
+  password: AuthChecker.hashPassword('correct horse'),
+  activated: true,
+  providerName: 'LOCAL',
+  ...overrides,
+});
+
+const loginWithInvite = async (
+  invite: string | undefined,
+  { user = passwordUser(), addUserToOrg = {} as any } = {}
+) => {
+  const organizationService = {
+    createOrgAndUser: vi.fn(),
+    addUserToOrg,
+    getCount: vi.fn().mockResolvedValue(0),
+  };
+  const userService = {
+    getUserByEmail: vi.fn().mockResolvedValue(user),
+    getUserByProvider: vi.fn().mockResolvedValue(null),
+  };
+  const emailService = { hasProvider: () => false, sendEmailSync: vi.fn() };
+  const attributionService = { lead: vi.fn(), queryParams: vi.fn() };
+  const service = new AuthService(
+    userService as never,
+    organizationService as never,
+    emailService as never,
+    {} as never,
+    {} as never,
+    attributionService as never
+  );
+  const controller = new AuthController(
+    service,
+    emailService as never,
+    attributionService as never
+  );
+  const body = await localLogin({
+    email: 'merchant@example.test',
+    password: 'correct horse',
+    provider: 'LOCAL',
+    providerToken: '',
+  });
+  const recorded = recordedResponse();
+
+  await controller.login(
+    {
+      cookies: {},
+      headers: invite ? { 'org-invite': invite } : {},
+    } as never,
+    body,
+    recorded.response as never,
+    '203.0.113.7',
+    'ticket-03'
+  );
+
+  return { ...recorded, organizationService, controller };
+};
+
+describe('organization invitation through password login', () => {
+  it('joins the invited organization once, in the invited role, and answers showorg', async () => {
+    const addUserToOrg = vi
+      .fn()
+      .mockResolvedValue({ organizationId: 'org-invited' });
+
+    const { headers, cookies, state, organizationService } =
+      await loginWithInvite(inviteToken(), { addUserToOrg });
+
+    expect(state.status).toBe(200);
+    expect(organizationService.addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(organizationService.addUserToOrg).toHaveBeenCalledWith(
+      'user-1',
+      'invite-1',
+      'org-invited',
+      'USER'
+    );
+    expect(headers.auth).toBeTruthy();
+    expect(headers.showorg).toBe('org-invited');
+    // Only this response carries the switch; no shared cookie is written.
+    expect(cookies).toHaveLength(0);
+  });
+
+  it('keeps a repeated acceptance to one membership and emits no showorg', async () => {
+    const addUserToOrg = vi.fn().mockResolvedValue(false);
+
+    const { headers, state, organizationService } = await loginWithInvite(
+      inviteToken(),
+      { addUserToOrg }
+    );
+
+    expect(state.status).toBe(200);
+    expect(organizationService.addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(headers.auth).toBeTruthy();
+    expect(headers.showorg).toBeUndefined();
+  });
+
+  it.each([
+    ['expired', inviteToken({ timeLimit: '2000-01-01T00:00:00.000Z' })],
+    ['invalid', 'not-a-signed-invite'],
+  ])(
+    'ignores an %s invitation while the ordinary login still succeeds',
+    async (_label, invite) => {
+      const addUserToOrg = vi.fn();
+
+      const { headers, state, organizationService } = await loginWithInvite(
+        invite,
+        { addUserToOrg }
+      );
+
+      expect(state.status).toBe(200);
+      expect(organizationService.addUserToOrg).not.toHaveBeenCalled();
+      expect(headers.auth).toBeTruthy();
+      expect(headers.showorg).toBeUndefined();
+    }
+  );
+
+  it('records the membership before the activation gate, without starting a session', async () => {
+    const addUserToOrg = vi
+      .fn()
+      .mockResolvedValue({ organizationId: 'org-invited' });
+
+    const { headers, state, organizationService } = await loginWithInvite(
+      inviteToken({ role: 'ADMIN' }),
+      { addUserToOrg, user: passwordUser({ activated: false }) }
+    );
+
+    expect(state.status).toBe(400);
+    expect(state.sent).toBe('User is not activated');
+    expect(organizationService.addUserToOrg).toHaveBeenCalledWith(
+      'user-1',
+      'invite-1',
+      'org-invited',
+      'ADMIN'
+    );
+    expect(headers.auth).toBeUndefined();
+    expect(headers.showorg).toBeUndefined();
+  });
+
+  it('keeps the default organization when the login has no invitation', async () => {
+    const addUserToOrg = vi.fn();
+
+    const { headers, state, organizationService } = await loginWithInvite(
+      undefined,
+      { addUserToOrg }
+    );
+
+    expect(state.status).toBe(200);
+    expect(organizationService.addUserToOrg).not.toHaveBeenCalled();
+    expect(headers.auth).toBeTruthy();
+    expect(headers.showorg).toBeUndefined();
+  });
+
+  it('still reads the historical org cookie for existing deployments', async () => {
+    const addUserToOrg = vi
+      .fn()
+      .mockResolvedValue({ organizationId: 'org-invited' });
+    const organizationService = {
+      createOrgAndUser: vi.fn(),
+      addUserToOrg,
+      getCount: vi.fn().mockResolvedValue(0),
+    };
+    const controller = new AuthController(
+      new AuthService(
+        {
+          getUserByEmail: vi.fn().mockResolvedValue(passwordUser()),
+          getUserByProvider: vi.fn(),
+        } as never,
+        organizationService as never,
+        { hasProvider: () => false } as never,
+        {} as never,
+        {} as never,
+        { lead: vi.fn() } as never
+      ),
+      { hasProvider: () => false } as never,
+      { lead: vi.fn() } as never
+    );
+    const body = await localLogin({
+      email: 'merchant@example.test',
+      password: 'correct horse',
+      provider: 'LOCAL',
+      providerToken: '',
+    });
+    const recorded = recordedResponse();
+
+    await controller.login(
+      { cookies: { org: inviteToken() }, headers: {} } as never,
+      body,
+      recorded.response as never,
+      '203.0.113.7',
+      'ticket-03'
+    );
+
+    expect(recorded.headers.showorg).toBe('org-invited');
+    expect(addUserToOrg).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('organization invitation through standard OAuth login', () => {
+  const oauthUser = {
+    id: 'user-1',
+    email: 'merchant@example.test',
+    password: '',
+    providerName: 'GITHUB',
+    activated: true,
+  };
+
+  const buildOAuth = (addUserToOrg = vi.fn() as any) => {
+    const getToken = vi.fn().mockResolvedValue('provider-token');
+    const getUser = vi.fn().mockResolvedValue({ id: 'provider-user' });
+    const built = build({
+      user: oauthUser,
+      providerManager: { getProvider: () => ({ getToken, getUser }) },
+    });
+    built.organizationService.addUserToOrg = addUserToOrg;
+    const authService = (built.controller as any)._authService;
+    return { ...built, authService, getToken, getUser, addUserToOrg };
+  };
+
+  const exchange = async (
+    controller: AuthController,
+    {
+      invite,
+      stateToken,
+      state = 'login-abc',
+    }: { invite?: string; stateToken?: string; state?: string }
+  ) => {
+    const recorded = recordedResponse();
+    await controller.oauthExists(
+      {
+        headers: {
+          'content-type': 'application/json',
+          ...(invite ? { 'org-invite': invite } : {}),
+        },
+        get: () => stateToken,
+        cookies: {},
+      } as never,
+      'provider-code',
+      undefined,
+      state,
+      'github',
+      recorded.response as never
+    );
+    return recorded;
+  };
+
+  it('joins the invited organization once after the state proof verifies', async () => {
+    const addUserToOrg = vi
+      .fn()
+      .mockResolvedValue({ organizationId: 'org-invited' });
+    const { controller, authService, getToken } = buildOAuth(addUserToOrg);
+    const stateToken = authService.createOAuthStateToken('github', 'login-abc');
+
+    const { headers, cookies, state } = await exchange(controller, {
+      invite: inviteToken({ role: 'ADMIN' }),
+      stateToken,
+    });
+
+    expect(state.status).toBe(200);
+    expect(getToken).toHaveBeenCalledWith('provider-code', undefined);
+    expect(addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(addUserToOrg).toHaveBeenCalledWith(
+      'user-1',
+      'invite-1',
+      'org-invited',
+      'ADMIN'
+    );
+    expect(headers.auth).toBeTruthy();
+    expect(headers.showorg).toBe('org-invited');
+    expect(cookies).toHaveLength(0);
+  });
+
+  it('keeps a repeated OAuth acceptance to one membership and emits no showorg', async () => {
+    const addUserToOrg = vi.fn().mockResolvedValue(false);
+    const { controller, authService } = buildOAuth(addUserToOrg);
+    const stateToken = authService.createOAuthStateToken('github', 'login-abc');
+
+    const { headers, state } = await exchange(controller, {
+      invite: inviteToken(),
+      stateToken,
+    });
+
+    expect(state.status).toBe(200);
+    expect(addUserToOrg).toHaveBeenCalledTimes(1);
+    expect(headers.showorg).toBeUndefined();
+  });
+
+  it.each([
+    ['expired', inviteToken({ timeLimit: '2000-01-01T00:00:00.000Z' })],
+    ['invalid', 'not-a-signed-invite'],
+  ])('ignores an %s invitation after a valid sign-in', async (_label, invite) => {
+    const addUserToOrg = vi.fn();
+    const { controller, authService } = buildOAuth(addUserToOrg);
+    const stateToken = authService.createOAuthStateToken('github', 'login-abc');
+
+    const { headers, state } = await exchange(controller, {
+      invite,
+      stateToken,
+    });
+
+    expect(state.status).toBe(200);
+    expect(addUserToOrg).not.toHaveBeenCalled();
+    expect(headers.auth).toBeTruthy();
+    expect(headers.showorg).toBeUndefined();
+  });
+
+  it('rejects a callback without the tab state proof before joining anything', async () => {
+    const addUserToOrg = vi.fn();
+    const { controller, getToken } = buildOAuth(addUserToOrg);
+
+    await expect(
+      exchange(controller, { invite: inviteToken() })
+    ).rejects.toThrow('Invalid state');
+
+    expect(getToken).not.toHaveBeenCalled();
+    expect(addUserToOrg).not.toHaveBeenCalled();
+  });
+
+  it('rejects a state proof issued for another provider before joining anything', async () => {
+    const addUserToOrg = vi.fn();
+    const { controller, authService } = buildOAuth(addUserToOrg);
+    const stateToken = authService.createOAuthStateToken('google', 'login-abc');
+
+    await expect(
+      exchange(controller, { invite: inviteToken(), stateToken })
+    ).rejects.toThrow('Invalid state');
+
+    expect(addUserToOrg).not.toHaveBeenCalled();
   });
 });
