@@ -762,9 +762,14 @@ describe('reconnect of an already-bound channel', () => {
     );
   });
 
-  it('keeps ordinary OAuth reconnects in the current window', () => {
-    expect(reconnect).toContain('window.location.href = url;');
+  it('keeps ordinary OAuth reconnects on the shared window choice', () => {
+    // the helper navigates a standalone window and opens the relay only
+    // inside the parent application iframe
+    expect(reconnect).toContain(
+      'openChannelOAuth(url, { embedded: isEmbeddedInIframe() })'
+    );
     expect(reconnect).not.toContain('window.open');
+    expect(reconnect).not.toContain('window.location.href');
   });
 
   it('shows the credential entry and hides the OAuth one for account/key providers', () => {

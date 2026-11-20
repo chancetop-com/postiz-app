@@ -24,6 +24,11 @@ vi.mock('@gitroom/react/helpers/variable.context', () => ({
 vi.mock('@gitroom/react/translation/get.transation.service.client', () => ({
   useT: () => (key: string, fallback?: string) => fallback || key,
 }));
+vi.mock('@gitroom/frontend/components/layout/redirect', () => ({
+  Redirect: ({ url }: { url: string }) => (
+    <div data-testid="redirect">{url}</div>
+  ),
+}));
 
 import { ContinueIntegration } from '@gitroom/frontend/components/launches/continue.integration';
 
@@ -124,13 +129,11 @@ const api = (routes: {
   return { calls, fetchMock };
 };
 
-const renderContinue = (provider: string) =>
-  render(
-    <ContinueIntegration
-      provider={provider}
-      searchParams={{ code: 'code-1', state: 'state-1' }}
-    />
-  );
+const renderContinue = (
+  provider: string,
+  searchParams: Record<string, string> = { code: 'code-1', state: 'state-1' }
+) =>
+  render(<ContinueIntegration provider={provider} searchParams={searchParams} />);
 
 const saveCalls = (calls: Call[]) =>
   calls.filter((call) => call.url.includes('/provider/'));
@@ -369,25 +372,28 @@ describe('a successful save is the only thing that reports completion', () => {
 });
 
 describe('the single-account providers keep their direct save', () => {
-  it('does not show a chooser when the provider finished in one step', async () => {
-    window.sessionStorage.setItem('channel_popup_mode', 'true');
-    const windowOpener = opener();
-    const close = closeSpy();
-    const { calls } = api({
-      callback: () => respond(200, { id: 'integration-1' }),
-    });
+  it.each(['linkedin', 'tiktok', 'instagram-standalone'])(
+    'does not show a chooser when %s finished in one step',
+    async (provider) => {
+      window.sessionStorage.setItem('channel_popup_mode', 'true');
+      const windowOpener = opener();
+      const close = closeSpy();
+      const { calls } = api({
+        callback: () => respond(200, { id: 'integration-1' }),
+      });
 
-    const { queryByText } = renderContinue('instagram-standalone');
+      const { queryByText } = renderContinue(provider);
 
-    await waitFor(() => expect(close).toHaveBeenCalled());
-    expect(queryByText('Save')).toBeNull();
-    expect(queryByText('Configure Your Channel')).toBeNull();
-    expect(saveCalls(calls)).toHaveLength(0);
-    expect(windowOpener.postMessage).toHaveBeenCalledWith(
-      { type: 'CHANNEL_UPDATED', provider: 'instagram-standalone' },
-      '*'
-    );
-  });
+      await waitFor(() => expect(close).toHaveBeenCalled());
+      expect(queryByText('Save')).toBeNull();
+      expect(queryByText('Configure Your Channel')).toBeNull();
+      expect(saveCalls(calls)).toHaveLength(0);
+      expect(windowOpener.postMessage).toHaveBeenCalledWith(
+        { type: 'CHANNEL_UPDATED', provider },
+        '*'
+      );
+    }
+  );
 });
 
 describe('the chooser follows the candidate list', () => {
@@ -522,5 +528,50 @@ describe('early callback exits for a two-step provider', () => {
     expect(queryByText('Configure Your Channel')).toBeNull();
     expect(windowOpener.postMessage).not.toHaveBeenCalled();
     expect(close).not.toHaveBeenCalled();
+  });
+});
+
+describe('a provider-side cancel or callback failure in the popup', () => {
+  beforeEach(() => {
+    window.sessionStorage.setItem('channel_popup_mode', 'true');
+  });
+
+  it('shows the callback error, reports nothing and does not redirect or close', async () => {
+    const windowOpener = opener();
+    const close = closeSpy();
+    api({
+      callback: () => respond(500, { message: 'invalid_grant' }),
+    });
+
+    const { findByText, queryByTestId } = renderContinue('youtube');
+
+    expect(await findByText('invalid_grant')).toBeTruthy();
+    expect(windowOpener.postMessage).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    // a popup has no dashboard to return to and no binding to report
+    expect(queryByTestId('redirect')).toBeNull();
+  });
+
+  it('treats a provider cancel as the same non-binding failure', async () => {
+    const windowOpener = opener();
+    const close = closeSpy();
+    const { calls } = api({
+      callback: () => respond(400, { message: 'access_denied' }),
+    });
+
+    const { findByText, queryByTestId } = renderContinue('facebook', {
+      error: 'access_denied',
+      state: 'state-1',
+    });
+
+    expect(await findByText('access_denied')).toBeTruthy();
+    // the cancel came back to the callback, never to the chooser
+    expect(calls.filter((call) => call.url.includes('social-connect'))).toHaveLength(1);
+    expect(calls[0].body.error).toBe('access_denied');
+    expect(windowOpener.postMessage).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    expect(queryByTestId('redirect')).toBeNull();
   });
 });

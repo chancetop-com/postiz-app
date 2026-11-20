@@ -125,15 +125,19 @@ export const ContinueIntegration: FC<{
         method: 'POST',
         body: JSON.stringify({ ...modifiedParams, timezone }),
       });
+      // A 400 body is read once to decide whether this was a public flow at
+      // all; keep it so a genuine provider refusal can still be shown.
+      let errorData: any = null;
 
       // If public endpoint fails with specific errors, try authenticated endpoint
       if (data.status === HttpStatusCode.BadRequest) {
-        const errorData = await data.json().catch(() => ({}));
+        errorData = await data.json().catch(() => ({}));
         // "Invalid connection type" means this wasn't started as a public flow
         if (
           errorData.message?.includes('Invalid connection type') ||
           errorData.message?.includes('Invalid or expired state')
         ) {
+          errorData = null;
           data = await fetch(`/integrations/social-connect/${provider}`, {
             method: 'POST',
             body: JSON.stringify({ ...modifiedParams, timezone }),
@@ -161,7 +165,7 @@ export const ContinueIntegration: FC<{
         data.status !== HttpStatusCode.Ok &&
         data.status !== HttpStatusCode.Created
       ) {
-        const errorData = await data.json().catch(() => ({}));
+        errorData = errorData || (await data.json().catch(() => ({})));
         setErrorMessage(
           errorData.message || errorData.msg || 'Could not add provider'
         );
@@ -463,9 +467,11 @@ export const ContinueIntegration: FC<{
                 'An error occurred. Please try again.'
               )}
           </div>
-          {typeof window !== 'undefined' && window.sessionStorage.getItem('auth') && (
-            <Redirect url="/launches" delay={3000} />
-          )}
+          {typeof window !== 'undefined' &&
+            window.sessionStorage.getItem('auth') &&
+            !isChannelPopup() && (
+              <Redirect url="/launches" delay={3000} />
+            )}
         </div>
       </div>
     );
