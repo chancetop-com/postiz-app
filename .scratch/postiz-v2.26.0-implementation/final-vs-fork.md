@@ -6,7 +6,7 @@
 **构建源提交：** `b596737423c73427a7a5bc6aef8de3d46dac9118`（`k8s/BUILD_CONTEXT_MANIFEST.json` 的 `sourceCommit`，`worktreeState=clean`）
 **最终 HEAD：** 本报告所在提交（`git rev-parse HEAD`）
 
-本报告回答“商户升级前后实际会看到/经历什么变化”。`F..HEAD` 共 430 个差异路径（185 A / 245 M），
+本报告回答“商户升级前后实际会看到/经历什么变化”。`F..HEAD` 共 506 个差异路径（261 A / 245 M），
 其中大部分是 `.scratch/` 证据、`k8s/` 生成副本和测试；产品源码变化集中在
 `apps/{backend,frontend,orchestrator}`、`libraries/` 和 `var/docker/`。逐路径的官方差异见
 [`final-vs-upstream.md`](final-vs-upstream.md)。

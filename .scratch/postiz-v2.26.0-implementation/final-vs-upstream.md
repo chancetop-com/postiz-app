@@ -7,7 +7,7 @@
 **上游增量基线：** `a5affe62c74e39c1e7ac960d50d8418b807d532c`（v2.25.3）
 
 本报告只基于上述固定提交和最终源码的实际 `git diff` 生成；未使用计划中的“预计差异”代替实际结果。完整路径清单见同目录的
-[`final-vs-upstream-paths.tsv`](final-vs-upstream-paths.tsv)（`git diff --name-status 132859f32 HEAD`，1,697 行）与
+[`final-vs-upstream-paths.tsv`](final-vs-upstream-paths.tsv)（`git diff --name-status 132859f32 HEAD`，1,773 行）与
 [`upstream-130.tsv`](upstream-130.tsv)（B→U 的 130 个路径及最终关系）。
 
 ## 1. 度量口径
@@ -21,7 +21,7 @@ git rev-list --count $U..HEAD
 
 | 项 | 读数 |
 | --- | ---: |
-| 相对 v2.26.0 的差异路径 | **1,697** |
+| 相对 v2.26.0 的差异路径 | **1,773** |
 | 新增（A） | 1,631 |
 | 修改（M） | 62 |
 | 删除（D） | 3 |
@@ -31,7 +31,7 @@ git rev-list --count $U..HEAD
 | 上游路径保留定制差异 | **20** |
 | U→HEAD 提交数 | 68（保留上游提交历史，未 squash） |
 
-按顶层归类：`k8s/` 1,012、`.scratch/` 522、`tests/` 64、产品源码/构建 78、文档 12、其他 9。所有 1,697
+按顶层归类：`k8s/` 1,012、`.scratch/` 598、`tests/` 64、产品源码/构建 78、文档 12、其他 9。所有 1,773
 个路径都在附录 TSV 中逐行出现，没有只给目录或“同上”而省略路径。
 
 ## 2. 官方 130 个路径的去向
@@ -158,7 +158,7 @@ git rev-list --count $U..HEAD
 | 类别 | 数量 | 内容与理由 | 验证 |
 | --- | ---: | --- | --- |
 | `k8s/**` | 1,012 | 991 个由 `prepare-build-context.sh` 从最终根源码生成的副本 + 21 个上下文专用文件（Dockerfile、构建/部署脚本、lib、tests、配置）。保留原因：K8s 构建必须来自最终根源码；不另行维护业务代码。 | `prepare-build-context.sh --check` 通过；镜像 `postiz-ticket14:b596737423c7` 实跑（T10/14）。 |
-| `.scratch/postiz-v2.26.0-implementation/**` | 522 | 实施票、验收记录、rehearsal 脚本与证据。保留原因：审计与复现；不进入运行时。 | 本报告与 `_reports/ticket-*.md`。 |
+| `.scratch/postiz-v2.26.0-implementation/**` | 598 | 实施票、验收记录、rehearsal 脚本与证据。保留原因：审计与复现；不进入运行时。 | 本报告与 `_reports/ticket-*.md`。 |
 | `tests/**` | 64 | 新增的回归、结构守卫和真实数据库/Temporal 测试（商户 SSO、邀请、重置、渠道、公开链接、多选帖子、索引、Temporal、工具链等）。 | `DATABASE_URL=… pnpm test` → 64 文件 / 695 项全部通过。 |
 | 文档 | 12 | `AGENTS.md`、`CONTEXT.md`、`doc/`、`docs/agents/`、`README.md`、`CLAUDE.md`（类型变化）。 | 不参与运行时。 |
 | 其他 | 9 | `.codegraph/.gitignore`、`docker/` 本地编排、`var/` 调研文档与图片（6 A）；删除 `.eslintignore`、`jest.config.ts`、`jest.preset.js`（3 D）。 | 构建/测试使用 ESLint flat config 与 Vitest。 |

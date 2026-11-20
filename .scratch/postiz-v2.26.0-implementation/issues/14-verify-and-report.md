@@ -68,11 +68,11 @@
 | 报告 | 路径 |
 | --- | --- |
 | 相对升级前定制版（按业务流程） | `.scratch/postiz-v2.26.0-implementation/final-vs-fork.md`（+ `final-vs-fork-paths.tsv`） |
-| 相对官方 v2.26.0（完整路径） | `.scratch/postiz-v2.26.0-implementation/final-vs-upstream.md`（+ `final-vs-upstream-paths.tsv` 1,697 行、`upstream-130.tsv`） |
+| 相对官方 v2.26.0（完整路径） | `.scratch/postiz-v2.26.0-implementation/final-vs-upstream.md`（+ `final-vs-upstream-paths.tsv` 1,773 行、`upstream-130.tsv`） |
 
 官方 130 个路径全部存在：110 个与 v2.26.0 逐字一致，20 个保留定制差异并逐项给出源/理由/验证。
-相对官方版共 1,697 个差异路径（1,631 A / 62 M / 3 D / 1 T），完整附录无路径遗漏；`k8s/` 1,012
-个为生成副本，`.scratch/` 522 个为审计材料，产品差异 78 个逐路径说明。
+相对官方版共 1,773 个差异路径（1,707 A / 62 M / 3 D / 1 T），完整附录无路径遗漏；`k8s/` 1,012
+个为生成副本，`.scratch/` 598 个为审计材料，产品差异 78 个逐路径说明。
 
 ### 外部验证
 
