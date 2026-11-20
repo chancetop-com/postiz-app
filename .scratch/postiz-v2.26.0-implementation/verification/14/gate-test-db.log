@@ -1,0 +1,420 @@
+
+> gitroom@1.0.0 test /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14
+> vitest run
+
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.12 /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14
+
+stdout | tests/session-copilot-headers.test.tsx > main layout Copilot > passes auth/showorg headers and leaves impersonate to the request fetch
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+
+ ✓ tests/startup-sync.test.ts (17 tests) 3397ms
+     ✓ runs the official root sync before starting the application  1248ms
+     ✓ stops the container without starting the application when the sync fails  698ms
+     ✓ passes the exit code of the application command through  1071ms
+     ✓ refuses to run without a command instead of exiting zero  369ms
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children with the signed-in user when /user/self succeeds
+Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
+
+ ✓ tests/session-copilot-headers.test.tsx (4 tests) 2829ms
+     ✓ passes auth/showorg headers and leaves impersonate to the request fetch  2594ms
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children with the signed-in user when /user/self succeeds
+Failed to load runtime info (/copilot/chat/info): Cannot convert undefined or null to object
+[CopilotKit] Error (runtime_info_fetch_failed): TypeError: Cannot convert undefined or null to object
+    at Function.entries (<anonymous>)
+    at AgentRegistry.performRuntimeConnection (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@copilotkit/core/dist/index.mjs:1822:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) { runtimeUrl: '/copilot/chat' }
+
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children with the signed-in user when /user/self succeeds
+Agent default not found
+
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children when /user/self is rejected
+Failed to load runtime info (/copilot/chat/info): Cannot convert undefined or null to object
+[CopilotKit] Error (runtime_info_fetch_failed): TypeError: Cannot convert undefined or null to object
+    at Function.entries (<anonymous>)
+    at AgentRegistry.performRuntimeConnection (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@copilotkit/core/dist/index.mjs:1822:45) { runtimeUrl: '/copilot/chat' }
+
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children when /user/self is rejected
+Agent default not found
+
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children when /user/self cannot be reached
+Failed to load runtime info (/copilot/chat/info): Cannot convert undefined or null to object
+[CopilotKit] Error (runtime_info_fetch_failed): TypeError: Cannot convert undefined or null to object
+    at Function.entries (<anonymous>)
+    at AgentRegistry.performRuntimeConnection (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@copilotkit/core/dist/index.mjs:1822:45) { runtimeUrl: '/copilot/chat' }
+
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children when /user/self cannot be reached
+Agent default not found
+
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children when /user/self is not JSON
+Failed to load runtime info (/copilot/chat/info): Cannot convert undefined or null to object
+[CopilotKit] Error (runtime_info_fetch_failed): TypeError: Cannot convert undefined or null to object
+    at Function.entries (<anonymous>)
+    at AgentRegistry.performRuntimeConnection (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@copilotkit/core/dist/index.mjs:1822:45) { runtimeUrl: '/copilot/chat' }
+
+stderr | tests/preview-auth.test.tsx > PreviewWrapper (anonymous preview shell) > renders its children when /user/self is not JSON
+Agent default not found
+
+stdout | tests/preview-auth.test.tsx > main layout user check > keeps the rejected /user/self redirect that the preview must not copy
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+
+stderr | tests/media-api-upload.test.ts > POST /media/upload-server > rejects an image over the 10 MB cap before saving it
+Error streaming file to Local Storage: BadRequestException: File is too large.
+    at Transform.transform [as _transform] (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/libraries/nestjs-libraries/src/upload/custom.upload.validation.ts:38:25)
+    at Transform._write (node:internal/streams/transform:171:8)
+    at writeOrBuffer (node:internal/streams/writable:572:12)
+    at _write (node:internal/streams/writable:501:10)
+    at Writable.write (node:internal/streams/writable:510:10)
+    at Readable.ondata (node:internal/streams/readable:1009:22)
+    at Readable.emit (node:events:519:28)
+    at Readable.read (node:internal/streams/readable:782:10)
+    at flow (node:internal/streams/readable:1283:53)
+    at resume_ (node:internal/streams/readable:1262:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+  response: {
+    message: 'File is too large.',
+    error: 'Bad Request',
+    statusCode: 400
+  },
+  status: 400,
+  options: {}
+}
+
+ ✓ tests/media-api-upload.test.ts (5 tests) 4748ms
+ ✓ tests/preview-auth.test.tsx (6 tests) 4327ms
+     ✓ renders its children with the signed-in user when /user/self succeeds  2871ms
+     ✓ keeps the rejected /user/self redirect that the preview must not copy  1402ms
+ ✓ tests/channel-connect-callback.test.tsx (18 tests) 821ms
+ ✓ tests/auth-standard-routes.test.ts (22 tests) 2457ms
+     ✓ starts a session with auth and reload headers  317ms
+     ✓ ignores an invalid invitation while the ordinary login still succeeds  301ms
+     ✓ still reads the historical org cookie for existing deployments  322ms
+stdout | tests/fault-recovery.test.ts > e-mail and refresh failures > tries the mail provider exactly three times and then swallows the failure
+Email service provider: no provider
+
+stdout | tests/fault-recovery.test.ts > e-mail and refresh failures > tries the mail provider exactly three times and then swallows the failure
+Email attempt 1/3 failed: Error: synthetic provider outage
+    at Object.sendEmail (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/tests/fault-recovery.test.ts:161:15)
+    at EmailService.sendEmailSync (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/libraries/nestjs-libraries/src/services/email.service.ts:142:47)
+    at /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/tests/fault-recovery.test.ts:166:15
+    at file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64
+    at run (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:20)
+    at limiterFn (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:1162:59)
+    at file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:38
+    at Traces.$ (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/vitest/dist/chunks/traces.DT5aQ62U.js:142:27)
+    at trace (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/vitest/dist/chunks/test.DNmyFkvJ.js:4398:21)
+    at file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async callAroundHooks (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2664:3)
+    at async callAroundEachHooks (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2800:2)
+    at async runTest (file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:2941:4)
+
+ ✓ tests/optional-services-mcp.test.ts (4 tests) 695ms
+     ✓ logs a rejected startMcp and still listens with the core wiring in place  683ms
+stdout | tests/fault-recovery.test.ts > e-mail and refresh failures > tries the mail provider exactly three times and then swallows the failure
+Email attempt 2/3 failed: Error: synthetic provider outage
+    at Object.sendEmail (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/tests/fault-recovery.test.ts:161:15)
+    at EmailService.sendEmailSync (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/libraries/nestjs-libraries/src/services/email.service.ts:142:47)
+    at /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/tests/fault-recovery.test.ts:165:5
+    at async file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stdout | tests/public-preview-route.test.tsx > public preview route > asks the backend for the public posts of the preview
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+
+ ✓ tests/channel-multistep-selection.test.tsx (25 tests) 574ms
+stdout | tests/channel-credentials.test.ts > rotating credentials of already-bound channels > refreshes the six and other bound providers without changing identity
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > rotating credentials of already-bound channels > keeps refreshing the remaining channels when one refresh fails
+Encryption provider: no provider
+
+stdout | tests/public-preview-route.test.tsx > public preview route > renders the inline comment panel of a valid preview
+2026-11-01T10:00:00.000Z
+
+stdout | tests/public-preview-route.test.tsx > public preview route > renders the media of a valid preview
+2026-11-01T10:00:00.000Z
+
+stdout | tests/public-preview-route.test.tsx > public preview route > sanitises the post content the backend returned
+2026-11-01T10:00:00.000Z
+
+ ✓ tests/public-preview-route.test.tsx (10 tests) 1241ms
+     ✓ asks the backend for the public posts of the preview  1169ms
+stdout | tests/fault-recovery.test.ts > e-mail and refresh failures > tries the mail provider exactly three times and then swallows the failure
+Email attempt 3/3 failed: Error: synthetic provider outage
+    at Object.sendEmail (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/tests/fault-recovery.test.ts:161:15)
+    at EmailService.sendEmailSync (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/libraries/nestjs-libraries/src/services/email.service.ts:142:47)
+    at /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/tests/fault-recovery.test.ts:165:5
+    at async file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+Email to somebody@synthetic.invalid failed after 3 attempts: Error: synthetic provider outage
+    at Object.sendEmail (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/tests/fault-recovery.test.ts:161:15)
+    at EmailService.sendEmailSync (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/libraries/nestjs-libraries/src/services/email.service.ts:142:47)
+    at /Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/tests/fault-recovery.test.ts:165:5
+    at async file:///Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+ ✓ tests/channel-add-flow.test.tsx (7 tests) 476ms
+stdout | tests/media-library.test.tsx > media library uploads and deletes > uploads through the real local uploader and selects the saved record
+{
+  successful: [
+    {
+      source: '',
+      id: 'uppy-fresh/png-1e-image/png-5-1795178983409',
+      name: 'fresh.png',
+      extension: 'png',
+      meta: [Object],
+      type: 'image/png',
+      data: File {},
+      progress: [Object],
+      size: 5,
+      isGhost: false,
+      isRemote: false,
+      remote: undefined,
+      preview: undefined,
+      response: [Object],
+      uploadURL: undefined,
+      isPaused: false
+    }
+  ],
+  failed: [],
+  uploadID: 'y3Qp6fnqmSfbrukcQhmCW'
+}
+
+stdout | tests/channel-credentials.test.ts > rotating credentials of already-bound channels > treats an empty refreshed token as a failure, never as success
+Encryption provider: no provider
+
+ ✓ tests/fault-recovery.test.ts (16 tests) 1780ms
+     ✓ tries the mail provider exactly three times and then swallows the failure  1411ms
+     ✓ registers every produced workflow type in one candidate bundle  354ms
+stdout | tests/media-editor.test.tsx
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+
+ ✓ tests/media-library.test.tsx (8 tests) 494ms
+ ✓ tests/media-editor.test.tsx (4 tests) 385ms
+stdout | tests/channel-credentials.test.ts > rotating credentials of already-bound channels > keeps the same account on another organization untouched
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > rotating credentials of already-bound channels > keeps non-whitelisted bindings queryable and settable
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > concurrent refresh of one channel > reuses the credential a parallel refresh rotated and later publishes with it
+Encryption provider: no provider
+
+ ✓ tests/session-org-invite.test.tsx (6 tests) 347ms
+stdout | tests/channel-credentials.test.ts > concurrent refresh of one channel > notifies only the attempt that first flags a broken channel
+Encryption provider: no provider
+
+ ✓ tests/channel-connect-consent.test.tsx (5 tests) 368ms
+ ✓ tests/oauth-authorize-session.test.tsx (3 tests) 395ms
+ ✓ tests/sso-light-theme.test.tsx (4 tests) 214ms
+stdout | tests/oauth-register-session.test.tsx
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+
+ ✓ tests/oauth-register-session.test.tsx (5 tests) 244ms
+ ✓ tests/session-lifecycle.test.tsx (7 tests) 167ms
+ ✓ tests/merchant-sso-session.test.tsx (8 tests) 223ms
+ ✓ tests/password-reset-token.test.ts (63 tests) 2107ms
+     ✓ keeps the old password working after new and legacy submissions are rejected  339ms
+     ✓ changes the password through the new link so only the new password logs in  623ms
+     ✓ changes the password through a pre-upgrade link and verifies the login result  425ms
+ ✓ tests/channel-list-refresh.test.tsx (3 tests) 199ms
+ ✓ tests/merchant-sso-entry.test.tsx (9 tests) 142ms
+ ✓ tests/session-org-tab.test.tsx (5 tests) 114ms
+ ✓ tests/public-preview.test.ts (13 tests) 44ms
+stderr | tests/channel-credentials.test.ts > concurrent refresh of one channel > notifies only the attempt that first flags a broken channel
+Could not refresh facebook integration integration-1 revoked
+
+stderr | tests/channel-credentials.test.ts > concurrent refresh of one channel > notifies only the attempt that first flags a broken channel
+Could not refresh facebook integration integration-1 revoked
+
+stdout | tests/channel-credentials.test.ts > pages and shared accounts keep their exact associations > refreshes a root and two pages of one account without mixing their tokens
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > pages and shared accounts keep their exact associations > refreshing one organization leaves the same account in another byte-identical
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > default deployment without an encryption provider > keeps synthetic legacy tokens in their original form through a write and read
+Encryption provider: no provider
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > refresh with grouped pages of the same account > reconnects a page with its root id and stores the page token
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > refresh with grouped pages of the same account > does not call reConnect for a root channel
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > refresh with grouped pages of the same account > flags the channel when the token refresh itself fails
+Encryption provider: no provider
+
+ ✓ tests/channel-connect-timezone.test.tsx (2 tests) 143ms
+ ✓ tests/session-popup.test.tsx (3 tests) 31ms
+stderr | tests/layout-navigation.test.tsx > menu entries > keeps Agent and Settings out of the rendered menu
+Received `true` for a non-boolean attribute `prefetch`.
+
+If you want to write it to the DOM, pass a string instead: prefetch="true" or prefetch={value.toString()}.
+
+ ✓ tests/layout-navigation.test.tsx (5 tests) 88ms
+ ✓ tests/merchant-sso-http.test.ts (12 tests) 124ms
+ ✓ tests/merchant-sso-routes.test.ts (11 tests) 48ms
+ ✓ tests/channel-add-entries.test.tsx (6 tests) 74ms
+ ✓ tests/account-surfaces.test.tsx (6 tests) 133ms
+stderr | tests/channel-credentials.test.ts > refresh with grouped pages of the same account > flags the channel when the token refresh itself fails
+Could not refresh instagram integration integration-1 invalid grant
+
+stdout | tests/channel-credentials.test.ts > reconnect persistence > stores the freshly authenticated refresh token and expiration
+reconnect
+
+stdout | tests/channel-credentials.test.ts > reconnect persistence > does not persist anything when the reauthorised account is rejected
+reconnect
+
+stdout | tests/channel-credentials.test.ts > old root lookup > still finds a root id that a deleted account stored as md5
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > old root lookup > still finds a root id that a deleted account stored as md5
+Encryption provider: no provider
+
+stdout | tests/channel-credentials.test.ts > old root lookup > does not invent an underscore-suffixed root id
+Encryption provider: no provider
+
+ ✓ tests/theme-brand.test.tsx (7 tests) 143ms
+ ✓ tests/optional-services-copilot.test.ts (10 tests) 160ms
+ ✓ tests/optional-services-core-flows.test.ts (12 tests) 190ms
+ ✓ tests/media-upload-route.test.ts (5 tests) 44ms
+stdout | tests/channel-credentials.test.ts > real PostgreSQL credential matrix
+Encryption provider: no provider
+
+stdout | tests/surface-theme.test.tsx
+🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+
+ ✓ tests/surface-theme.test.tsx (2 tests) 26ms
+stderr | tests/media-upload-server.test.ts > local upload writes > rejects an image over the 10 MB limit and leaves no file behind
+Error streaming file to Local Storage: BadRequestException: File is too large.
+    at Transform.transform [as _transform] (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/libraries/nestjs-libraries/src/upload/custom.upload.validation.ts:38:25)
+    at Transform._write (node:internal/streams/transform:171:8)
+    at writeOrBuffer (node:internal/streams/writable:572:12)
+    at _write (node:internal/streams/writable:501:10)
+    at Writable.write (node:internal/streams/writable:510:10)
+    at Readable.ondata (node:internal/streams/readable:1009:22)
+    at Readable.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at node:internal/webstreams/adapters:552:22
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  response: {
+    message: 'File is too large.',
+    error: 'Bad Request',
+    statusCode: 400
+  },
+  status: 400,
+  options: {}
+}
+
+stderr | tests/media-upload-server.test.ts > local upload writes > rejects an image over the 10 MB limit and leaves no file behind
+Error streaming file to Local Storage: BadRequestException: File is too large.
+    at Transform.transform [as _transform] (/Users/chancetio/Desktop/Web/postiz-app-worktrees/ticket-14/libraries/nestjs-libraries/src/upload/custom.upload.validation.ts:38:25)
+    at Transform._write (node:internal/streams/transform:171:8)
+    at writeOrBuffer (node:internal/streams/writable:572:12)
+    at _write (node:internal/streams/writable:501:10)
+    at Writable.write (node:internal/streams/writable:510:10)
+    at Readable.ondata (node:internal/streams/readable:1009:22)
+    at Readable.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at node:internal/webstreams/adapters:552:22
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  response: {
+    message: 'File is too large.',
+    error: 'Bad Request',
+    statusCode: 400
+  },
+  status: 400,
+  options: {}
+}
+
+ ✓ tests/media-upload-server.test.ts (8 tests) 68ms
+ ✓ tests/media-processing.test.ts (5 tests) 21ms
+ ✓ tests/schema-upgrade-contract.test.ts (55 tests) 14ms
+ ✓ tests/scheduled-post-continuity.test.ts (8 tests) 46ms
+ ✓ tests/merchant-account-org.test.ts (14 tests) 31ms
+ ✓ tests/auth-layout.test.tsx (1 test) 14ms
+stdout | tests/channel-credentials.test.ts > real PostgreSQL credential matrix > persists a reconnect of an old page into PostgreSQL without moving the root
+reconnect
+
+ ✓ tests/app-shell.test.tsx (1 test) 7ms
+ ✓ tests/recurring-maintenance-workers.test.ts (10 tests) 98ms
+ ✓ tests/sso-cookie-gate.test.ts (19 tests) 33ms
+ ✓ tests/channel-popup-contract.test.tsx (10 tests) 9ms
+ ✓ tests/channel-public-connect-link.test.ts (16 tests) 13ms
+ ✓ tests/channel-upstream-retention.test.ts (16 tests) 5ms
+ ✓ tests/session-upload-headers.test.ts (4 tests) 7ms
+ ✓ tests/channel-credentials.test.ts (33 tests) 11675ms
+     ✓ keeps refreshing the remaining channels when one refresh fails  755ms
+     ✓ treats an empty refreshed token as a failure, never as success  754ms
+     ✓ notifies only the attempt that first flags a broken channel  3008ms
+     ✓ flags the channel when the token refresh itself fails  3011ms
+     ✓ refreshes the six dashboard channels, pages and history, and keeps going after a failure  1707ms
+     ✓ reuses the winning concurrent rotation and publishes the next Tumblr post with it  1028ms
+ ✓ tests/sso-exchange.test.ts (5 tests) 8ms
+ ✓ tests/session-oauth-state.test.ts (12 tests) 15ms
+ ✓ tests/oauth-session-roundtrip.test.ts (4 tests) 24ms
+ ✓ tests/toolchain-contract.test.ts (5 tests) 5ms
+stdout | tests/channel-multistep-binding.test.ts > YouTube > binds the picked channel instead of the first one in the list
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > Facebook Page > binds the picked page with that page token
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > Facebook Page > leaves a different existing binding in the same organisation alone
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > Facebook Page > reuses the existing row when the same page is bound again
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > Instagram (Facebook Business) > binds the picked Instagram account on top of its page token
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > Instagram (Facebook Business) > does not write another organisation’s row
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > the save refuses anything that is not a pending selection > rejects a selection for another organisation
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > the save refuses anything that is not a pending selection > rejects an integration that is already bound
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > the save refuses anything that is not a pending selection > rejects an unknown integration
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > the save refuses anything that is not a pending selection > rejects a provider that cannot resolve a page, and writes nothing
+Encryption provider: no provider
+
+stdout | tests/channel-multistep-binding.test.ts > the save refuses anything that is not a pending selection > propagates a platform refusal without touching the row
+Encryption provider: no provider
+
+ ✓ tests/channel-multistep-binding.test.ts (11 tests) 19ms
+ ✓ tests/session-org-flow.test.ts (14 tests) 40ms
+ ✓ tests/merchant-sso.test.ts (4 tests) 11ms
+ ✓ tests/channel-identifiers.test.ts (7 tests) 8ms
+ ✓ tests/temporal-fault-recovery.test.ts (10 tests) 7ms
+ ✓ tests/temporal-inflight-continuity.test.ts (6 tests) 4ms
+ ✓ tests/session-401-contract.test.ts (2 tests) 9ms
+ ✓ tests/temporal-continuity.test.ts (50 tests) 8ms
+stdout | tests/selected-channel-posts.test.ts > selected-channel posts
+Encryption provider: no provider
+
+ ✓ tests/selected-channel-posts.test.ts (7 tests) 463ms
+
+ Test Files  64 passed (64)
+      Tests  695 passed (695)
+   Start at  20:49:35
+   Duration  24.69s (transform 6.70s, setup 0ms, import 94.47s, tests 42.66s, environment 13.28s)
+

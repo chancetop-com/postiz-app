@@ -1,0 +1,516 @@
+2026-11-20T12:35:45.415894880Z [startup-sync] cwd=/app command=pnpm run prisma-db-push
+2026-11-20T12:35:45.758866422Z 
+2026-11-20T12:35:45.758891213Z > gitroom@1.0.0 prisma-db-push /app
+2026-11-20T12:35:45.758893422Z > prisma db push --schema ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+2026-11-20T12:35:45.758894588Z 
+2026-11-20T12:35:51.319211758Z Prisma schema loaded from libraries/nestjs-libraries/src/database/prisma/schema.prisma
+2026-11-20T12:35:51.327692591Z Datasource "db": PostgreSQL database "postiz", schema "public" at "t14-pg:5432"
+2026-11-20T12:36:15.139091671Z 
+2026-11-20T12:36:15.139118755Z 🚀  Your database is now in sync with your Prisma schema. Done in 23.75s
+2026-11-20T12:36:15.139192296Z 
+2026-11-20T12:36:15.140865463Z Running generate... (Use --skip-generate to skip the generators)
+2026-11-20T12:36:15.718270672Z [2K[1A[2K[GRunning generate... - Prisma Client
+2026-11-20T12:36:16.286311797Z [2K[1A[2K[G✔ Generated Prisma Client (v6.5.0) to ./node_modules/@prisma/client in 567ms
+2026-11-20T12:36:16.287121505Z 
+2026-11-20T12:36:16.556346839Z [startup-sync] database schema is in sync; starting: sh -c nginx && pm2-runtime ecosystem.config.cjs
+2026-11-20T12:36:16.847964256Z 2026-11-20T12:36:16: PM2 log: Launching in no daemon mode
+2026-11-20T12:36:16.896402881Z 2026-11-20T12:36:16: PM2 log: App [backend:0] starting in -fork mode-
+2026-11-20T12:36:16.899643256Z 2026-11-20T12:36:16: PM2 log: App [frontend:1] starting in -fork mode-
+2026-11-20T12:36:16.905621672Z 2026-11-20T12:36:16: PM2 log: App [backend:0] online
+2026-11-20T12:36:16.910334797Z 2026-11-20T12:36:16: PM2 log: App [frontend:1] online
+2026-11-20T12:36:16.914916547Z 2026-11-20T12:36:16: PM2 log: App [orchestrator:2] starting in -fork mode-
+2026-11-20T12:36:16.920584547Z 2026-11-20T12:36:16: PM2 log: App [orchestrator:2] online
+2026-11-20T12:36:17.528629464Z ▲ Next.js 16.4.2
+2026-11-20T12:36:17.528655089Z - Local:         http://localhost:4200
+2026-11-20T12:36:17.528657464Z - Network:       http://172.20.0.6:4200
+2026-11-20T12:36:17.528658506Z ✓ Ready in 356ms
+2026-11-20T12:36:17.801879964Z ✓ Running next.config.js took 272ms
+2026-11-20T12:36:18.383322631Z 127.0.0.1 - - [20/Nov/2026:12:36:18 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+2026-11-20T12:36:18.383450756Z 2026/11/20 12:36:18 [error] 127#127: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:18.383457006Z 2026/11/20 12:36:18 [warn] 127#127: *1 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:18.383458590Z 2026/11/20 12:36:18 [error] 127#127: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:18.383478173Z 2026/11/20 12:36:18 [warn] 127#127: *1 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.536068257Z 2026/11/20 12:36:20 [error] 125#125: *4 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.536145924Z 2026/11/20 12:36:20 [warn] 125#125: *4 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.536149841Z 2026/11/20 12:36:20 [error] 125#125: *4 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.536151091Z 2026/11/20 12:36:20 [warn] 125#125: *4 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.536127882Z 127.0.0.1 - - [20/Nov/2026:12:36:20 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+2026-11-20T12:36:20.811238591Z 2026/11/20 12:36:20 [error] 128#128: *7 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.811270924Z 2026/11/20 12:36:20 [warn] 128#128: *7 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.811273341Z 2026/11/20 12:36:20 [error] 128#128: *7 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.811274507Z 2026/11/20 12:36:20 [warn] 128#128: *7 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:20.811363632Z 127.0.0.1 - - [20/Nov/2026:12:36:20 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+2026-11-20T12:36:22.755228050Z 2026/11/20 12:36:22 [error] 129#129: *10 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:22.755291550Z 2026/11/20 12:36:22 [warn] 129#129: *10 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:22.755296467Z 2026/11/20 12:36:22 [error] 129#129: *10 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:22.755313717Z 2026/11/20 12:36:22 [warn] 129#129: *10 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:22.755236217Z 127.0.0.1 - - [20/Nov/2026:12:36:22 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+2026-11-20T12:36:23.396142134Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-11-20T12:36:23.419252134Z Encryption provider: no provider
+2026-11-20T12:36:23.421311217Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mCreating new client connection to t14-temporal:7233 (attempt 1)[39m
+2026-11-20T12:36:23.421319717Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+2026-11-20T12:36:23.440503342Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mSuccessfully connected to t14-temporal:7233[39m
+2026-11-20T12:36:23.440526509Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+2026-11-20T12:36:23.456977675Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +14ms[39m
+2026-11-20T12:36:23.457792384Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mVideoModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-11-20T12:36:23.492973050Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mWorker connection established to t14-temporal:7233[39m
+2026-11-20T12:36:23.493017509Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+2026-11-20T12:36:23.493446925Z Email service provider: no provider
+2026-11-20T12:36:23.493457175Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTemporalModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:23.494218259Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDatabaseModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:23.494233217Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:23.502431050Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/health}:[39m[38;5;3m +8ms[39m
+2026-11-20T12:36:23.504717550Z [32m[Nest] 157  - [39m11/20/2026, 12:36:23 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health/status, GET} route[39m[38;5;3m +3ms[39m
+2026-11-20T12:36:24.926742343Z 127.0.0.1 - - [20/Nov/2026:12:36:24 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+2026-11-20T12:36:24.926834551Z 2026/11/20 12:36:24 [error] 132#132: *13 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:24.926838718Z 2026/11/20 12:36:24 [warn] 132#132: *13 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:24.926840051Z 2026/11/20 12:36:24 [error] 132#132: *13 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:24.926841134Z 2026/11/20 12:36:24 [warn] 132#132: *13 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:25.403548051Z 2026-11-20T12:36:25.396Z [INFO] asset workflow-bundle-31ce9ec349a0cfed7829.js 3.18 MiB [emitted] [immutable] (name: main)
+2026-11-20T12:36:25.403609635Z runtime modules 1010 bytes 5 modules
+2026-11-20T12:36:25.403611843Z modules by path ./node_modules/ 965 KiB
+2026-11-20T12:36:25.403612968Z   modules by path ./node_modules/@temporalio/ 332 KiB 55 modules
+2026-11-20T12:36:25.403613885Z   modules by path ./node_modules/nexus-rpc/lib/ 25.6 KiB 17 modules
+2026-11-20T12:36:25.403614718Z   + 4 modules
+2026-11-20T12:36:25.403615468Z modules by path ./apps/orchestrator/dist/ 181 KiB
+2026-11-20T12:36:25.403616510Z   modules by path ./apps/orchestrator/dist/apps/orchestrator/src/workflows/ 179 KiB 24 modules
+2026-11-20T12:36:25.403617510Z   modules by path ./apps/orchestrator/dist/libraries/nestjs-libraries/src/ 1.02 KiB 3 modules
+2026-11-20T12:36:25.403620801Z   modules by path ./apps/orchestrator/dist/apps/orchestrator/src/signals/*.js 452 bytes
+2026-11-20T12:36:25.403621718Z     ./apps/orchestrator/dist/apps/orchestrator/src/signals/email.signal.js 220 bytes [built] [code generated] [1 warning]
+2026-11-20T12:36:25.403622551Z     ./apps/orchestrator/dist/apps/orchestrator/src/signals/send.email.signal.js 232 bytes [built] [code generated] [1 warning]
+2026-11-20T12:36:25.403623426Z optional modules 30 bytes [optional]
+2026-11-20T12:36:25.403624176Z   __temporal_custom_payload_converter (ignored) 15 bytes [optional] [built] [code generated]
+2026-11-20T12:36:25.403625010Z   __temporal_custom_failure_converter (ignored) 15 bytes [optional] [built] [code generated]
+2026-11-20T12:36:25.403658426Z webpack 5.105.4 compiled successfully in 1385 ms { sdkComponent: 'worker', taskQueue: 'main' }
+2026-11-20T12:36:25.434221343Z 2026-11-20T12:36:25.431Z [INFO] Workflow bundle created { sdkComponent: 'worker', taskQueue: 'main', size: '3.18MB' }
+2026-11-20T12:36:26.035820677Z 2026/11/20 12:36:26 [error] 130#130: *16 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:26.035871135Z 2026/11/20 12:36:26 [warn] 130#130: *16 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:26.035874635Z 2026/11/20 12:36:26 [error] 130#130: *16 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:26.035884468Z 2026/11/20 12:36:26 [warn] 130#130: *16 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:26.035914760Z 127.0.0.1 - - [20/Nov/2026:12:36:26 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+2026-11-20T12:36:26.223843510Z 2026-11-20T12:36:26.221Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'main', state: 'RUNNING' }
+2026-11-20T12:36:26.226526385Z 2026-11-20T12:36:26.225Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'main' }
+2026-11-20T12:36:26.231370093Z 2026-11-20T12:36:26.228Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'x', state: 'RUNNING' }
+2026-11-20T12:36:26.232115510Z 2026-11-20T12:36:26.229Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'x' }
+2026-11-20T12:36:26.235717385Z 2026-11-20T12:36:26.231Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'x' }
+2026-11-20T12:36:26.235733385Z 2026-11-20T12:36:26.233Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'linkedin', state: 'RUNNING' }
+2026-11-20T12:36:26.237580010Z 2026-11-20T12:36:26.234Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'linkedin' }
+2026-11-20T12:36:26.237591968Z 2026-11-20T12:36:26.234Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'linkedin' }
+2026-11-20T12:36:26.237856593Z 2026-11-20T12:36:26.235Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'reddit', state: 'RUNNING' }
+2026-11-20T12:36:26.237864177Z 2026-11-20T12:36:26.236Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'reddit' }
+2026-11-20T12:36:26.237865635Z 2026-11-20T12:36:26.236Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'reddit' }
+2026-11-20T12:36:26.256936927Z 2026-11-20T12:36:26.237Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'instagram', state: 'RUNNING' }
+2026-11-20T12:36:26.257006260Z 2026-11-20T12:36:26.238Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'instagram' }
+2026-11-20T12:36:26.257013468Z 2026-11-20T12:36:26.238Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'instagram' }
+2026-11-20T12:36:26.257712968Z 2026-11-20T12:36:26.239Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'facebook', state: 'RUNNING' }
+2026-11-20T12:36:26.257732927Z 2026-11-20T12:36:26.239Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'facebook' }
+2026-11-20T12:36:26.257736927Z 2026-11-20T12:36:26.240Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'facebook' }
+2026-11-20T12:36:26.257738635Z 2026-11-20T12:36:26.242Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'threads', state: 'RUNNING' }
+2026-11-20T12:36:26.257741677Z 2026-11-20T12:36:26.243Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'threads' }
+2026-11-20T12:36:26.257748010Z 2026-11-20T12:36:26.243Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'threads' }
+2026-11-20T12:36:26.257754135Z 2026-11-20T12:36:26.244Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'youtube', state: 'RUNNING' }
+2026-11-20T12:36:26.257760427Z 2026-11-20T12:36:26.244Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'youtube' }
+2026-11-20T12:36:26.257766052Z 2026-11-20T12:36:26.245Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'youtube' }
+2026-11-20T12:36:26.257769385Z 2026-11-20T12:36:26.246Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'gmb', state: 'RUNNING' }
+2026-11-20T12:36:26.257770927Z 2026-11-20T12:36:26.246Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'gmb' }
+2026-11-20T12:36:26.257779218Z 2026-11-20T12:36:26.247Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'gmb' }
+2026-11-20T12:36:26.258628635Z 2026-11-20T12:36:26.248Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'tiktok', state: 'RUNNING' }
+2026-11-20T12:36:26.259096843Z 2026-11-20T12:36:26.249Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'tiktok' }
+2026-11-20T12:36:26.259102510Z 2026-11-20T12:36:26.249Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'tiktok' }
+2026-11-20T12:36:26.259106802Z 2026-11-20T12:36:26.250Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'pinterest', state: 'RUNNING' }
+2026-11-20T12:36:26.259111177Z 2026-11-20T12:36:26.250Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'pinterest' }
+2026-11-20T12:36:26.259575677Z 2026-11-20T12:36:26.250Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'pinterest' }
+2026-11-20T12:36:26.259616593Z 2026-11-20T12:36:26.251Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'dribbble', state: 'RUNNING' }
+2026-11-20T12:36:26.259624427Z 2026-11-20T12:36:26.251Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'dribbble' }
+2026-11-20T12:36:26.259650093Z 2026-11-20T12:36:26.251Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'dribbble' }
+2026-11-20T12:36:26.259655927Z 2026-11-20T12:36:26.252Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'discord', state: 'RUNNING' }
+2026-11-20T12:36:26.259658593Z 2026-11-20T12:36:26.252Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'discord' }
+2026-11-20T12:36:26.259663593Z 2026-11-20T12:36:26.252Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'discord' }
+2026-11-20T12:36:26.259665343Z 2026-11-20T12:36:26.252Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'slack', state: 'RUNNING' }
+2026-11-20T12:36:26.259669135Z 2026-11-20T12:36:26.252Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'slack' }
+2026-11-20T12:36:26.259675427Z 2026-11-20T12:36:26.252Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'slack' }
+2026-11-20T12:36:26.259681385Z 2026-11-20T12:36:26.252Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'kick', state: 'RUNNING' }
+2026-11-20T12:36:26.259687593Z 2026-11-20T12:36:26.252Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'kick' }
+2026-11-20T12:36:26.259693718Z 2026-11-20T12:36:26.252Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'kick' }
+2026-11-20T12:36:26.259699927Z 2026-11-20T12:36:26.253Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'twitch', state: 'RUNNING' }
+2026-11-20T12:36:26.259703718Z 2026-11-20T12:36:26.253Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'twitch' }
+2026-11-20T12:36:26.259754510Z 2026-11-20T12:36:26.253Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'twitch' }
+2026-11-20T12:36:26.259761427Z 2026-11-20T12:36:26.254Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'mastodon', state: 'RUNNING' }
+2026-11-20T12:36:26.259878552Z 2026-11-20T12:36:26.256Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'mastodon' }
+2026-11-20T12:36:26.259882885Z 2026-11-20T12:36:26.256Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'mastodon' }
+2026-11-20T12:36:26.259886177Z 2026-11-20T12:36:26.257Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'bluesky', state: 'RUNNING' }
+2026-11-20T12:36:26.259888885Z 2026-11-20T12:36:26.257Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'bluesky' }
+2026-11-20T12:36:26.259889802Z 2026-11-20T12:36:26.258Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'bluesky' }
+2026-11-20T12:36:26.260616510Z 2026-11-20T12:36:26.258Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'lemmy', state: 'RUNNING' }
+2026-11-20T12:36:26.260829468Z 2026-11-20T12:36:26.259Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'lemmy' }
+2026-11-20T12:36:26.261734552Z 2026-11-20T12:36:26.259Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'lemmy' }
+2026-11-20T12:36:26.261748677Z 2026-11-20T12:36:26.260Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'wrapcast', state: 'RUNNING' }
+2026-11-20T12:36:26.261750760Z 2026-11-20T12:36:26.260Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'wrapcast' }
+2026-11-20T12:36:26.261905593Z 2026-11-20T12:36:26.260Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'wrapcast' }
+2026-11-20T12:36:26.262793468Z 2026-11-20T12:36:26.261Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'telegram', state: 'RUNNING' }
+2026-11-20T12:36:26.262798677Z 2026-11-20T12:36:26.261Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'telegram' }
+2026-11-20T12:36:26.262816218Z 2026-11-20T12:36:26.261Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'telegram' }
+2026-11-20T12:36:26.262888010Z 2026-11-20T12:36:26.262Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'nostr', state: 'RUNNING' }
+2026-11-20T12:36:26.262892052Z 2026-11-20T12:36:26.262Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'nostr' }
+2026-11-20T12:36:26.263358260Z 2026-11-20T12:36:26.262Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'nostr' }
+2026-11-20T12:36:26.264120302Z 2026-11-20T12:36:26.263Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'vk', state: 'RUNNING' }
+2026-11-20T12:36:26.264139718Z 2026-11-20T12:36:26.263Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'vk' }
+2026-11-20T12:36:26.264153093Z 2026-11-20T12:36:26.263Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'vk' }
+2026-11-20T12:36:26.264853302Z 2026-11-20T12:36:26.264Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'medium', state: 'RUNNING' }
+2026-11-20T12:36:26.264866468Z 2026-11-20T12:36:26.264Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'medium' }
+2026-11-20T12:36:26.264879302Z 2026-11-20T12:36:26.264Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'medium' }
+2026-11-20T12:36:26.265116718Z 2026-11-20T12:36:26.264Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'devto', state: 'RUNNING' }
+2026-11-20T12:36:26.266271468Z 2026-11-20T12:36:26.264Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'devto' }
+2026-11-20T12:36:26.266486593Z 2026-11-20T12:36:26.265Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'devto' }
+2026-11-20T12:36:26.268067177Z 2026-11-20T12:36:26.265Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'hashnode', state: 'RUNNING' }
+2026-11-20T12:36:26.268090718Z 2026-11-20T12:36:26.266Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'hashnode' }
+2026-11-20T12:36:26.268094010Z 2026-11-20T12:36:26.266Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'hashnode' }
+2026-11-20T12:36:26.268095760Z 2026-11-20T12:36:26.266Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'wordpress', state: 'RUNNING' }
+2026-11-20T12:36:26.268097343Z 2026-11-20T12:36:26.266Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'wordpress' }
+2026-11-20T12:36:26.268098927Z 2026-11-20T12:36:26.266Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'wordpress' }
+2026-11-20T12:36:26.268100468Z 2026-11-20T12:36:26.267Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'listmonk', state: 'RUNNING' }
+2026-11-20T12:36:26.268102010Z 2026-11-20T12:36:26.267Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'listmonk' }
+2026-11-20T12:36:26.268103593Z 2026-11-20T12:36:26.267Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'listmonk' }
+2026-11-20T12:36:26.269880802Z 2026-11-20T12:36:26.267Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'moltbook', state: 'RUNNING' }
+2026-11-20T12:36:26.269892968Z 2026-11-20T12:36:26.267Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'moltbook' }
+2026-11-20T12:36:26.269894593Z 2026-11-20T12:36:26.267Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'moltbook' }
+2026-11-20T12:36:26.270431093Z 2026-11-20T12:36:26.267Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'whop', state: 'RUNNING' }
+2026-11-20T12:36:26.271357843Z 2026-11-20T12:36:26.267Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'whop' }
+2026-11-20T12:36:26.271439260Z 2026-11-20T12:36:26.268Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'whop' }
+2026-11-20T12:36:26.271446218Z 2026-11-20T12:36:26.268Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'skool', state: 'RUNNING' }
+2026-11-20T12:36:26.271448052Z 2026-11-20T12:36:26.268Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'skool' }
+2026-11-20T12:36:26.271449802Z 2026-11-20T12:36:26.268Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'skool' }
+2026-11-20T12:36:26.271451385Z 2026-11-20T12:36:26.268Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'mewe', state: 'RUNNING' }
+2026-11-20T12:36:26.271468177Z 2026-11-20T12:36:26.268Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'mewe' }
+2026-11-20T12:36:26.271471218Z 2026-11-20T12:36:26.268Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'mewe' }
+2026-11-20T12:36:26.271472843Z 2026-11-20T12:36:26.270Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'tumblr', state: 'RUNNING' }
+2026-11-20T12:36:26.271474385Z 2026-11-20T12:36:26.270Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'tumblr' }
+2026-11-20T12:36:26.272179427Z 2026-11-20T12:36:26.270Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'tumblr' }
+2026-11-20T12:36:26.272189177Z 2026-11-20T12:36:26.271Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'email', state: 'RUNNING' }
+2026-11-20T12:36:26.272193260Z 2026-11-20T12:36:26.271Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'email' }
+2026-11-20T12:36:26.272199260Z 2026-11-20T12:36:26.271Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'email' }
+2026-11-20T12:36:26.272202427Z 2026-11-20T12:36:26.271Z [INFO] Worker state changed { sdkComponent: 'worker', taskQueue: 'email-bulk', state: 'RUNNING' }
+2026-11-20T12:36:26.272649427Z 2026-11-20T12:36:26.271Z [WARN] No workflows registered, not polling for workflow tasks { sdkComponent: 'worker', taskQueue: 'email-bulk' }
+2026-11-20T12:36:26.272655093Z 2026-11-20T12:36:26.271Z [INFO] No Nexus services registered, not polling for Nexus tasks { sdkComponent: 'worker', taskQueue: 'email-bulk' }
+2026-11-20T12:36:26.273165135Z [32m[Nest] 157  - [39m11/20/2026, 12:36:26 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +2768ms[39m
+2026-11-20T12:36:26.276483468Z Orchestrator health check listening on port 3002
+2026-11-20T12:36:27.123474469Z 2026/11/20 12:36:27 [error] 126#126: *19 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:27.123540385Z 2026/11/20 12:36:27 [warn] 126#126: *19 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:27.123547635Z 2026/11/20 12:36:27 [error] 126#126: *19 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:27.123549802Z 2026/11/20 12:36:27 [warn] 126#126: *19 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:27.123616552Z 127.0.0.1 - - [20/Nov/2026:12:36:27 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+2026-11-20T12:36:28.891790386Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+2026-11-20T12:36:28.927705803Z Encryption provider: no provider
+2026-11-20T12:36:28.933121928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mCreating new client connection to t14-temporal:7233 (attempt 1)[39m
+2026-11-20T12:36:28.933151053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+2026-11-20T12:36:28.966768761Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mSuccessfully connected to t14-temporal:7233[39m
+2026-11-20T12:36:28.966800428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+2026-11-20T12:36:28.969868386Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSentryModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-11-20T12:36:28.969884470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUploadModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:28.972351761Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mThrottlerModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-11-20T12:36:28.973500970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:28.974036595Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mVideoModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:28.974798928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mThirdPartyModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:28.996969678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mWorker connection established to t14-temporal:7233[39m
+2026-11-20T12:36:28.997010886Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[TemporalConnectionFactory] [39m[32mTemporalConnectionFactory[39m
+2026-11-20T12:36:28.997143053Z Email service provider: no provider
+2026-11-20T12:36:28.997336928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTemporalModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-11-20T12:36:28.997344470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTemporalRegisterMissingSearchAttributesModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:28.997536553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mInfiniteWorkflowRegisterModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:28.999721845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAgentModule dependencies initialized[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:28.999738470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:28 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDatabaseModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.001196011Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +2ms[39m
+2026-11-20T12:36:29.001280470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mChatModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.007177553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPublicApiModule dependencies initialized[39m[38;5;3m +6ms[39m
+2026-11-20T12:36:29.007386636Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mApiModule dependencies initialized[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.370335803Z 2026/11/20 12:36:29 [error] 131#131: *22 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:29.370386720Z 2026/11/20 12:36:29 [warn] 131#131: *22 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:29.370390887Z 2026/11/20 12:36:29 [error] 131#131: *22 connect() failed (111: Connection refused) while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:29.370385012Z 127.0.0.1 - - [20/Nov/2026:12:36:29 +0000] "GET /api/ HTTP/1.1" 502 157 "-" "curl/7.88.1"
+2026-11-20T12:36:29.370392220Z 2026/11/20 12:36:29 [warn] 131#131: *22 upstream server temporarily disabled while connecting to upstream, client: 127.0.0.1, server: _, request: "GET /api/ HTTP/1.1", upstream: "http://127.0.0.1:3000/", host: "localhost:5000"
+2026-11-20T12:36:29.384849220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRootController {/}:[39m[38;5;3m +377ms[39m
+2026-11-20T12:36:29.387492762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/, GET} route[39m[38;5;3m +3ms[39m
+2026-11-20T12:36:29.387512595Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPaymentController {/payment}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.387614053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/payment/:provider, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.387920303Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStripeController {/stripe}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.388391637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/stripe, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.388397887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/auth}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.388771470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/can-register, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.389878053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/attribution, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.390043095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/register, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.391072053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/login, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.391093178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/forgot, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.391637178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/forgot-return, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.391945803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/oauth-mobile-callback, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.391969928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/oauth/:provider, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.391975262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/activate, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.392480803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/resend-activation, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.393815178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/farcaster/signer, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.393821345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/farcaster/signer, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.393822845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/oauth/:provider/redirect, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.393823928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/oauth/:provider/exists, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.393856262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/sso, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.393857678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPublicController {/public}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.393858678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/agent, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.393859803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/posts/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.394117303Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/posts/:id/comments, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397054762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/posts/:id/comments, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.397071387Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/t, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.397074553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/modify-subscription, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397075720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/stream, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397076845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMonitorController {/monitor}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397083178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/monitor/queue/:name, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397084345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mEnterpriseController {/enterprise}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397085470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/enterprise/create-user, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.397086512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/enterprise/url, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397087553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/enterprise/delete-channel, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397180678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNoAuthIntegrationsController {/integrations}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397185178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397186262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/social-connect/:integration, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397187428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/public/provider/:id/connect, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397188428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/public/connect/:token, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397189512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/public/connect/:token, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397190637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/extension-refresh, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.397191637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOAuthController {/oauth}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397192678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/register, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397219095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/authorize, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397220470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/authorize/self-hosted, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397221845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/token, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397222803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/userinfo, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397223845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/userinfo, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.397224845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/hubspot/callback, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398429303Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMediaWidgetController {/media-widget}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398434220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media-widget/upload, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398435428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media-widget/status, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.398436428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mClippingWidgetController {/clipping-widget}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398437470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/clipping-widget/status, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398438470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUsersController {/user}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398439512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/chatbase-token, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398442512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/self, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398444262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/personal, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398494053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/impersonate, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398496678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/impersonate, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398497845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/switch, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398498970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/personal, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.398499928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/email-notifications, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398640887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/email-notifications, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398667845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/timezone, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398678053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/api-key/rotate, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398792428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/subscription, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398834303Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/subscription/tiers, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398903220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/join-org, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.398914470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/organizations, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.399494095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/change-org, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.399512053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/delete-account-info, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.399530553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/delete-account, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.399534345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/logout, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.402949428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/t, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.402994637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAnalyticsController {/analytics}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.403002178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/analytics/:integration, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.404193678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/analytics/post/:postId, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.404204637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntegrationsController {/integrations}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.404208845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/provider/:id/connect, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.404211178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:identifier/internal-plugs, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.404212262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/customers, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.404213262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/customers/:id, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.404214220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/group, PUT} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.406381345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/customer-name, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.407362720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/custom-name, PUT} route[39m[38;5;3m +3ms[39m
+2026-11-20T12:36:29.407380762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/list, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.407383262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/settings, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.409374720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/nickname, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.409504178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.409725053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/social/:integration, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.409776387Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/time, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.409833595Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/mentions, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.409874178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/function, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.410431803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/disable, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.410471012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/enable, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.410520053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations, DELETE} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.410556553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/plug/list, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.410605387Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/plugs, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.410663137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/:id/plugs, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.413372137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/plugs/:id/activate, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.413397512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/telegram/updates, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.413400553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/moltbook/register, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.413402803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/moltbook/status, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417050928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSettingsController {/settings}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417071220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/team, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417076137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/team, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417079553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/team/add, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.417082845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/team/:id, DELETE} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.417083887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/shortlink, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417084845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/settings/shortlink, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417085845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPostsController {/posts}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417086887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/statistics, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417087845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/missing, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.417145970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/release-url, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417150845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/release-id, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417153762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/should-shortlink, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417154928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/comments, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417156012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/comments/:commentId/resolve, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417188095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/tags, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417191720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/tags, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417195970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/tags/:id, PUT} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.417200428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/tags/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417204595Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.417209012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/find-slot, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417213428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/find-slot/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417218053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/list, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.417222470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/old, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.419805137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/group/:group/debug-export, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.419943762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/group/:group, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.419953845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.420098803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/valid, POST} route[39m[38;5;3m +2ms[39m
+2026-11-20T12:36:29.420132345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.420198803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/generator/draft, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.421342095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/generator, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.421355345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:group, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.421357678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/:id/date, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.421362845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/posts/separate-posts, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.421364720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMediaController {/media}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.421366595Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/:id, DELETE} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.421368512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/generate-video, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.421370345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/generate-image, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.421372220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/generate-image-with-prompt, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.421399470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/upload-server, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.423800262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/save-media, POST} route[39m[38;5;3m +2ms[39m
+2026-11-20T12:36:29.423812845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/information, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.423814470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/upload-simple, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.423815637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/:endpoint, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.423816637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/:id/status, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.423817803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.424360178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/video-options, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.424366428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/video/function, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.424368012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/media/generate-video/:type/allowed, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.424369095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mClippingController {/clipping}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.424370095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/clipping, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.424371137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/clipping, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.424591053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/clipping/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.424597887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBillingController {/billing}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.425965387Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/check/:id, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.425979803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/check-discount, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.426208012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/apply-discount, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.426534137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/finish-trial, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.426549845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/is-trial-finished, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.426554053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/embedded, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.427769512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/subscribe, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.427777470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/sync, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.427781262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/portal, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.427785345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/invoices, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.427789178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/renewal, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.427793595Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.430121803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/cancel, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.430128470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/prorate, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.430134928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/charges, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.430136053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/refund-charges, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.430137095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/cancel-subscription, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.430138262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/coupon-info, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.430142595Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/apply-coupon, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.431004012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/cancel-coupon, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.431494678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/chatbase-refund/preview, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.432335178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/chatbase-refund, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.432352553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/billing/add-subscription, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.432355095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNotificationsController {/notifications}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.433246345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/notifications, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.433264970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/notifications/list, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.433267637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCopilotController {/copilot}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.433269595Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/chat, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.433478262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/agent, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.433484345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/credits, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.433755928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/:thread/list, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.434293428Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/copilot/list, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.434298137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWebhookController {/webhooks}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.434449678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.434600762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.435058053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.435106553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.435177137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/webhooks/send, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.435502887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSignatureController {/signatures}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.435854303Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.435868178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures/default, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.436013470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.436018928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.436027553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/signatures/:id, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.436029678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAutopostController {/autopost}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.436530970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.436541512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.436544220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost/:id, PUT} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.436546345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.436798220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost/:id/active, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.437384720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/autopost/send, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.437397470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSetsController {/sets}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.437976803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sets, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.437989803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sets, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.437991887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sets, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438447053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/sets/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438452970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mThirdPartyController {/third-party}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438454553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/list, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438461970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438463095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438576303Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/:id/submit, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438582762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/function/:id/:functionName, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.438821220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/:id/import, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438823970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/third-party/:identifier, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438825012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOAuthAppController {/user/oauth-app}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.438827012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.439016720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.439554637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.439621970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.439628178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/oauth-app/rotate-secret, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.439630678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mApprovedAppsController {/user/approved-apps}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.439632845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/approved-apps, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.439651762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/user/approved-apps/:id, DELETE} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.439657262Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOAuthAuthorizedController {/oauth}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.440104553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/oauth/authorize, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.440162678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAnnouncementsController {/announcements}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.440166012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/announcements, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.440919220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/announcements, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.440931762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/announcements/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.440934095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAdminController {/admin}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.440936053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/admin/errors, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441435178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/admin/errors/platforms, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441440387Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/admin/stats, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441441803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPublicIntegrationsController {/public/v1}:[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441442887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/upload, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441444012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/upload-from-url, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441449095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/find-slot/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441450220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441936345Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.441942553Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id, DELETE} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.441944095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/group/:group, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442357095Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/is-connected, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442370887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/media, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442373678Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/media/:id/status, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442375720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/me, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442377637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/groups, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442379512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integrations, GET} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.442631637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/social/:integration, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442646928Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integrations/connect, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442649512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/users, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442660637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/posts/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442924137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/account, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442929637Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/channels, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.442931720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/debug/activity, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443093220Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/credits/reset, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443097512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/notifications, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443172970Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/generate-video, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443176137Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/video/function, POST} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443177303Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.443249053Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443251887Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/clipping/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443478845Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integrations/:id, DELETE} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443486470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integration-settings/:id, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443488720Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/missing, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443590512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/settings, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443745012Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/status, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443847762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/posts/:id/release-id, PUT} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.443946512Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/analytics/:integration, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.444234803Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/analytics/post/:postId, GET} route[39m[38;5;3m +0ms[39m
+2026-11-20T12:36:29.444241178Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/public/v1/integration-trigger/:id, POST} route[39m[38;5;3m +1ms[39m
+2026-11-20T12:36:29.686527303Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +241ms[39m
+2026-11-20T12:36:29.687355428Z Backend started successfully on port 3000
+2026-11-20T12:36:29.687786470Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [32mConfiguration check completed without any issues[39m
+2026-11-20T12:36:29.687792762Z [32m[Nest] 145  - [39m11/20/2026, 12:36:29 PM [32m    LOG[39m [32m🚀 Backend is running on: http://localhost:3000[39m
+2026-11-20T12:36:31.124125637Z 127.0.0.1 - - [20/Nov/2026:12:36:31 +0000] "GET /api/ HTTP/1.1" 200 15 "-" "curl/7.88.1"
+2026-11-20T12:36:31.530783513Z 127.0.0.1 - - [20/Nov/2026:12:36:31 +0000] "GET /api/ HTTP/1.1" 200 15 "-" "curl/7.88.1"

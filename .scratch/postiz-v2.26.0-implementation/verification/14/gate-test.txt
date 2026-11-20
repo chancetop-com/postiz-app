@@ -1,0 +1,5 @@
+Fri Nov 20 12:25:36 UTC 2026
+COMMIT b7c069fc016aea22bdc4f4cdb14a00fa3f5eb79f
+ENV .env absent: yes
+CMD pnpm test
+EXIT=0

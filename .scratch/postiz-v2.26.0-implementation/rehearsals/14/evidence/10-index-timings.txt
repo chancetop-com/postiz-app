@@ -1,0 +1,5 @@
+2026-11-20 12:35:51.688 UTC [183] LOG:  duration: 58.101 ms  statement: CREATE INDEX "Errors_createdAt_platform_idx" ON "Errors"("createdAt", "platform")
+2026-11-20 12:35:51.848 UTC [183] LOG:  duration: 158.971 ms  statement: CREATE INDEX "Notifications_organizationId_createdAt_deletedAt_idx" ON "Notifications"("organizationId", "createdAt", "deletedAt")
+2026-11-20 12:36:14.992 UTC [183] LOG:  duration: 23143.753 ms  statement: CREATE INDEX "Post_publishDate_state_deletedAt_parentPostId_integrationId_idx" ON "Post"("publishDate", "state", "deletedAt", "parentPostId", "integrationId", "organizationId", "creationMethod")
+2026-11-20 12:36:15.127 UTC [183] LOG:  duration: 133.543 ms  statement: CREATE INDEX "Post_organizationId_publishDate_idx" ON "Post"("organizationId", "publishDate")
+2026-11-20 12:36:15.129 UTC [183] LOG:  duration: 1.986 ms  statement: CREATE INDEX "User_providerId_providerName_idx" ON "User"("providerId", "providerName")

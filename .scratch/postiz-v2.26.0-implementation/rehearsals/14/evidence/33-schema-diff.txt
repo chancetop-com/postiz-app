@@ -1,0 +1,44 @@
+2746a2747,2751
+> 
+> 
+> --
+> -- Name: Errors_createdAt_platform_idx; Type: INDEX; Schema: public; Owner: -
+> --
+2747a2753
+> CREATE INDEX "Errors_createdAt_platform_idx" ON public."Errors" USING btree ("createdAt", platform);
+2748a2755
+> 
+2987a2995,3001
+> -- Name: Notifications_organizationId_createdAt_deletedAt_idx; Type: INDEX; Schema: public; Owner: -
+> --
+> 
+> CREATE INDEX "Notifications_organizationId_createdAt_deletedAt_idx" ON public."Notifications" USING btree ("organizationId", "createdAt", "deletedAt");
+> 
+> 
+> --
+3267a3282,3288
+> -- Name: Post_organizationId_publishDate_idx; Type: INDEX; Schema: public; Owner: -
+> --
+> 
+> CREATE INDEX "Post_organizationId_publishDate_idx" ON public."Post" USING btree ("organizationId", "publishDate");
+> 
+> 
+> --
+3281a3303,3309
+> -- Name: Post_publishDate_state_deletedAt_parentPostId_integrationId_idx; Type: INDEX; Schema: public; Owner: -
+> --
+> 
+> CREATE INDEX "Post_publishDate_state_deletedAt_parentPostId_integrationId_idx" ON public."Post" USING btree ("publishDate", state, "deletedAt", "parentPostId", "integrationId", "organizationId", "creationMethod");
+> 
+> 
+> --
+3523a3552,3556
+> 
+> 
+> --
+> -- Name: User_providerId_providerName_idx; Type: INDEX; Schema: public; Owner: -
+> --
+3524a3558
+> CREATE INDEX "User_providerId_providerName_idx" ON public."User" USING btree ("providerId", "providerName");
+3525a3560
+> 

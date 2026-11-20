@@ -1,0 +1,2 @@
+prepare-build-context: working tree is not clean; commit first or pass --allow-dirty
+  ?? .scratch/postiz-v2.26.0-implementation/verification/
