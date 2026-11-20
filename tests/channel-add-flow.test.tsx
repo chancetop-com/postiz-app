@@ -19,7 +19,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(relaySearch),
 }));
 vi.mock('@gitroom/react/helpers/variable.context', () => ({
-  useVariables: () => ({ isGeneral: false, extensionId: '', backendUrl: '' }),
+  useVariables: () => variables,
 }));
 vi.mock('@gitroom/react/toaster/toaster', () => ({
   useToaster: () => ({ show: vi.fn() }),
@@ -48,6 +48,9 @@ vi.mock(
 );
 
 import { AddProviderComponent } from '@gitroom/frontend/components/launches/add.provider.component';
+import { useExtensionConnect } from '@gitroom/frontend/components/launches/add.provider.component';
+
+let variables = { isGeneral: false, extensionId: '', backendUrl: '' };
 
 const social = [
   { identifier: 'linkedin', name: 'LinkedIn', isExternal: false, isWeb3: false },
@@ -95,6 +98,7 @@ beforeEach(() => {
   push.mockReset();
   closeAll.mockReset();
   window.sessionStorage.clear();
+  variables = { isGeneral: false, extensionId: '', backendUrl: '' };
 });
 
 afterEach(() => {
@@ -265,5 +269,83 @@ describe('adding a channel inside the parent application iframe', () => {
     expect(window.sessionStorage.getItem('showorg')).toBe('org-a');
     expect(window.sessionStorage.getItem('impersonate')).toBe('imp-a');
     expect(window.sessionStorage.getItem('channel_popup_mode')).toBe('true');
+  });
+});
+
+describe('reconnecting an existing extension channel', () => {
+  const ExtensionReconnect = ({
+    identifier,
+    refresh,
+  }: {
+    identifier: string;
+    refresh: string;
+  }) => {
+    const connect = useExtensionConnect();
+    return (
+      <button onClick={() => connect(identifier, { refresh })}>Reconnect</button>
+    );
+  };
+
+  const stubChrome = (cookies: Array<Record<string, string>>) => {
+    const chromeMock = {
+      runtime: {
+        lastError: null,
+        sendMessage: vi.fn(
+          (_id: string, message: any, callback: (value: any) => void) => {
+            if (message.type === 'PING') {
+              callback({ status: true });
+              return;
+            }
+            if (message.type === 'GET_COOKIES') {
+              callback({ success: true, cookies });
+            }
+          }
+        ),
+      },
+    };
+    vi.stubGlobal('chrome', chromeMock);
+    return chromeMock;
+  };
+
+  it('reuses the cookie hand-off with the channel refresh id', async () => {
+    variables = {
+      isGeneral: false,
+      extensionId: 'extension-id',
+      backendUrl: 'http://localhost:3105',
+    };
+    const chromeMock = stubChrome([{ name: 'session', value: 'cookie-1' }]);
+    const location = stubLocation();
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ url: 'state-token' }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { getByText } = render(
+      <ExtensionReconnect identifier="skool" refresh="internal-9" />
+    );
+    fireEvent.click(getByText('Reconnect'));
+
+    await waitFor(() =>
+      expect(location.href).toContain('/integrations/social/skool')
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/integrations/social/skool?refresh=internal-9',
+      expect.anything()
+    );
+    expect(chromeMock.runtime.sendMessage).toHaveBeenCalledWith(
+      'extension-id',
+      { type: 'GET_COOKIES', provider: 'skool' },
+      expect.any(Function)
+    );
+
+    const url = new URL(location.href, 'http://localhost:4200');
+    expect(url.searchParams.get('state')).toBe('state-token');
+    expect(
+      JSON.parse(
+        Buffer.from(url.searchParams.get('code')!, 'base64').toString()
+      )
+    ).toEqual([{ name: 'session', value: 'cookie-1' }]);
+    expect(url.searchParams.get('onboarding')).toBeNull();
   });
 });

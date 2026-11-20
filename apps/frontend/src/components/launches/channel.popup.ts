@@ -75,6 +75,35 @@ export const buildChannelRelayUrl = (
   )}#${hashParts}`;
 };
 
+/**
+ * Starts a channel OAuth in the right window.
+ *
+ * An iframe cannot host the provider's consent screen and cannot keep a
+ * third-party session, so it opens the relay popup with this tab's session.
+ * A standalone window keeps the recorded behaviour and navigates in place.
+ * Both the add and the reconnect entries use this.
+ */
+export const openChannelOAuth = (
+  oauthUrl: string,
+  options: { embedded?: boolean } = {}
+): 'popup' | 'window' => {
+  if (options.embedded ?? isEmbeddedInIframe()) {
+    window.open(
+      buildChannelRelayUrl(oauthUrl, {
+        auth: window.sessionStorage.getItem('auth'),
+        showorg: window.sessionStorage.getItem('showorg'),
+        impersonate: window.sessionStorage.getItem('impersonate'),
+      }),
+      '_blank',
+      'popup,width=600,height=700'
+    );
+    return 'popup';
+  }
+
+  window.location.href = oauthUrl;
+  return 'window';
+};
+
 export const notifyChannelPopupOpener = (
   provider: string,
   opener: Window | null | undefined

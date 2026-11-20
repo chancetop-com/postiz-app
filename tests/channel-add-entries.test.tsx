@@ -136,4 +136,12 @@ describe('the add-channel entries', () => {
     const mobile = renderAdd({ isMobile: true });
     expect(icons(mobile.container)).toEqual(desktop);
   });
+
+  it('applies the same identifier list to the onboarding step', () => {
+    const desktop = icons(renderAdd().container);
+    cleanup();
+
+    const onboarding = renderAdd({ onboarding: true });
+    expect(icons(onboarding.container)).toEqual(desktop);
+  });
 });

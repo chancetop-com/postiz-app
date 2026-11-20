@@ -75,9 +75,14 @@ describe('reconnecting an existing channel', () => {
     );
   });
 
-  it('navigates the current window instead of opening a popup', () => {
-    expect(reconnect).toContain('window.location.href = url;');
+  it('goes through the shared window choice instead of a fixed popup', () => {
+    // the helper navigates a standalone window and opens the relay only
+    // inside the parent application iframe (covered in channel-popup-contract)
+    expect(reconnect).toContain(
+      'openChannelOAuth(url, { embedded: isEmbeddedInIframe() })'
+    );
     expect(reconnect).not.toContain('window.open');
+    expect(reconnect).not.toContain('window.location.href');
   });
 
   it('keeps the account/key form for custom-field providers', () => {
