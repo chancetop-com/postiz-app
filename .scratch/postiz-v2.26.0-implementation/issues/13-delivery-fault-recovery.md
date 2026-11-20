@@ -28,7 +28,9 @@
 | 执行起点 | `2622ec49`（`postiz-v2.26.0-integration`，工作区干净） |
 | 票分支 | `codex/ticket-13-fault-recovery` |
 | 实现提交 | `413004ea`（演练、证据、`tests/temporal-fault-recovery.test.ts`） |
-| 合并 | `git merge postiz-v2.26.0-integration`：`Already up to date`（tip 仍为 `2622ec49`） |
+| 分支同步 | 票分支内 `git merge postiz-v2.26.0-integration`：`Already up to date`（tip 仍为 `2622ec49`） |
+| 合并提交 | `18d0c20a`（`--no-ff`，父提交 `2622ec49` 与 `68e0d7c3`） |
+| 祖先校验 | `2622ec49`、`413004ea`、`68e0d7c3` 均为 `18d0c20a` 的祖先；合并后无冲突标记 |
 | 正常样本 | ticket 12 `evidence/normal-samples.json`（生成 2026-11-20T10:27:52Z；bundle `f2fe43cd…`；回放 16/16；媒体 sha256 `c414cd0e…`） |
 
 ### 场景与分类
@@ -47,11 +49,14 @@
 
 带 details 的 finalize 超时执行 search attributes 记录 `TemporalChangeVersion: post-finalize-timeout-unknown`，证明走了 `patched('post-finalize-timeout-unknown')` 分支：`resolvePending` 不再 sleep 20 s 后重跑 check+finalize，而是 `markUnconfirmed` 并结束。无 details 的 heartbeat 超时仍按“从未开始”重试：平台未接受时是安全的一次重试；平台已接受但 worker 在首个 15 s heartbeat 窗口内死亡时会产生第二次接受。这是既有设计风险，证据单列 `duplicate: true`，未新增全局幂等系统。
 
-### 恢复与重复发送
+### 恢复与重复发送（观察到的限制，不作为通过行为）
 
 - 兼容候选重启后，同一数据库、媒体目录和 Temporal 执行继续；`worker-death-finalize-with-details` 的 workflow id/run/type 不变，媒体摘要不变，平台账目仍为 1 次。
 - 本地写回可恢复时，shipped activity retry 完成 `PUBLISHED`/`releaseId`，没有第二次平台调用。
-- 写回完全不可用时，行保持 QUEUE，补偿扫描会重发；恢复必须先核对平台账目，不能仅凭本地行判断未发布。
+- **带 heartbeat details 的恢复没有重复发送**：timeout 携带 `finalizePost: entered`，工作流标记 ERROR/unconfirmed，重启后不再调度 finalize，平台只接受 1 次。
+- **无 details 且平台已接受时重复发送**：worker 在首个 15 s heartbeat 窗口内死亡，重启后按“从未开始”重试 finalize，平台出现 2 个不同 id（`stub-finalized-71560-3`、`stub-finalized-71750-2`），本地指向第二次；首个成为孤儿。这是既有 15 s 窗口风险，证据 `duplicate: true`。
+- **写回完全丢失 + 补偿扫描重复发送**：`updatePost` 与 `changeState` 都失败后行保持 QUEUE、无 releaseId，与“未发布”不可区分；扫描再次派发并接受第二个平台 id（`stub-pending-68847-1`、`stub-pending-68847-3`）。恢复必须先核对平台账目，不能仅凭本地行判断未发布。
+- 以上重复发送均记录为已观察到的限制/风险，不表示恢复逻辑通过；本票未新增全局幂等系统。
 - 平台已拒绝（bad_body）与 pending 均不写入“未知”标记；只有 timeout/无法确认才进入 ERROR + unconfirmed 通知。确认发送、重复调用和仍未知结果分别在 `evidence/classifications.json` 中记为 complete / failed / pending / unknown。
 
 ### 门禁
@@ -59,7 +64,7 @@
 | 命令 | 结果 |
 | --- | --- |
 | `pnpm typecheck` | 通过（frontend / backend / orchestrator） |
-| `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTimeout=20000` | **63 文件通过 / 1 跳过；682 用例通过 / 13 跳过**（含本票新增 10 条） |
+| `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTimeout=20000` | **64 文件 / 695 用例全部通过，0 跳过**（合并前 63 文件 / 685 用例；本票新增 1 文件 / 10 条） |
 | `run.mjs live` | 7/7 场景、84/84 断言 PASS |
 | 正常样本复用 | ticket 12 的 8 个正常场景与 16/16 回放作为对照；媒体载荷 sha256 一致 |
 
@@ -70,4 +75,3 @@
 - pending 的完整 30 分钟预算只观察到前两次 check；耗尽后的 `Could not confirm the post status` 分支由结构测试固定，未 live 等待。
 - 真实数据库备份/停写窗口下的协调恢复沿用 ticket 17 的既有结论；本票用兼容候选重启与媒体摘要对比复核。
 - 多 worker、`EXCLUDE_QUEUE`、发布中途关闭、真实 Pod/imageID 与 UI 对 `TemporalChangeVersion` 的展示未覆盖（交 14/18 与上线核验）。
-
