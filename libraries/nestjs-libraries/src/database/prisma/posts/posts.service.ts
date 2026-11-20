@@ -1433,6 +1433,10 @@ export class PostsService {
   ) {
     const getPostById = await this._postRepository.getPostById(id, orgId);
 
+    if (!getPostById) {
+      throw new NotFoundException('Post not found');
+    }
+
     if (action === 'schedule' && !republish) {
       this.guardAgainstRepublish(getPostById, 'changeDate');
     }
