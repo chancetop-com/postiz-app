@@ -92,3 +92,39 @@ describe('page proxy without an auth cookie', () => {
     expect(response.headers.get('location')).toContain('/auth/login');
   });
 });
+
+describe('organization invitation link', () => {
+  it('hands the signed invite to the session-aware login page in this tab', async () => {
+    const response = await visit('/?org=signed-invite-token');
+
+    expect(response.status).toBeGreaterThanOrEqual(300);
+    const redirect = new URL(response.headers.get('location')!);
+    expect(redirect.pathname).toBe('/auth/login');
+    expect(redirect.searchParams.get('org')).toBe('signed-invite-token');
+    // sessionStorage, not a shared or cross-site cookie, carries the invite
+    expect(response.headers.get('set-cookie')).toBeNull();
+  });
+
+  it('does not try to join the organization in the stateless proxy', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const response = await visit('/?org=signed-invite-token');
+
+    expect(response.status).toBeGreaterThanOrEqual(300);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('leaves an invite that already reached /auth on that page', async () => {
+    const response = await visit('/auth/login?org=signed-invite-token');
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('location')).toBeNull();
+  });
+
+  it('keeps the ordinary root redirect when there is no invitation', async () => {
+    vi.stubEnv('IS_GENERAL', 'true');
+    const response = await visit('/');
+
+    const redirect = new URL(response.headers.get('location')!);
+    expect(redirect.pathname).toBe('/launches');
+  });
+});

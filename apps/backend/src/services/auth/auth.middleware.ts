@@ -40,7 +40,11 @@ export class AuthMiddleware implements NestMiddleware {
       // Check the signature and session format before resolving current
       // activation and privileges from the database.
       const payload = AuthService.verifySessionJWT(auth);
-      const orgHeader = req.cookies.showorg || req.headers.showorg;
+      // This fork keeps the selected organisation in the current tab and
+      // sends it as a header. A legacy shared cookie is still read for old
+      // sessions, but the tab header wins so accepting an invitation (or
+      // switching organisation) never moves every tab.
+      const orgHeader = req.headers.showorg || req.cookies.showorg;
 
       let user = (await this._userService.getUserById(payload.id)) as User | null;
 

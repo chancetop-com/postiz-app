@@ -36,6 +36,7 @@ async function start() {
         'showorg',
         'impersonate',
         'oauth-state-token',
+        'org-invite',
         'x-postiz-org',
         'x-postiz-include-deleted',
         'x-copilotkit-runtime-client-gql-version',

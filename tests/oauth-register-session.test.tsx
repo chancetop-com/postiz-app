@@ -71,6 +71,45 @@ describe('the OAuth login callback UI', () => {
     );
   });
 
+  it('sends the pending tab invitation with the OAuth exchange', async () => {
+    window.sessionStorage.setItem('oauth_state:GITHUB', 'signed-proof');
+    window.sessionStorage.setItem('org-invite', 'signed-invite');
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify({ login: true }))
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    render(<Register />);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit
+    ];
+    expect(url).toBe('/auth/oauth/GITHUB/exists');
+    expect(init.headers).toEqual(
+      expect.objectContaining({
+        'oauth-state-token': 'signed-proof',
+        'org-invite': 'signed-invite',
+      })
+    );
+    await waitFor(() =>
+      expect(window.sessionStorage.getItem('org-invite')).toBeNull()
+    );
+  });
+
+  it('keeps the invite for the registration form when the provider account is new', async () => {
+    window.sessionStorage.setItem('oauth_state:GITHUB', 'signed-proof');
+    window.sessionStorage.setItem('org-invite', 'signed-invite');
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify({ token: 'provider-token' }))
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    render(<Register />);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(window.sessionStorage.getItem('org-invite')).toBe('signed-invite');
+  });
+
   it('offers sign-in again when the state exchange is rejected', async () => {
     vi.stubGlobal(
       'fetch',
