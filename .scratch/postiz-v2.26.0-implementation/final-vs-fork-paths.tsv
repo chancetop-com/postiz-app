@@ -231,6 +231,7 @@ A	apps/frontend/src/app/(app)/integrations/connect/[token]/page.tsx
 A	apps/frontend/src/app/(app)/integrations/connect/layout.tsx
 M	apps/frontend/src/app/(provider)/layout.tsx
 M	apps/frontend/src/components/agents/agent.tsx
+M	apps/frontend/src/components/auth/after.activate.tsx
 A	apps/frontend/src/components/auth/attribution.component.tsx
 M	apps/frontend/src/components/auth/login.tsx
 A	apps/frontend/src/components/auth/org.invite.ts
@@ -252,6 +253,7 @@ M	apps/frontend/src/components/launches/launches.component.tsx
 M	apps/frontend/src/components/launches/polonto/polonto.picture.generation.tsx
 M	apps/frontend/src/components/layout/impersonate.tsx
 M	apps/frontend/src/components/layout/layout.context.tsx
+M	apps/frontend/src/components/layout/logout.component.tsx
 M	apps/frontend/src/components/layout/pre-condition.component.tsx
 M	apps/frontend/src/components/new-launch/manage.modal.tsx
 M	apps/frontend/src/components/new-launch/picks.socials.component.tsx
@@ -294,6 +296,7 @@ A	k8s/apps/frontend/src/app/(app)/integrations/connect/[token]/page.tsx
 A	k8s/apps/frontend/src/app/(app)/integrations/connect/layout.tsx
 M	k8s/apps/frontend/src/app/(provider)/layout.tsx
 M	k8s/apps/frontend/src/components/agents/agent.tsx
+M	k8s/apps/frontend/src/components/auth/after.activate.tsx
 A	k8s/apps/frontend/src/components/auth/attribution.component.tsx
 M	k8s/apps/frontend/src/components/auth/login.tsx
 A	k8s/apps/frontend/src/components/auth/org.invite.ts
@@ -315,6 +318,7 @@ M	k8s/apps/frontend/src/components/launches/launches.component.tsx
 M	k8s/apps/frontend/src/components/launches/polonto/polonto.picture.generation.tsx
 M	k8s/apps/frontend/src/components/layout/impersonate.tsx
 M	k8s/apps/frontend/src/components/layout/layout.context.tsx
+M	k8s/apps/frontend/src/components/layout/logout.component.tsx
 M	k8s/apps/frontend/src/components/layout/pre-condition.component.tsx
 M	k8s/apps/frontend/src/components/new-launch/manage.modal.tsx
 M	k8s/apps/frontend/src/components/new-launch/picks.socials.component.tsx
@@ -334,6 +338,7 @@ M	k8s/apps/orchestrator/src/activities/integrations.activity.ts
 M	k8s/apps/orchestrator/src/activities/post.activity.ts
 A	k8s/apps/orchestrator/src/workflows/encrypt.tokens.workflow.ts
 M	k8s/apps/orchestrator/src/workflows/index.ts
+A	k8s/libraries/helpers/src/auth/org.invite.ts
 M	k8s/libraries/helpers/src/utils/count.length.ts
 M	k8s/libraries/nestjs-libraries/src/chat/load.tools.service.ts
 M	k8s/libraries/nestjs-libraries/src/chat/start.mcp.ts
@@ -361,6 +366,7 @@ A	k8s/libraries/nestjs-libraries/src/encryption/empty.provider.ts
 A	k8s/libraries/nestjs-libraries/src/encryption/encryption.interface.ts
 A	k8s/libraries/nestjs-libraries/src/encryption/local.provider.ts
 M	k8s/libraries/nestjs-libraries/src/integrations/integration.manager.ts
+A	k8s/libraries/nestjs-libraries/src/integrations/refresh.credential.ts
 M	k8s/libraries/nestjs-libraries/src/integrations/refresh.integration.service.ts
 M	k8s/libraries/nestjs-libraries/src/integrations/social.abstract.ts
 M	k8s/libraries/nestjs-libraries/src/integrations/social/bluesky.provider.ts
@@ -405,6 +411,7 @@ M	k8s/libraries/react-shared-libraries/src/translation/locales/vi/translation.js
 M	k8s/libraries/react-shared-libraries/src/translation/locales/zh/translation.json
 M	k8s/package.json
 M	k8s/pnpm-lock.yaml
+A	libraries/helpers/src/auth/org.invite.ts
 M	libraries/helpers/src/utils/count.length.ts
 M	libraries/nestjs-libraries/src/chat/load.tools.service.ts
 M	libraries/nestjs-libraries/src/chat/start.mcp.ts
@@ -432,6 +439,7 @@ A	libraries/nestjs-libraries/src/encryption/empty.provider.ts
 A	libraries/nestjs-libraries/src/encryption/encryption.interface.ts
 A	libraries/nestjs-libraries/src/encryption/local.provider.ts
 M	libraries/nestjs-libraries/src/integrations/integration.manager.ts
+A	libraries/nestjs-libraries/src/integrations/refresh.credential.ts
 M	libraries/nestjs-libraries/src/integrations/refresh.integration.service.ts
 M	libraries/nestjs-libraries/src/integrations/social.abstract.ts
 M	libraries/nestjs-libraries/src/integrations/social/bluesky.provider.ts
@@ -491,7 +499,9 @@ M	tests/channel-multistep-selection.test.tsx
 M	tests/channel-popup-contract.test.tsx
 A	tests/channel-public-connect-link.test.ts
 M	tests/channel-upstream-retention.test.ts
+A	tests/impersonation-precedence.test.ts
 A	tests/merchant-sso-http.test.ts
+M	tests/merchant-sso-session.test.tsx
 M	tests/oauth-register-session.test.tsx
 M	tests/oauth-session-roundtrip.test.ts
 M	tests/optional-services-copilot.test.ts
@@ -499,6 +509,7 @@ M	tests/optional-services-core-flows.test.ts
 M	tests/optional-services-mcp.test.ts
 M	tests/password-reset-token.test.ts
 A	tests/selected-channel-posts.test.ts
+M	tests/session-lifecycle.test.tsx
 M	tests/session-oauth-state.test.ts
 M	tests/session-org-flow.test.ts
 A	tests/session-org-invite.test.tsx

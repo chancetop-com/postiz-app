@@ -630,6 +630,7 @@ A	apps/frontend/src/app/(app)/sso/layout.tsx
 A	apps/frontend/src/app/(app)/sso/page.tsx
 M	apps/frontend/src/components/agents/agent.chat.tsx
 M	apps/frontend/src/components/analytics/chart-social.tsx
+M	apps/frontend/src/components/auth/after.activate.tsx
 M	apps/frontend/src/components/auth/login.tsx
 A	apps/frontend/src/components/auth/org.invite.ts
 M	apps/frontend/src/components/auth/providers/wallet.provider.tsx
@@ -1279,6 +1280,7 @@ A	k8s/deploy-postiz.sh
 A	k8s/ecosystem.config.cjs
 A	k8s/lib/json.sh
 A	k8s/libraries/helpers/src/auth/auth.service.ts
+A	k8s/libraries/helpers/src/auth/org.invite.ts
 A	k8s/libraries/helpers/src/configuration/configuration.checker.ts
 A	k8s/libraries/helpers/src/decorators/plug.decorator.ts
 A	k8s/libraries/helpers/src/decorators/post.plug.ts
@@ -1498,6 +1500,7 @@ A	k8s/libraries/nestjs-libraries/src/encryption/local.provider.ts
 A	k8s/libraries/nestjs-libraries/src/integrations/dashboard.function.decorator.ts
 A	k8s/libraries/nestjs-libraries/src/integrations/integration.manager.ts
 A	k8s/libraries/nestjs-libraries/src/integrations/integration.missing.scopes.ts
+A	k8s/libraries/nestjs-libraries/src/integrations/refresh.credential.ts
 A	k8s/libraries/nestjs-libraries/src/integrations/refresh.integration.service.ts
 A	k8s/libraries/nestjs-libraries/src/integrations/social.abstract.ts
 A	k8s/libraries/nestjs-libraries/src/integrations/social/bluesky.provider.ts
@@ -1684,6 +1687,7 @@ A	k8s/var/docker/ecosystem.config.cjs
 A	k8s/var/docker/entrypoint.sh
 A	k8s/var/docker/nginx.conf
 M	libraries/helpers/src/auth/auth.service.ts
+A	libraries/helpers/src/auth/org.invite.ts
 M	libraries/helpers/src/utils/custom.fetch.func.ts
 M	libraries/helpers/src/utils/custom.fetch.tsx
 A	libraries/helpers/src/utils/public.preview.ts
@@ -1693,6 +1697,8 @@ M	libraries/nestjs-libraries/src/database/prisma/posts/posts.service.ts
 A	libraries/nestjs-libraries/src/dtos/auth/sso.create-account.dto.ts
 A	libraries/nestjs-libraries/src/dtos/auth/sso.login.dto.ts
 M	libraries/nestjs-libraries/src/emails/empty.provider.ts
+A	libraries/nestjs-libraries/src/integrations/refresh.credential.ts
+M	libraries/nestjs-libraries/src/integrations/refresh.integration.service.ts
 M	libraries/nestjs-libraries/src/short-linking/providers/empty.ts
 M	libraries/nestjs-libraries/src/temporal/temporal.module.ts
 A	libraries/nestjs-libraries/src/temporal/worker.queues.ts
@@ -1719,6 +1725,7 @@ A	tests/channel-popup-contract.test.tsx
 A	tests/channel-public-connect-link.test.ts
 A	tests/channel-upstream-retention.test.ts
 A	tests/fault-recovery.test.ts
+A	tests/impersonation-precedence.test.ts
 A	tests/layout-navigation.test.tsx
 A	tests/media-api-upload.test.ts
 A	tests/media-editor.test.tsx

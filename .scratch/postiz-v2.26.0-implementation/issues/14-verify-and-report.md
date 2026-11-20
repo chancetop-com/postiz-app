@@ -103,3 +103,52 @@ exit 0）与 `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTi
 和非部署路径的 inactive runtime image。该状态不表示可以上线、镜像已发布或全部端到端已验收；
 发布、部署、生产数据变更与 squash 仍由用户决定。
 
+### 复核修复补充（2026-11-20）
+
+复核修复提交 `3430e461`（基于 `46991c5c`）以 `--no-ff` 合入，合并提交
+`85c616fcf9483dcd370097448751fe29e9e15edb`；其后 `595ef626` 只重新生成 `k8s/` 上下文，
+`85c616fc..595ef626` 的产品源码 0 差异。最终汇报告提交仅改 `.scratch/` 文档与路径清单。
+
+**逐项结果：**
+
+- **A–E 已修复**：A 登出/401 清除标签页 `org-invite`；B 签名邀请校验收件邮箱（大小写不敏感，
+  无邮箱拒绝）；C 激活后/激活标签页重选邀请组织；D 空 `impersonate` 头停止代入并过期旧 Cookie；
+  E `impersonate` 请求头优先于旧 Cookie（`AuthMiddleware`、`/user/self`、删除账户），邀请流程复用
+  `returnUrl`。新增 `tests/impersonation-precedence.test.ts`，并更新 auth/session/channel 断言。
+- **F 部分应用**：共享 `org-invite` 常量、抽取刷新复用谓词 `isRefreshableRow` /
+  `isReusableRefreshCredential`、移除 `openChannelOAuth` 未用参数、统一归因 lead 调用；批刷新
+  250/500 ms 与单渠道 1/2 s 重试节奏按原设计保留。
+- **keepAlive 保留**：`apps/backend/src/main.ts` 的 `keepAliveTimeout=905_000` /
+  `headersTimeout=906_000` 未改。它是官方 v2.26.0 自动合并内容，配套 AWS ALB 900 s 空闲超时；
+  `git diff 838843077 132859f32 -- apps/backend/src/main.ts` 可复核该 release delta。
+
+**门槛（合并提交上实跑）：**
+
+| 项 | 结果 |
+| --- | --- |
+| `pnpm typecheck` | exit 0（前端 typegen + 前端/后端/orchestrator tsc） |
+| `pnpm lint` | exit 0，**0 errors / 695 warnings** |
+| `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTimeout=20000` | **65 文件 / 715 通过 / 0 失败 / 0 跳过**，exit 0 |
+
+测试数高于基线的 702 通过 / 13 跳过，是因为主检出 `.env` 提供 `DATABASE_URL`，13 项数据库套件
+实际执行并通过；未修改 `.env`。测试、类型与 lint 在合并提交 `85c616fc` 上执行；此后仅
+`k8s/` 生成副本和 `.scratch/` 文档变化。
+
+**上下文与镜像：**
+
+| 项 | 结果 |
+| --- | --- |
+| 上下文重新生成 | `./k8s/prepare-build-context.sh`，源提交 `85c616fc`、clean、994 文件；提交 `595ef626` |
+| 上下文检查 | `--check` 在 `595ef626` 报告 **in sync**；`BUILD_CONTEXT_MANIFEST.json` 的 `sourceCommit=85c616fc…` |
+| 最终镜像 | `postiz-ticket14:review-85c616fc`；image ID / repo digest `sha256:0baeca5519e81f4337a9a3f5ab3a40e2876563fe3d34a076de8dee5bbe7d29f0`；linux/arm64，4.98 GB |
+| 冒烟 | 新库 `postiz-final-smoke` + Redis DB 20，端口 5001；`/api/` **200**、HEALTHCHECK **healthy**、nginx 1.22.1、PM2 `backend`/`frontend`/`orchestrator` 全部 **online**、启动同步成功、88 张表；容器已停止删除、库已删除 |
+
+**收发差异报告：** 已按最终源码重新生成
+`final-vs-fork-paths.tsv`（517 路径，266 A / 251 M；较 506 增 11）与
+`final-vs-upstream-paths.tsv`（1,780 路径，1,712 A / 64 M / 3 D / 1 T；较 1,773 增 7），
+两份 `.md` 的汇总数字同步更新。祖先复核：F `838843077`、U `132859f32` 均为最终 HEAD 祖先；
+无冲突标记。未推送、未部署、未改生产数据。
+
+**残余限制：** 未运行真实浏览器、真实邮件投递或真实 OAuth 提供商；A–E 的证据为
+controller/service/jsdom 测试与镜像冒烟。
+
