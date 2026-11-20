@@ -47,6 +47,7 @@ import { SubscriptionExceptionFilter } from '@gitroom/backend/services/auth/perm
 import { PostValidationExceptionFilter } from '@gitroom/backend/api/routes/posts.validation.exception';
 import { HttpExceptionFilter } from '@gitroom/nestjs-libraries/services/exception.filter';
 import { EmailService } from '@gitroom/nestjs-libraries/services/email.service';
+import { AttributionService } from '@gitroom/nestjs-libraries/services/attribution/attribution.service';
 import { AuthProviderManager } from '@gitroom/backend/services/auth/providers/providers.manager';
 import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/users.service';
 import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
@@ -188,6 +189,7 @@ const ssoService = {
     PoliciesGuard,
     { provide: APP_GUARD, useClass: PoliciesGuard },
     { provide: SsoService, useValue: ssoService },
+    { provide: AttributionService, useValue: { lead: vi.fn(), queryParams: () => [] } },
     { provide: EmailService, useValue: { hasProvider: () => false } },
     { provide: AuthProviderManager, useValue: {} },
     { provide: UsersService, useValue: usersService },

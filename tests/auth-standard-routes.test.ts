@@ -76,15 +76,21 @@ const build = ({ user = null as any } = {}) => {
     hasProvider: () => false,
     sendEmailSync: vi.fn(),
   };
+  const attributionService = {
+    lead: vi.fn().mockResolvedValue(undefined),
+    queryParams: vi.fn().mockReturnValue([]),
+  };
   const controller = new AuthController(
     new AuthService(
       userService as never,
       organizationService as never,
       emailService as never,
       {} as never,
-      {} as never
+      {} as never,
+      attributionService as never
     ),
-    emailService as never
+    emailService as never,
+    attributionService as never
   );
   return { controller, userService, organizationService };
 };
@@ -228,6 +234,36 @@ describe('standard OAuth login state round trip', () => {
     );
   });
 
+  it('switches the tab to the invited organization after the exchange', async () => {
+    const { controller } = build();
+    const authService = (controller as any)._authService;
+    vi.spyOn(authService, 'checkExists').mockResolvedValue({
+      jwt: 'jwt-oauth',
+      token: null,
+      addedOrg: { organizationId: 'org-invited' },
+    } as never);
+    const { response, cookies, headers, state } = recordedResponse();
+
+    await controller.oauthExists(
+      {
+        headers: { 'content-type': 'application/json' },
+        get: () => 'signed-state-token',
+        cookies: {},
+      } as never,
+      'provider-code',
+      'redirect-uri',
+      'login-abc',
+      'github',
+      response as never
+    );
+
+    expect(state.status).toBe(200);
+    expect(headers.auth).toBe('jwt-oauth');
+    expect(headers.showorg).toBe('org-invited');
+    expect(headers.reload).toBe('true');
+    expect(cookies).toHaveLength(0);
+  });
+
   it.each([
     ['a session proof header', 'signed-state-token', 'signed-state-token'],
     ['a missing proof header', undefined, undefined],
@@ -259,7 +295,8 @@ describe('standard OAuth login state round trip', () => {
         'provider-code',
         'redirect-uri',
         'login-abc',
-        expected
+        expected,
+        false
       );
       expect(state.status).toBe(200);
       expect(headers.auth).toBe('jwt-oauth');

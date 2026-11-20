@@ -8,6 +8,7 @@ import { RefreshIntegrationService } from '@gitroom/nestjs-libraries/integration
 import { InstagramProvider } from '@gitroom/nestjs-libraries/integrations/social/instagram.provider';
 import { SkoolProvider } from '@gitroom/nestjs-libraries/integrations/social/skool.provider';
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
+import { EncryptionService } from '@gitroom/nestjs-libraries/services/encryption.service';
 import { NoAuthIntegrationsController } from '@gitroom/backend/api/routes/no.auth.integrations.controller';
 import { ioRedis } from '@gitroom/nestjs-libraries/redis/redis.service';
 
@@ -190,7 +191,8 @@ const makeService = (
     {} as any,
     {} as any,
     {} as any,
-    {} as any
+    {} as any,
+    new EncryptionService()
   );
   const manager = {
     getSocialIntegration: (identifier: string) => providers[identifier],

@@ -34,9 +34,12 @@ beforeEach(() => {
         getUser: async () => ({ id: 'provider-user' }),
       }),
     } as never,
-    {} as never
+    {} as never,
+    { lead: async () => undefined } as never
   );
-  const controller = new AuthController(service, {} as never);
+  const controller = new AuthController(service, {} as never, {
+    queryParams: () => [],
+  } as never);
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init: RequestInit = {}) => {
@@ -67,9 +70,7 @@ beforeEach(() => {
             {
               headers: Object.fromEntries(headers),
               get: (name: string) => headers.get(name),
-              get cookies() {
-                throw new Error('No cookies should be read');
-              },
+              cookies: {},
             } as never,
             input.code,
             undefined,
