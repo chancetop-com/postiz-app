@@ -140,3 +140,84 @@ describe('public connect links', () => {
     expect(continueIntegration).toContain("returnURL.includes('?') ? '&' : '?'");
   });
 });
+
+describe('the default deployment keeps reading old credentials in plain text', () => {
+  const READ_ROOT = path.resolve(
+    import.meta.dirname,
+    '../libraries/nestjs-libraries/src'
+  );
+  const encryption = read(READ_ROOT, 'services/encryption.service.ts');
+  const repository = read(
+    READ_ROOT,
+    'database/prisma/integrations/integration.repository.ts'
+  );
+  const integrationService = read(
+    READ_ROOT,
+    'database/prisma/integrations/integration.service.ts'
+  );
+  const refreshService = read(
+    READ_ROOT,
+    'integrations/refresh.integration.service.ts'
+  );
+  const publicController = read(
+    BACKEND,
+    'public-api/routes/v1/public.integrations.controller.ts'
+  );
+  const dashboardController = read(
+    BACKEND,
+    'api/routes/integrations.controller.ts'
+  );
+
+  it('only encrypts when a provider is configured and refuses an unknown one', () => {
+    expect(encryption).toContain("case 'local':");
+    expect(encryption).toContain("case 'aws-kms':");
+    expect(encryption).toContain('return new EmptyProvider();');
+    expect(encryption).toContain('throw new Error(`Unknown encryption provider:');
+    // empty provider: encrypt is a pass-through, not an error
+    expect(encryption).toContain('if (!this.canEncrypt()) {');
+    expect(encryption).toContain('return value;');
+    // values written before the option was enabled have no prefix
+    expect(encryption).toContain('value.startsWith(ENCRYPTED_PREFIX)');
+  });
+
+  it('writes and reads through the service without a prefix in the default path', () => {
+    expect(repository).toContain('token = await this._encryptionService.encrypt(token)');
+    expect(repository).toContain(
+      'refreshToken = await this._encryptionService.encrypt(refreshToken)'
+    );
+    expect(repository).toContain('this._encryptionService.decryptFields(');
+    // the list never selects the two credential columns
+    expect(repository).toContain('omit: {');
+    expect(repository).toContain('token: true,');
+    expect(repository).toContain('refreshToken: true,');
+    // an empty refresh token still does not wipe the stored one
+    expect(repository).toContain('...(refreshToken ? { refreshToken } : {})');
+  });
+
+  it('never leaks a credential through a list response', () => {
+    const publicList = publicController.slice(
+      publicController.indexOf('async listIntegration('),
+      publicController.indexOf("@Get('/social/:integration')")
+    );
+    expect(publicList).not.toContain('token:');
+    expect(publicList).not.toContain('refreshToken');
+
+    const dashboardList = dashboardController.slice(
+      dashboardController.indexOf('async getIntegrationList('),
+      dashboardController.indexOf("@Post('/function')")
+    );
+    expect(dashboardList).not.toContain('token: p.token');
+    expect(dashboardList).not.toContain('refreshToken: p.refreshToken');
+  });
+
+  it('keeps the batch and the per-channel refresh aligned', () => {
+    // one failed provider does not end the loop
+    expect(integrationService).toContain('continue;');
+    expect(integrationService).toContain('reuseParallelRefresh(');
+    // notification only when the update actually flipped refreshNeeded
+    expect(integrationService).toContain('if (flagged) {');
+    // the per-channel path has the same guard
+    expect(refreshService).toContain('stored.refreshToken !== integration.refreshToken');
+    expect(refreshService).toContain('if (flagged) {');
+  });
+});
