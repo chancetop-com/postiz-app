@@ -27,6 +27,7 @@
 | --- | --- |
 | 实现分支 | `codex/ticket-09-custom-content-flows` |
 | 用例提交 | `2a9971a83`（`test(content): pin billing feedback for members and admins`） |
+| 集成合并提交 | `2aeaadc3a`，父提交 `822d62358`（集成分支）与 `c695988c2`（实现分支） |
 | 运行时数据库 | PostgreSQL `postiz-ticket-09`（容器 `postiz-postgres`） |
 | Redis | `redis://localhost:6379/9` |
 | 后端 / 前端 | `http://localhost:3109` / `http://localhost:4309` |
@@ -95,6 +96,15 @@
 | --- | --- | --- |
 | 类型 | `pnpm typecheck` | frontend（含 `next typegen`）、backend、orchestrator 全部通过，exit 0 |
 | 回归 | `NOT_SECURED= pnpm test --maxWorkers=1 --testTimeout=20000 --hookTimeout=20000` | **58 文件 / 579 用例全部通过**，exit 0，191.83s |
+
+### 合入后复核（集成分支 `2aeaadc3a`）
+
+| 门 | 命令 | 结果 |
+| --- | --- | --- |
+| 类型 | `pnpm typecheck` | exit 0（frontend typegen + frontend + backend + orchestrator） |
+| 回归 | 同上 | **62 文件 / 645 用例全部通过**，exit 0，353.38s；较合并前 62 文件 / 642 用例恰为本票新增 3 例 |
+
+冲突仅本票状态头（集成分支 `claimed` 对实现分支 `resolved`），按实现分支解决；`tests/` 两处改动自动合并，无冲突标记。
 
 ### 未验证
 
