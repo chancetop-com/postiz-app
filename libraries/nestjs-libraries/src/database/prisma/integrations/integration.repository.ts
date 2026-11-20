@@ -564,17 +564,15 @@ export class IntegrationRepository {
               );
             }
           }
-          // A removed page retains its historical posts and credentials.
-          if (binding.rootInternalId) {
-            await tx.integration.updateMany({
-              where: {
-                organizationId: org,
-                internalId,
-                deletedAt: { not: null },
-              },
-              data: { internalId: makeId(10) },
-            });
-          }
+          // Preserve the history of removed pages and identically named native
+          // IDs on other platforms. A same-platform, single-step reconnect can reuse its row.
+          await tx.integration.updateMany({
+            where: {
+              organizationId: org, internalId, deletedAt: { not: null },
+              ...(!binding.rootInternalId && { providerIdentifier: { not: provider } }),
+            },
+            data: { internalId: makeId(10) },
+          });
           return write(tx);
         });
     return this.decryptTokens(upsert);

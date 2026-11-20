@@ -72,7 +72,7 @@ const build = ({
       id: 'org-new',
       users: [{ user: { id: 'user-new', email: 'new@example.test' } }],
     }),
-    activeInviteMembership: vi
+    getActiveMembership: vi
       .fn()
       .mockResolvedValue({ organizationId: 'org-invited' }),
     addUserToOrg: vi.fn().mockResolvedValue({ organizationId: 'org-invited' }),
@@ -286,7 +286,7 @@ describe('register and activate', () => {
     const organizationService = {
       addUserToOrg,
       activationInvitation: vi.fn(),
-      activeInviteMembership: vi
+      getActiveMembership: vi
         .fn()
         .mockResolvedValue({ organizationId: 'org-invited' }),
     };
@@ -555,7 +555,7 @@ const loginWithInvite = async (
   const organizationService = {
     createOrgAndUser: vi.fn(),
     addUserToOrg,
-    activeInviteMembership: vi
+    getActiveMembership: vi
       .fn()
       .mockResolvedValue({ organizationId: 'org-invited' }),
     getCount: vi.fn().mockResolvedValue(0),

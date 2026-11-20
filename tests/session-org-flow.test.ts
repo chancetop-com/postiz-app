@@ -154,12 +154,12 @@ describe('default organisation attribution', () => {
 });
 
 describe('manual organisation switch endpoint', () => {
-  const controller = () =>
+  const controller = (active = true) =>
     new UsersController(
       {} as never,
       {} as never,
       {} as never,
-      {} as never,
+      { getActiveMembership: async () => active && { organizationId: 'org-2' } } as never,
       {} as never,
       {} as never
     );
@@ -181,12 +181,18 @@ describe('manual organisation switch endpoint', () => {
     return { response, headers };
   };
 
-  it('returns the selected organisation so the tab can store it', () => {
+  it('returns the selected organisation so the tab can store it', async () => {
     const { response, headers } = recordedResponse();
 
-    controller().changeOrg('org-2', response as never);
+    await controller().changeOrg({ id: 'user' } as never, 'org-2', response as never);
 
     expect(headers.showorg).toBe('org-2');
+  });
+
+  it('does not select a workspace after membership has been removed or disabled', async () => {
+    const { response, headers } = recordedResponse();
+    await expect(controller(false).changeOrg({ id: 'user' } as never, 'org-2', response as never)).rejects.toMatchObject({ status: 404 });
+    expect(headers.showorg).toBeUndefined();
   });
 
   it('creates the api key of the organisation that was actually selected', async () => {
@@ -269,7 +275,7 @@ describe('accepting an invitation from an existing tab session', () => {
       {} as never,
       {
         addUserToOrg,
-        activeInviteMembership: async () =>
+        getActiveMembership: async () =>
           active && { organizationId: 'org-invited' },
       } as never,
       {} as never,

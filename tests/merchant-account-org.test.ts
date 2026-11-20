@@ -266,7 +266,7 @@ describe('request-time organisation resolution', () => {
 });
 
 describe('manual organisation switch endpoint', () => {
-  it('returns the selected organisation in the showorg header', () => {
+  it('returns the selected organisation in the showorg header', async () => {
     const headers: Record<string, string> = {};
     const response = {
       header(name: string, value: string) {
@@ -284,12 +284,12 @@ describe('manual organisation switch endpoint', () => {
       {} as never,
       {} as never,
       {} as never,
-      {} as never,
+      { getActiveMembership: async () => ({ organizationId: 'org-2' }) } as never,
       {} as never,
       {} as never
     );
 
-    controller.changeOrg('org-2', response as never);
+    await controller.changeOrg({ id: 'user' } as never, 'org-2', response as never);
 
     expect(headers.showorg).toBe('org-2');
   });

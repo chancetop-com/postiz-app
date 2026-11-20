@@ -301,11 +301,15 @@ export class UsersController {
   }
 
   @Post('/change-org')
-  changeOrg(
+  async changeOrg(
+    @GetUserFromRequest() user: User,
     @Body('id') id: string,
     @Res({ passthrough: true }) response: Response
   ) {
-    response.header('showorg', id);
+    if (typeof id !== 'string' || !id) throw new HttpException('Select a workspace', 400);
+    const membership = await this._orgService.getActiveMembership(user.id, id);
+    if (!membership) throw new HttpException('Workspace membership is no longer active', 404);
+    response.header('showorg', membership.organizationId);
     response.status(200).send();
   }
 

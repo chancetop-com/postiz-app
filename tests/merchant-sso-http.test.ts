@@ -75,6 +75,7 @@ const buildWorld = () => {
   };
 
   const organizationService = {
+    getActiveMembership: async (userId: string, organizationId: string) => [...memberships.values()].find((m) => m.userId === userId && m.organizationId === organizationId && !m.disabled),
     getOrgsByUserId: vi.fn(async (userId: string) => {
       return [...memberships.values()]
         .filter((membership) => membership.userId === userId)
@@ -209,7 +210,7 @@ const buildApp = (world: ReturnType<typeof buildWorld>) => {
 
   app.post('/user/change-org', (req, res) => {
     withSession(req, res, () => {
-      return users.changeOrg(req.body.id, res as never);
+      return users.changeOrg((req as any).user, req.body.id, res as never);
     });
   });
 

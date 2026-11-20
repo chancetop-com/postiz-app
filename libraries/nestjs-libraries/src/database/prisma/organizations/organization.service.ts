@@ -48,8 +48,8 @@ export class OrganizationService {
     );
   }
 
-  activeInviteMembership(userId: string, orgId: string) {
-    return this._organizationRepository.activeInviteMembership(userId, orgId);
+  getActiveMembership(userId: string, orgId: string) {
+    return this._organizationRepository.getActiveMembership(userId, orgId);
   }
 
   activationInvitation(userId: string, inviteId: string) {

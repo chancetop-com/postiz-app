@@ -1932,6 +1932,24 @@ databaseSuite('real PostgreSQL credential matrix', () => {
     expect(after).toEqual(channel);
   });
 
+  it('preserves a deleted channel when a single-step link has the same native ID on another platform', async () => {
+    const org = 'ticket11-removed-' + pid;
+    await prisma.organization.create({ data: { id: org, name: 'Historical channel' } });
+    try {
+      const old = await prisma.integration.create({ data: { organizationId: org, internalId: 'same-id', providerIdentifier: 'linkedin',
+        name: 'Historical', type: 'social', token: 'historical-token', deletedAt: new Date() } });
+      const connected = await repository.createOrUpdateIntegration(undefined, false, org, 'New channel', undefined, 'social',
+        'same-id', 'youtube', 'new-token', undefined, undefined, undefined, false, undefined, undefined, undefined, {});
+      expect(connected.id).not.toBe(old.id);
+      expect(await prisma.integration.findUnique({ where: { id: old.id } })).toMatchObject({
+        providerIdentifier: old.providerIdentifier, token: old.token, deletedAt: old.deletedAt,
+      });
+    } finally {
+      await prisma.integration.deleteMany({ where: { organizationId: org } });
+      await prisma.organization.delete({ where: { id: org } });
+    }
+  });
+
   it('rolls back a provider migration when the final slot check rejects it', async () => {
     const org = 'ticket11-migration-quota-' + pid;
     await prisma.organization.create({ data: { id: org, name: 'Migration quota test' } });
