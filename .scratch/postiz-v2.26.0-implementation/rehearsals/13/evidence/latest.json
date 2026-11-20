@@ -1,0 +1,1157 @@
+{
+  "ticket": 13,
+  "generatedAt": "2026-11-20T11:34:47.480Z",
+  "node": "v22.23.4",
+  "scenarios": [
+    {
+      "id": "scan-mutations-during-compensation",
+      "description": "The missing-posts scan loads four stale QUEUE candidates; before dispatch one is deleted, one is canceled (state ERROR) and one is rescheduled. The activity re-read decides: only the untouched and the still-QUEUE rescheduled rows dispatch; the deleted/canceled rows send nothing and keep their original time.",
+      "startedAt": "2026-11-20T11:34:48.022Z",
+      "observations": [
+        {
+          "name": "live post published",
+          "value": {
+            "id": "post-mwowjg18-3",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T11:29:48.044Z",
+            "releaseId": "stub-finalized-62211-4",
+            "releaseURL": "https://stub.invalid/stub-finalized-62211-4",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowjg0n-1\",\"name\":\"org-mwowjg0n-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowjg0n-1.png\"}]",
+            "updatedAt": "2026-11-20T11:35:07.367Z"
+          }
+        },
+        {
+          "name": "rescheduled execution",
+          "value": {
+            "workflowId": "post_post-mwowjg1e-9",
+            "runId": "95ba8433-8c06-4c06-9b1f-214b5328252a",
+            "type": "postWorkflowV112",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "organizationId": "org_org-mwowjg0n-1",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+4878a905a691e8cf135635d9492c3312d29a64495532656190eac7770e172658"
+              ],
+              "postId": "post-mwowjg1e-9"
+            }
+          }
+        },
+        {
+          "name": "rescheduled post published",
+          "value": {
+            "id": "post-mwowjg1e-9",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T11:34:57.044Z",
+            "releaseId": "stub-finalized-62211-3",
+            "releaseURL": "https://stub.invalid/stub-finalized-62211-3",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowjg0n-1\",\"name\":\"org-mwowjg0n-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowjg0n-1.png\"}]",
+            "updatedAt": "2026-11-20T11:35:07.350Z"
+          }
+        },
+        {
+          "name": "rescheduled first send relative to the new time (ms)",
+          "value": 10187
+        },
+        {
+          "name": "deleted row after the scan",
+          "value": {
+            "id": "post-mwowjg1c-5",
+            "state": "QUEUE",
+            "publishDate": "2026-11-20T11:29:48.044Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": null,
+            "deletedAt": "2026-11-20T11:35:05.864Z",
+            "image": "[{\"id\":\"media_org-mwowjg0n-1\",\"name\":\"org-mwowjg0n-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowjg0n-1.png\"}]",
+            "updatedAt": "2026-11-20T11:35:05.866Z"
+          }
+        },
+        {
+          "name": "canceled row after the scan",
+          "value": {
+            "id": "post-mwowjg1d-7",
+            "state": "ERROR",
+            "publishDate": "2026-11-20T11:29:48.044Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": "Canceled during the compensation scan",
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowjg0n-1\",\"name\":\"org-mwowjg0n-1.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowjg0n-1.png\"}]",
+            "updatedAt": "2026-11-20T11:35:05.873Z"
+          }
+        },
+        {
+          "name": "scan mutations recorded before dispatch",
+          "value": [
+            {
+              "postId": "post-mwowjg1c-5",
+              "action": "delete"
+            },
+            {
+              "postId": "post-mwowjg1d-7",
+              "action": "cancel"
+            },
+            {
+              "postId": "post-mwowjg1e-9",
+              "action": "reschedule"
+            }
+          ]
+        },
+        {
+          "name": "platform accepted sends for the four candidates",
+          "value": 2
+        },
+        {
+          "name": "ticket-12 normal sample",
+          "value": {
+            "id": "missing-scan",
+            "dispatched": "postWorkflowV112",
+            "published": 1
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "control post published once",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "control post keeps its original scheduled time",
+          "ok": true,
+          "actual": "2026-11-20T11:29:48.044Z",
+          "expected": "2026-11-20T11:29:48.044Z"
+        },
+        {
+          "name": "still-QUEUE rescheduled row is dispatched as V112",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "rescheduled publish keeps the new scheduled time",
+          "ok": true,
+          "actual": "2026-11-20T11:34:57.044Z",
+          "expected": "2026-11-20T11:34:57.044Z"
+        },
+        {
+          "name": "rescheduled post wrote its release id back",
+          "ok": true,
+          "actual": true,
+          "detail": "stub-finalized-62211-3"
+        },
+        {
+          "name": "rescheduled post sent exactly once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "rescheduled post did not send before the new time",
+          "ok": true,
+          "actual": true,
+          "detail": "sent 10187ms relative to 2026-11-20T11:34:57.044Z"
+        },
+        {
+          "name": "deleted row is still soft-deleted",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "deleted row keeps its original time",
+          "ok": true,
+          "actual": "2026-11-20T11:29:48.044Z",
+          "expected": "2026-11-20T11:29:48.044Z"
+        },
+        {
+          "name": "deleted row was not dispatched",
+          "ok": true,
+          "actual": "no execution",
+          "expected": "no execution"
+        },
+        {
+          "name": "canceled row is ERROR",
+          "ok": true,
+          "actual": "ERROR",
+          "expected": "ERROR"
+        },
+        {
+          "name": "canceled row keeps its original time",
+          "ok": true,
+          "actual": "2026-11-20T11:29:48.044Z",
+          "expected": "2026-11-20T11:29:48.044Z"
+        },
+        {
+          "name": "canceled row was not dispatched",
+          "ok": true,
+          "actual": "no execution",
+          "expected": "no execution"
+        },
+        {
+          "name": "all three scan mutations applied",
+          "ok": true,
+          "actual": 3,
+          "expected": 3
+        },
+        {
+          "name": "deleted/canceled posts sent nothing",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "only the two still-QUEUE rows sent",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "media payload matches the ticket-12 normal sample",
+          "ok": true,
+          "actual": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+          "expected": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77"
+        }
+      ]
+    },
+    {
+      "id": "finalize-platform-rejected",
+      "description": "postPending/checkPostStatus succeed, then finalizePost throws a non-retryable bad_body failure: the post is ERROR with the serialized platform rejection, the platform records zero accepted finalizes, and nothing is classified as unknown or retried.",
+      "startedAt": "2026-11-20T11:35:07.910Z",
+      "observations": [
+        {
+          "name": "post after the platform rejection",
+          "value": {
+            "id": "post-mwowjvdb-12",
+            "state": "ERROR",
+            "publishDate": "2026-11-20T11:35:09.419Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": "{\"cause\":{\"failure\":{\"message\":\"synthetic provider rejected the finalize\",\"source\":\"TypeScriptSDK\",\"stackTrace\":\"ApplicationFailure: synthetic provider rejected the finalize\\n    at badBody (<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/13/lib/stub-provider.cjs:153:10)\\n    at Object.finalizePost (<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/13/lib/stub-provider.cjs:277:13)\\n    at <repo>/apps/orchestrator/src/activities/post.activity.ts:517:26\\n    at PostActivity.refreshAndRepeat (<repo>/apps/orchestrator/src/activities/post.activity.ts:300:20)\\n    at <repo>/apps/orchestrator/src/activities/post.activity.ts:516:14\\n    at PostActivity.handleDisconnect (<repo>/apps/orchestrator/src/activities/post.activity.ts:336:20)\\n    at <repo>/apps/orchestrator/src/activities/post.activity.ts:515:12\\n    at withHeartbeat (<repo>/libraries/nestjs-libraries/src/temporal/temporal.heartbeat.ts:76:18)\\n    at PostActivity.finalizePost (<repo>/apps/orchestrator/src/activities/post.activity.ts:514:25)\",\"applicationFailureInfo\":{\"type\":\"bad_body\",\"nonRetryable\":true,\"details\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"eyJpZGVudGlmaWVyIjoiYmx1ZXNreSIsImpzb24iOiJ7fSIsImJvZHkiOiJ7XCJ0eXBlXCI6XCJCdWZmZXJcIixcImRhdGFcIjpbMTIzLDEyNV19In0=\"}]}}},\"type\":\"bad_body\",\"nonRetryable\":true,\"details\":[{\"identifier\":\"bluesky\",\"json\":\"{}\",\"body\":\"{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":[123,125]}\"}]},\"failure\":{\"message\":\"Activity task failed\",\"cause\":{\"message\":\"synthetic provider rejected the finalize\",\"source\":\"TypeScriptSDK\",\"stackTrace\":\"ApplicationFailure: synthetic provider rejected the finalize\\n    at badBody (<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/13/lib/stub-provider.cjs:153:10)\\n    at Object.finalizePost (<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/13/lib/stub-provider.cjs:277:13)\\n    at <repo>/apps/orchestrator/src/activities/post.activity.ts:517:26\\n    at PostActivity.refreshAndRepeat (<repo>/apps/orchestrator/src/activities/post.activity.ts:300:20)\\n    at <repo>/apps/orchestrator/src/activities/post.activity.ts:516:14\\n    at PostActivity.handleDisconnect (<repo>/apps/orchestrator/src/activities/post.activity.ts:336:20)\\n    at <repo>/apps/orchestrator/src/activities/post.activity.ts:515:12\\n    at withHeartbeat (<repo>/libraries/nestjs-libraries/src/temporal/temporal.heartbeat.ts:76:18)\\n    at PostActivity.finalizePost (<repo>/apps/orchestrator/src/activities/post.activity.ts:514:25)\",\"applicationFailureInfo\":{\"type\":\"bad_body\",\"nonRetryable\":true,\"details\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"eyJpZGVudGlmaWVyIjoiYmx1ZXNreSIsImpzb24iOiJ7fSIsImJvZHkiOiJ7XCJ0eXBlXCI6XCJCdWZmZXJcIixcImRhdGFcIjpbMTIzLDEyNV19In0=\"}]}}},\"activityFailureInfo\":{\"scheduledEventId\":\"34\",\"startedEventId\":\"35\",\"identity\":\"62532@MacBook-Pro-4.local\",\"activityType\":{\"name\":\"finalizePost\"},\"activityId\":\"5\",\"retryState\":\"RETRY_STATE_NON_RETRYABLE_FAILURE\"}},\"activityType\":\"finalizePost\",\"activityId\":\"5\",\"retryState\":\"NON_RETRYABLE_FAILURE\",\"identity\":\"62532@MacBook-Pro-4.local\"}",
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowjvd2-10\",\"name\":\"org-mwowjvd2-10.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowjvd2-10.png\"}]",
+            "updatedAt": "2026-11-20T11:35:23.521Z"
+          }
+        },
+        {
+          "name": "platform ledger",
+          "value": {
+            "pendingAccepted": 1,
+            "finalizeEntered": 1,
+            "finalizeAccepted": 0,
+            "finalizeRejected": 1
+          }
+        },
+        {
+          "name": "durable Errors rows",
+          "value": [
+            "{\"cause\":{\"failure\":{\"message\":\"synthetic provider rejected the finalize\",\"source\":\"TypeScriptSDK\",\"stackTrace\":\"Applica"
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "platform-rejected post is ERROR",
+          "ok": true,
+          "actual": "ERROR",
+          "expected": "ERROR"
+        },
+        {
+          "name": "no release id is written",
+          "ok": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "name": "the stored failure carries the bad_body type",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"cause\":{\"failure\":{\"message\":\"synthetic provider rejected the finalize\",\"source\":\"TypeScriptSDK\",\"stackTrace\":\"ApplicationFailure: synthetic provider rejected the finalize\\n    at badBody (<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals"
+        },
+        {
+          "name": "the pending call was accepted once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "finalize was invoked once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "the platform rejected the finalize",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "the platform accepted zero finalizes",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "the rejection was not retried",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "an Errors row records the platform rejection",
+          "ok": true,
+          "actual": true,
+          "detail": "[\"{\\\"cause\\\":{\\\"failure\\\":{\\\"message\\\":\\\"synthetic provider rejected the finalize\\\",\\\"sourc\"]"
+        },
+        {
+          "name": "the user is told the platform rejected the post",
+          "ok": true,
+          "actual": true,
+          "detail": "[\"An error occurred while posting on bluesky: synthetic provider rejected the fina\"]"
+        }
+      ]
+    },
+    {
+      "id": "pending-still-in-progress",
+      "description": "checkPostStatus keeps returning pending: the platform accepted the publish, the row stays QUEUE, the execution stays RUNNING and no finalize is attempted. This is a pending result, distinct from a platform rejection and from the unknown timeout marker.",
+      "startedAt": "2026-11-20T11:35:24.035Z",
+      "observations": [
+        {
+          "name": "pending row",
+          "value": {
+            "id": "post-mwowk7tg-15",
+            "state": "QUEUE",
+            "publishDate": "2026-11-20T11:35:25.552Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowk7t0-13\",\"name\":\"org-mwowk7t0-13.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowk7t0-13.png\"}]",
+            "updatedAt": "2026-11-20T11:35:24.053Z"
+          }
+        },
+        {
+          "name": "pending execution",
+          "value": {
+            "workflowId": "post_post-mwowk7tg-15",
+            "runId": "01a1f8bd-9dc6-7412-9d1a-0fe386ce1524",
+            "type": "postWorkflowV112",
+            "status": "RUNNING",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+4878a905a691e8cf135635d9492c3312d29a64495532656190eac7770e172658"
+              ],
+              "postId": "post-mwowk7tg-15",
+              "organizationId": "org_org-mwowk7t0-13"
+            }
+          }
+        },
+        {
+          "name": "ticket-12 normal V112 contract",
+          "value": {
+            "pending": 1,
+            "checks": 1,
+            "finalizes": 1
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "pending post stays QUEUE",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "pending execution stays RUNNING",
+          "ok": true,
+          "actual": "RUNNING",
+          "expected": "RUNNING"
+        },
+        {
+          "name": "no release id yet",
+          "ok": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "name": "the platform accepted the publish once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "the status read ran at least twice",
+          "ok": true,
+          "actual": true,
+          "expected": true
+        },
+        {
+          "name": "pending never finalized",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "pending row has no error marker",
+          "ok": true,
+          "actual": true,
+          "detail": "null"
+        },
+        {
+          "name": "pending has no Errors row",
+          "ok": true,
+          "actual": 0,
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "writeback-transient-recovers",
+      "description": "The platform accepts and finalizes the post, the first updatePost activity attempt fails locally, and the shipped retry writes the accepted result back. The platform send count stays one and the row ends PUBLISHED with the finalize release id.",
+      "startedAt": "2026-11-20T11:36:00.382Z",
+      "observations": [
+        {
+          "name": "row after the failed first write-back",
+          "value": {
+            "id": "post-mwowkzuw-18",
+            "state": "QUEUE",
+            "publishDate": "2026-11-20T11:36:01.892Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowkzum-16\",\"name\":\"org-mwowkzum-16.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowkzum-16.png\"}]",
+            "updatedAt": "2026-11-20T11:36:00.393Z"
+          }
+        },
+        {
+          "name": "row after the retry",
+          "value": {
+            "id": "post-mwowkzuw-18",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T11:36:01.892Z",
+            "releaseId": "stub-finalized-63311-2",
+            "releaseURL": "https://stub.invalid/stub-finalized-63311-2",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowkzum-16\",\"name\":\"org-mwowkzum-16.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowkzum-16.png\"}]",
+            "updatedAt": "2026-11-20T11:38:15.351Z"
+          }
+        },
+        {
+          "name": "platform ledger after recovery",
+          "value": {
+            "publishing": 1,
+            "finalizeAccepted": 1
+          }
+        },
+        {
+          "name": "write-back attempts",
+          "value": [
+            "2026-11-20T11:36:15.313Z",
+            "2026-11-20T11:38:15.346Z"
+          ]
+        },
+        {
+          "name": "write-back timeline",
+          "value": [
+            {
+              "event": "40",
+              "kind": "activityTaskScheduled",
+              "activity": "updatePost"
+            },
+            {
+              "event": "41",
+              "kind": "activityTaskStarted",
+              "activity": "updatePost"
+            },
+            {
+              "event": "42",
+              "kind": "activityTaskCompleted",
+              "activity": "updatePost"
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "failed write-back leaves the row QUEUE",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "retry writes PUBLISHED",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "retry writes the finalize release id",
+          "ok": true,
+          "actual": true,
+          "detail": "stub-finalized-63311-2"
+        },
+        {
+          "name": "no error remains on the recovered row",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "platform send was accepted once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "finalize was accepted once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "write-back was attempted twice",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "the shipped retry waited the configured backoff",
+          "ok": true,
+          "actual": true,
+          "detail": "120033ms"
+        },
+        {
+          "name": "write-back retried inside one scheduled activity",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "history records one updatePost task that completed after the retry",
+          "ok": true,
+          "actual": true
+        }
+      ]
+    },
+    {
+      "id": "writeback-permanent-sweep-duplicates",
+      "description": "updatePost and changeState both fail after the platform accepted the post, so the row stays QUEUE with no local result. The compensation scan then treats it as unpublished and sends it again: the same post is accepted twice. Evidence for reconciling the platform before re-enabling the sweep.",
+      "startedAt": "2026-11-20T11:38:15.721Z",
+      "observations": [
+        {
+          "name": "first accepted publish",
+          "value": [
+            {
+              "step": "accepted",
+              "id": "stub-pending-68847-1",
+              "postDbId": "post-mwownwaj-21"
+            }
+          ]
+        },
+        {
+          "name": "row after both write-backs failed",
+          "value": {
+            "id": "post-mwownwaj-21",
+            "state": "QUEUE",
+            "publishDate": "2026-11-20T11:33:15.739Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwownwa2-19\",\"name\":\"org-mwownwa2-19.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwownwa2-19.png\"}]",
+            "updatedAt": "2026-11-20T11:38:15.739Z"
+          }
+        },
+        {
+          "name": "accepted publishes after the scan",
+          "value": [
+            {
+              "at": "2026-11-20T11:38:30.104Z",
+              "id": "stub-pending-68847-1",
+              "pid": 68847
+            },
+            {
+              "at": "2026-11-20T11:38:31.609Z",
+              "id": "stub-pending-68847-3",
+              "pid": 68847
+            }
+          ]
+        },
+        {
+          "name": "row after the scan republished it",
+          "value": {
+            "id": "post-mwownwaj-21",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T11:33:15.739Z",
+            "releaseId": "stub-finalized-68847-5",
+            "releaseURL": "https://stub.invalid/stub-finalized-68847-5",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwownwa2-19\",\"name\":\"org-mwownwa2-19.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwownwa2-19.png\"}]",
+            "updatedAt": "2026-11-20T11:38:31.714Z"
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "unknown row stays QUEUE",
+          "ok": true,
+          "actual": "QUEUE",
+          "expected": "QUEUE"
+        },
+        {
+          "name": "unknown row has no local release id",
+          "ok": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "name": "the scan republished the same post",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "the two accepts are distinct platform ids",
+          "ok": true,
+          "actual": true,
+          "detail": "stub-pending-68847-1 vs stub-pending-68847-3"
+        },
+        {
+          "name": "the last accepted publish is written back",
+          "ok": true,
+          "actual": true,
+          "detail": "stub-finalized-68847-5"
+        },
+        {
+          "name": "the local release id is the last finalize result",
+          "ok": true,
+          "actual": "stub-finalized-68847-5",
+          "expected": "stub-finalized-68847-5"
+        }
+      ]
+    },
+    {
+      "id": "worker-death-finalize-no-details",
+      "description": "Two finalizes are in flight when the worker is SIGKILLed inside the first heartbeat interval, so neither has heartbeat details: one had not reached the platform (safe retry), the other was already accepted (retry duplicates). After restart the workflow retries both; the evidence separates the safe retry from the duplicate.",
+      "startedAt": "2026-11-20T11:38:31.986Z",
+      "observations": [
+        {
+          "name": "heartbeat details before the kill",
+          "value": {
+            "safe": 0,
+            "duplicate": 0
+          }
+        },
+        {
+          "name": "safe row after the retry",
+          "value": {
+            "id": "post-mwowo8ud-25",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T11:38:33.005Z",
+            "releaseId": "stub-finalized-71750-1",
+            "releaseURL": "https://stub.invalid/stub-finalized-71750-1",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowo8tv-22\",\"name\":\"org-mwowo8tv-22.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowo8tv-22.png\"}]",
+            "updatedAt": "2026-11-20T11:41:44.213Z"
+          }
+        },
+        {
+          "name": "duplicate row after the retry",
+          "value": {
+            "id": "post-mwowo8uf-27",
+            "state": "PUBLISHED",
+            "publishDate": "2026-11-20T11:38:33.007Z",
+            "releaseId": "stub-finalized-71750-2",
+            "releaseURL": "https://stub.invalid/stub-finalized-71750-2",
+            "error": null,
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowo8u6-23\",\"name\":\"org-mwowo8u6-23.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowo8u6-23.png\"}]",
+            "updatedAt": "2026-11-20T11:41:44.212Z"
+          }
+        },
+        {
+          "name": "duplicate finalize accepts",
+          "value": [
+            {
+              "id": "stub-finalized-71560-3",
+              "pid": 71560,
+              "at": "2026-11-20T11:38:43.930Z"
+            },
+            {
+              "id": "stub-finalized-71750-2",
+              "pid": 71750,
+              "at": "2026-11-20T11:41:44.180Z"
+            }
+          ]
+        },
+        {
+          "name": "duplicate finalize timeout",
+          "value": {
+            "eventId": "36",
+            "activity": "finalizePost",
+            "timeoutType": 4,
+            "heartbeatPayloads": 0,
+            "failureMessage": "activity Heartbeat timeout"
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "name": "the safe finalize has no heartbeat details yet",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "the accepted finalize also has no heartbeat details yet",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "worker process group was SIGKILLed",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "safe execution completed after the safe retry",
+          "ok": true,
+          "actual": "COMPLETED",
+          "expected": "COMPLETED"
+        },
+        {
+          "name": "safe post is PUBLISHED after the retry",
+          "ok": true,
+          "actual": "PUBLISHED",
+          "expected": "PUBLISHED"
+        },
+        {
+          "name": "safe post has one platform accept (the first attempt never reached the platform)",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "safe finalize accepted exactly once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "safe finalize was scheduled twice (failed first attempt + retry)",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "accepted finalize was sent twice after the no-details retry",
+          "ok": true,
+          "actual": 2,
+          "expected": 2
+        },
+        {
+          "name": "the two accepts are distinct platform ids",
+          "ok": true,
+          "actual": true,
+          "detail": "stub-finalized-71560-3 vs stub-finalized-71750-2"
+        },
+        {
+          "name": "the retry came from the restarted process",
+          "ok": true,
+          "actual": true,
+          "detail": "71560 vs 71750"
+        },
+        {
+          "name": "the local result points at the second accept",
+          "ok": true,
+          "actual": "stub-finalized-71750-2",
+          "expected": "stub-finalized-71750-2"
+        },
+        {
+          "name": "the timeout carried no heartbeat details",
+          "ok": true,
+          "actual": {
+            "timeoutType": 4,
+            "heartbeatPayloads": 0
+          },
+          "expected": {
+            "timeoutType": 4,
+            "heartbeatPayloads": 0
+          }
+        },
+        {
+          "name": "the no-details timeout was classified as never-started and retried",
+          "ok": true,
+          "actual": "COMPLETED",
+          "expected": "COMPLETED"
+        }
+      ]
+    },
+    {
+      "id": "worker-death-finalize-with-details",
+      "description": "The platform accepted finalizePost, a heartbeat reached the server, then the worker was SIGKILLed. After restart the heartbeat timeout carries details, the workflow marks the post unconfirmed and never runs finalize again: one accepted send, no duplicate, no local release id (unknown).",
+      "startedAt": "2026-11-20T11:41:45.253Z",
+      "observations": [
+        {
+          "name": "heartbeat details before the kill",
+          "value": {
+            "payloads": 1,
+            "firstHeartbeatAfterMs": 15329
+          }
+        },
+        {
+          "name": "heartbeat detail payload",
+          "value": "\"finalizePost: entered\""
+        },
+        {
+          "name": "row after the heartbeat timeout",
+          "value": {
+            "id": "post-mwowsdz3-30",
+            "state": "ERROR",
+            "publishDate": "2026-11-20T11:41:46.779Z",
+            "releaseId": null,
+            "releaseURL": null,
+            "error": "{\"cause\":{\"failure\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"ImZpbmFsaXplUG9zdDogZW50ZXJlZCI=\"}]}}},\"lastHeartbeatDetails\":\"finalizePost: entered\",\"timeoutType\":\"HEARTBEAT\"},\"failure\":{\"message\":\"Activity task timed out\",\"cause\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"ImZpbmFsaXplUG9zdDogZW50ZXJlZCI=\"}]}}},\"activityFailureInfo\":{\"scheduledEventId\":\"34\",\"startedEventId\":\"35\",\"activityType\":{\"name\":\"finalizePost\"},\"activityId\":\"5\",\"retryState\":\"RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED\"}},\"activityType\":\"finalizePost\",\"activityId\":\"5\",\"retryState\":\"MAXIMUM_ATTEMPTS_REACHED\",\"identity\":\"\"}",
+            "deletedAt": null,
+            "image": "[{\"id\":\"media_org-mwowsdyd-28\",\"name\":\"org-mwowsdyd-28.png\",\"originalName\":\"legacy.png\",\"path\":\"/uploads/rehearsal13/org-mwowsdyd-28.png\"}]",
+            "updatedAt": "2026-11-20T11:45:19.287Z"
+          }
+        },
+        {
+          "name": "execution after recovery",
+          "value": {
+            "workflowId": "post_post-mwowsdz3-30",
+            "runId": "01a1f8c3-74b8-7d0b-baea-a632edf2a49f",
+            "type": "postWorkflowV112",
+            "status": "COMPLETED",
+            "taskQueue": "main",
+            "searchAttributes": {
+              "organizationId": "org_org-mwowsdyd-28",
+              "postId": "post-mwowsdz3-30",
+              "BuildIds": [
+                "unversioned",
+                "unversioned:@temporalio/worker@1.15.0+4878a905a691e8cf135635d9492c3312d29a64495532656190eac7770e172658"
+              ],
+              "TemporalChangeVersion": "post-finalize-timeout-unknown"
+            }
+          }
+        },
+        {
+          "name": "custom unknown-result marker",
+          "value": [
+            "post-finalize-timeout-unknown"
+          ]
+        },
+        {
+          "name": "finalize timeout event",
+          "value": {
+            "eventId": "36",
+            "activity": "finalizePost",
+            "timeoutType": 4,
+            "heartbeatPayloads": 1,
+            "failureMessage": "activity Heartbeat timeout"
+          }
+        },
+        {
+          "name": "activity schedule counts",
+          "value": {
+            "postSocialPending": 1,
+            "checkPostStatus": 1,
+            "finalizePost": 1
+          }
+        },
+        {
+          "name": "durable Errors rows",
+          "value": [
+            "{\"cause\":{\"failure\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails"
+          ]
+        },
+        {
+          "name": "notifications",
+          "value": [
+            "Your post was sent to Bluesky, but we couldn't confirm it was published. Please check your Synthetic"
+          ]
+        },
+        {
+          "name": "media digest check",
+          "value": {
+            "before": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+            "after": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+            "rowChangedAfterRecovery": true
+          }
+        },
+        {
+          "name": "platform calls after recovery",
+          "value": [
+            {
+              "method": "postPending",
+              "accepted": true,
+              "pid": 87028
+            },
+            {
+              "method": "checkPostStatus",
+              "accepted": null,
+              "pid": 87028
+            },
+            {
+              "method": "finalizePost",
+              "accepted": true,
+              "pid": 87028
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "name": "worker process group was SIGKILLed after the heartbeat",
+          "ok": true,
+          "actual": true
+        },
+        {
+          "name": "post is ERROR/unconfirmed",
+          "ok": true,
+          "actual": "ERROR",
+          "expected": "ERROR"
+        },
+        {
+          "name": "no local release id is written",
+          "ok": true,
+          "actual": null,
+          "expected": null
+        },
+        {
+          "name": "the publish date is unchanged",
+          "ok": true,
+          "actual": "2026-11-20T11:41:46.779Z",
+          "expected": "2026-11-20T11:41:46.779Z"
+        },
+        {
+          "name": "the stored failure names finalizePost",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"cause\":{\"failure\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"ImZpbmFsaXplUG9zdDogZW50ZXJlZCI=\"}]}}},\"lastHeartbeatDetails\":\"finalizePo"
+        },
+        {
+          "name": "the stored failure carries the heartbeat timeout details",
+          "ok": true,
+          "actual": true,
+          "detail": "{\"cause\":{\"failure\":{\"message\":\"activity Heartbeat timeout\",\"source\":\"Server\",\"timeoutFailureInfo\":{\"timeoutType\":\"TIMEOUT_TYPE_HEARTBEAT\",\"lastHeartbeatDetails\":{\"payloads\":[{\"metadata\":{\"encoding\":\"anNvbi9wbGFpbg==\"},\"data\":\"ImZpbmFsaXplUG9zdDogZW50ZXJlZCI=\"}]}}},\"lastHeartbeatDetails\":\"finalizePo"
+        },
+        {
+          "name": "same workflow id after the restart",
+          "ok": true,
+          "actual": "post_post-mwowsdz3-30",
+          "expected": "post_post-mwowsdz3-30"
+        },
+        {
+          "name": "same run id after the restart",
+          "ok": true,
+          "actual": "01a1f8c3-74b8-7d0b-baea-a632edf2a49f",
+          "expected": "01a1f8c3-74b8-7d0b-baea-a632edf2a49f"
+        },
+        {
+          "name": "same workflow type after the restart",
+          "ok": true,
+          "actual": "postWorkflowV112",
+          "expected": "postWorkflowV112"
+        },
+        {
+          "name": "the post-finalize-timeout-unknown patch marker is recorded",
+          "ok": true,
+          "actual": true,
+          "detail": "[\"post-finalize-timeout-unknown\"]"
+        },
+        {
+          "name": "one heartbeat timeout with exactly one payload",
+          "ok": true,
+          "actual": {
+            "timeoutType": 4,
+            "heartbeatPayloads": 1
+          },
+          "expected": {
+            "timeoutType": 4,
+            "heartbeatPayloads": 1
+          }
+        },
+        {
+          "name": "publish scheduled once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "status check scheduled once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "finalize was never scheduled again after the timeout",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "exactly one finalize reached the platform",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "the publish was accepted exactly once",
+          "ok": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "an Errors row records the timeout",
+          "ok": true,
+          "actual": true,
+          "detail": "[\"{\\\"cause\\\":{\\\"failure\\\":{\\\"message\\\":\\\"activity Heartbeat timeout\\\",\\\"source\\\":\\\"Server\\\",\\\"t\"]"
+        },
+        {
+          "name": "the user is told the result could not be confirmed",
+          "ok": true,
+          "actual": true,
+          "detail": "[\"Your post was sent to Bluesky, but we couldn't confirm it was published. Please \"]"
+        },
+        {
+          "name": "the local media file was not changed by the recovery",
+          "ok": true,
+          "actual": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77",
+          "expected": "c414cd0e204de974f73753c7e28d7638e7b3691bb8b1a2bab6b25bb7fed7ce77"
+        }
+      ]
+    }
+  ],
+  "classifications": [
+    {
+      "id": "scan-mutations-during-compensation",
+      "classification": "complete",
+      "duplicate": false,
+      "summary": "deleted/canceled candidates were skipped by the pre-dispatch re-read; the rescheduled QUEUE row dispatched once at its new time"
+    },
+    {
+      "id": "finalize-platform-rejected",
+      "classification": "failed",
+      "duplicate": false,
+      "summary": "bad_body from finalize: platform accepted no finalize, row ERROR with the rejection; not an unknown result"
+    },
+    {
+      "id": "pending-still-in-progress",
+      "classification": "pending",
+      "duplicate": false,
+      "summary": "platform accepted once; status kept returning pending, row QUEUE, execution RUNNING, no finalize and no error marker"
+    },
+    {
+      "id": "writeback-transient-recovers",
+      "classification": "complete",
+      "duplicate": false,
+      "summary": "one accepted platform send; the first local write-back failed, the shipped retry wrote PUBLISHED with the finalize id"
+    },
+    {
+      "id": "total-writeback-loss-before-sweep",
+      "classification": "unknown",
+      "duplicate": false,
+      "summary": "platform accepted once; updatePost and changeState failed, the row says QUEUE and cannot be distinguished from never-published"
+    },
+    {
+      "id": "total-writeback-loss-sweep-duplicate",
+      "classification": "unknown",
+      "duplicate": true,
+      "summary": "the compensation scan accepted the already-published post a second time; must reconcile the platform before re-enabling the sweep"
+    },
+    {
+      "id": "worker-death-finalize-before-platform-accept",
+      "classification": "complete",
+      "duplicate": false,
+      "summary": "no heartbeat details and no platform accept before the kill; the retry accepted once and wrote back"
+    },
+    {
+      "id": "worker-death-finalize-after-platform-accept-no-details",
+      "classification": "unknown",
+      "duplicate": true,
+      "summary": "no heartbeat details, but the platform had already accepted the finalize; the retry sent a second accept. Residual 15s-window hazard, recorded not hidden."
+    },
+    {
+      "id": "worker-death-finalize-with-details",
+      "classification": "unknown",
+      "duplicate": false,
+      "summary": "one accepted finalize; heartbeat timeout carried details; the workflow marked ERROR/unconfirmed and never retried finalize after the restart"
+    }
+  ],
+  "failures": [],
+  "environment": {
+    "database": "postgresql://postiz-local:***@localhost:5432/postiz-ticket-13",
+    "redis": "redis://localhost:6379/13",
+    "temporalAddress": "localhost:7233",
+    "temporalNamespace": "postiz-ticket-13",
+    "namespaceCreated": false,
+    "runningWorkflowsTerminatedAtStart": 1,
+    "truncatedTables": 88,
+    "uploadDirectory": "<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/13/work/uploads",
+    "candidate": {
+      "commit": "2622ec49cf09ce422c4203c07426d1d467e1895f",
+      "branch": "codex/ticket-13-fault-recovery",
+      "dirtyFiles": 2
+    },
+    "faultFile": "<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/13/work/faults.json",
+    "compiledEntrypoint": "apps/orchestrator/dist/apps/orchestrator/src/main.js"
+  },
+  "normalSamples": {
+    "path": "<repo>/.scratch/postiz-v2.26.0-implementation/rehearsals/12/evidence/normal-samples.json",
+    "generatedAt": "2026-11-20T10:27:52.846Z",
+    "namespace": "postiz-ticket-12",
+    "candidateBundle": {
+      "workflowsPath": "apps/orchestrator/src/workflows/index.ts",
+      "bundleSha256": "f2fe43cd155d86272a68e785df5b610d5b09ae1a68eaf226475ddbc8b262a0ee",
+      "replayedAt": "2026-11-20T10:23:18.160Z",
+      "replayedAgainst": {
+        "commit": "40190719df65a815e0622cc4a6355031b735f59d",
+        "branch": "codex/ticket-12-temporal-continuity",
+        "dirtyFiles": 3
+      },
+      "fixtureProvenance": {
+        "generatedAt": "2026-11-11T13:15:27.229Z",
+        "legacyCommit": "6fdf7cb53543fa28a470ad63e7619e8b98bcee43",
+        "legacyBundleSha256": "028e69b6f80804d0ac6afd4b881847ba089e4ff189ba543e0695918899c20ded",
+        "patchedBundleSha256": "6983fd53ff4f9c8fc8bbc66fb20cfcb8d7896512b73242263fe97d8b7f17d3c0",
+        "lockfileSha256": "caba97c3e0351d85580979737e06f22ca825039605b232b49d51f1e2c2929197"
+      },
+      "totals": {
+        "histories": 16,
+        "replayed": 16,
+        "failed": 0
+      },
+      "fixtureGenerationRevision": {
+        "workflowsPath": "apps/orchestrator/src/workflows/index.ts",
+        "commit": "5fc45bfdb664364dd5b0d78762c3f96cce5465c4",
+        "branch": "codex/ticket-14-temporal-replay",
+        "dirtyFiles": 8
+      }
+    },
+    "scenarioIds": [
+      "v101-sleep-takeover",
+      "v102-delayed-comment",
+      "v102-repeat-child",
+      "v112-pending-finalize",
+      "refresh-backlog",
+      "legacy-email-drain",
+      "compat-provider-queue",
+      "missing-scan"
+    ]
+  },
+  "finishedAt": "2026-11-20T11:45:20.736Z",
+  "ok": true
+}
