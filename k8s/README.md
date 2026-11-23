@@ -5,7 +5,11 @@ This directory is the container build context for the single-image deployment
 
 The repository root is the only source of business code. Everything in
 `apps/`, `libraries/` and `var/docker/` here is a **generated copy** and must
-never be edited directly: edit the root file and re-run the preparer.
+never be edited directly: edit the root file and re-run the preparer. The
+context-root `package.json`, lockfile, workspace and tsconfig files are
+generated the same way. These copies are intentionally untracked (the root
+`.gitignore` excludes them); run `prepare-build-context.sh` after a fresh
+clone before building.
 
 ## Actions
 
