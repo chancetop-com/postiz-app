@@ -334,17 +334,21 @@ describe('the two-step callback keeps the link destination', () => {
 });
 
 describe('the callback in an ordinary window', () => {
-  it('uses the actual callback page with a tab session and no auth cookie', async () => {
+  it('forwards the TikTok Business auth_code from a tab session without an auth cookie', async () => {
     document.cookie = 'auth=;max-age=0;path=/';
-    vi.stubGlobal('fetch', respond(200, { id: 'integration-1' }));
+    const request = vi.fn<typeof fetch>(async () => Response.json({ id: 'integration-1' }));
+    vi.stubGlobal('fetch', request);
     render(
       await ChannelCallbackPage({
-        params: Promise.resolve({ provider: 'tiktok' }),
-        searchParams: Promise.resolve({ code: 'code-1', state: 'state-1' }),
+        params: Promise.resolve({ provider: 'tiktok-business' }),
+        searchParams: Promise.resolve({ auth_code: 'code-1', state: 'state-1' }),
       })
     );
     await waitFor(() => expect(push).toHaveBeenCalled());
-    expect(push.mock.calls[0][0]).toContain('/launches?added=tiktok');
+    expect(push.mock.calls[0][0]).toContain('/launches?added=tiktok-business');
+    const [url, init] = request.mock.calls[0];
+    expect(url).toContain('/integrations/social-connect/tiktok-business');
+    expect(JSON.parse(String(init?.body))).toMatchObject({ code: 'code-1', state: 'state-1' });
   });
 
   it('keeps anonymous public callbacks inline even with a stale auth cookie', async () => {

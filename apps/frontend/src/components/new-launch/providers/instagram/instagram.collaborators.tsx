@@ -11,6 +11,7 @@ import { useSettings } from '@gitroom/frontend/components/launches/helpers/use.v
 import { InstagramDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/instagram.dto';
 import { InstagramCollaboratorsTags } from '@gitroom/frontend/components/new-launch/providers/instagram/instagram.tags';
 import { InstagramAudioSelector } from '@gitroom/frontend/components/new-launch/providers/instagram/instagram.audio';
+import { LocationSelector } from '@gitroom/frontend/components/new-launch/providers/location.selector';
 import { useIntegration } from '@gitroom/frontend/components/launches/helpers/use.integration';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { InstagramPreview } from '@gitroom/frontend/components/new-launch/providers/instagram/instagram.preview';
@@ -42,9 +43,12 @@ const InstagramCollaborators: FC<{
   const { watch, register, formState, control } = useSettings();
   const { integration } = useIntegration();
   const postCurrentType = watch('post_type');
+  const location = watch('location');
   const isTrialReel = watch('is_trial_reel');
   // The Audio API is only available with Facebook Login, not Instagram Login
   const supportsAudio = integration?.identifier === 'instagram';
+  const storyHidden =
+    postCurrentType === 'story' ? ' invisible h-0 overflow-hidden' : '';
   return (
     <>
       <Select
@@ -60,6 +64,25 @@ const InstagramCollaborators: FC<{
           </option>
         ))}
       </Select>
+
+      <div className={`mt-[18px]${storyHidden}`}>
+        <Checkbox
+          {...register('is_ai_generated', {
+            value: false,
+          })}
+          label={t('made_with_ai', 'Made with AI')}
+        />
+      </div>
+
+      {integration?.identifier === 'instagram' && (
+        <div className={`mt-[18px]${storyHidden}`}>
+          <LocationSelector
+            label={t('tiktok_location_label', 'Location')}
+            value={location}
+            {...register('location')}
+          />
+        </div>
+      )}
 
       {postCurrentType !== 'story' && (
         <InstagramCollaboratorsTags

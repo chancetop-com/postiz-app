@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import {
   BadBody,
   Disconnect,
+  RefreshToken,
   SocialAbstract,
   ValidityMedia,
 } from '@gitroom/nestjs-libraries/integrations/social.abstract';
@@ -23,8 +24,34 @@ import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
 import { DashboardFunction } from '@gitroom/nestjs-libraries/integrations/dashboard.function.decorator';
 import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 
+// Travels through the workflow history between postPending, checkPostStatus
+// and finalizePost - keep it small JSON.
+type InstagramPendingData = {
+  type: string;
+  postType: 'stories' | 'single' | 'carousel';
+  containers: string[];
+  message?: string;
+  isAiGenerated?: boolean;
+  locationId?: string;
+  carouselId?: string;
+  collaborators?: string[];
+};
+
+export const INSTAGRAM_MEDIA_RULE =
+  "Instagram should have at least one attachment, if it's a story, it can have only one picture.";
+export const INSTAGRAM_AI_RULE =
+  'is_ai_generated labels a single image, a single video/Reel, or the whole carousel (the parent ' +
+  'container). It is ignored on stories and on carousel children, and is available with both ' +
+  'Instagram login types.';
+const INSTAGRAM_LOCATION_RULE =
+  'location is a Facebook Page with location data, available with Facebook Login only: it is sent ' +
+  'on a single image, a single video/Reel and the carousel parent container, and is ignored on ' +
+  'stories, carousel children and Instagram Standalone.';
+export const INSTAGRAM_STANDALONE_LOCATION_RULE =
+  'location is unavailable with Instagram Standalone (Instagram Login) and is always ignored.';
+
 @Rules(
-  "Instagram should have at least one attachment, if it's a story, it can have only one picture"
+  `${INSTAGRAM_MEDIA_RULE} ${INSTAGRAM_AI_RULE} ${INSTAGRAM_LOCATION_RULE}`
 )
 export class InstagramProvider
   extends SocialAbstract
@@ -112,6 +139,13 @@ export class InstagramProvider
         value: string;
       }
     | undefined {
+    if (body.indexOf('INSTAGRAM_PLATFORM_API__INVALID_LOCATION_ID') > -1) {
+      return {
+        type: 'bad-body' as const,
+        value:
+          'The selected Page has no valid location data, please choose another location',
+      };
+    }
     if (body.indexOf('An unknown error occurred') > -1) {
       return {
         type: 'retry' as const,
@@ -758,6 +792,27 @@ export class InstagramProvider
           )}`
         : ``;
     const isTrialReel = this.assetBoolean(firstPost.settings.is_trial_reel);
+    const isAiGenerated =
+      !isStory && firstPost.settings.is_ai_generated === true;
+    // location_id is a Facebook Page ID: Facebook Login only. A single media
+    // container carries it; a carousel sends it once on the parent container
+    // (see the pendingData handoff below), never on the children.
+    const locationId =
+      type === 'graph.facebook.com' &&
+      !isStory &&
+      firstPost.settings.location?.id
+        ? String(firstPost.settings.location.id)
+        : undefined;
+    const locationParam =
+      locationId && (firstPost?.media?.length ?? 0) === 1
+        ? `&location_id=${encodeURIComponent(locationId)}`
+        : ``;
+    // The AI flag goes on the media container itself for single media, and on
+    // the carousel parent in finalizePost. Carousel children never carry it.
+    const aiGeneratedParams =
+      isAiGenerated && (firstPost?.media?.length ?? 0) === 1
+        ? `&is_ai_generated=true`
+        : ``;
     const medias = await Promise.all(
       firstPost?.media?.map(async (m) => {
         const caption =
@@ -834,7 +889,7 @@ export class InstagramProvider
 
         const { id: photoId } = await (
           await this.fetch(
-            `https://${type}/${META_GRAPH_API_VERSION}/${id}/media?${mediaType}${altText}${isCarousel}${itemCollaborators}${trialParams}${audioConfiguration}&access_token=${accessToken}${caption}`,
+            `https://${type}/${META_GRAPH_API_VERSION}/${id}/media?${mediaType}${aiGeneratedParams}${locationParam}${altText}${isCarousel}${itemCollaborators}${trialParams}${audioConfiguration}&access_token=${accessToken}${caption}`,
             {
               method: 'POST',
             }
@@ -848,44 +903,41 @@ export class InstagramProvider
     // Containers are invisible until media_publish runs: the processing wait
     // and the publish itself move to checkPostStatus / finalizePost so a
     // failure there can never re-create (and re-publish) the whole post.
+    const pendingData: InstagramPendingData = {
+      type,
+      postType:
+        isStory && medias.length > 1
+          ? 'stories'
+          : medias.length === 1
+          ? 'single'
+          : 'carousel',
+      containers: medias,
+      message: firstPost?.message || '',
+      isAiGenerated,
+      ...(locationId ? { locationId } : {}),
+      ...(collaborators
+        ? {
+            collaborators: firstPost.settings.collaborators!.map((p) =>
+              this.stripHandle(p.label)
+            ),
+          }
+        : {}),
+    };
+
     return [
       {
         id: firstPost.id,
         postId: '',
         releaseURL: '',
         status: 'pending',
-        pendingData: {
-          type,
-          postType:
-            isStory && medias.length > 1
-              ? 'stories'
-              : medias.length === 1
-              ? 'single'
-              : 'carousel',
-          containers: medias,
-          message: firstPost?.message || '',
-          ...(collaborators
-            ? {
-                collaborators: firstPost.settings.collaborators!.map((p) =>
-                  this.stripHandle(p.label)
-                ),
-              }
-            : {}),
-        },
+        pendingData,
       },
     ];
   }
 
   override async checkPostStatus(
     token: string,
-    pendingData: {
-      type: string;
-      postType: 'stories' | 'single' | 'carousel';
-      containers: string[];
-      message?: string;
-      carouselId?: string;
-      collaborators?: string[];
-    },
+    pendingData: InstagramPendingData,
     integration: Integration
   ): Promise<PendingCheckResponse> {
     const [accessToken, userToken] = token.split('___');
@@ -937,14 +989,7 @@ export class InstagramProvider
 
   override async finalizePost(
     token: string,
-    pendingData: {
-      type: string;
-      postType: 'stories' | 'single' | 'carousel';
-      containers: string[];
-      message?: string;
-      carouselId?: string;
-      collaborators?: string[];
-    },
+    pendingData: InstagramPendingData,
     integration: Integration
   ): Promise<PendingCheckResponse> {
     const [accessToken, userToken] = token.split('___');
@@ -1006,6 +1051,12 @@ export class InstagramProvider
               ? `&collaborators=${encodeURIComponent(
                   JSON.stringify(pendingData.collaborators)
                 )}`
+              : ``
+          }${
+            pendingData.isAiGenerated ? `&is_ai_generated=true` : ``
+          }${
+            pendingData.locationId
+              ? `&location_id=${encodeURIComponent(pendingData.locationId)}`
               : ``
           }&access_token=${accessToken}`,
           {
@@ -1318,6 +1369,87 @@ export class InstagramProvider
       duration: audio.duration_in_ms || 0,
       previewUrl: audio.download_url || '',
     }));
+  }
+
+  // https://developers.facebook.com/documentation/pages-api/search-pages
+  // location_id is a Facebook Page ID, and only a Page with location data is
+  // accepted. Facebook Login only: Instagram Standalone has no Page object.
+  @Tool({
+    description:
+      'Search Facebook Pages that have location data to attach a location via the "location" setting. Facebook Login (instagram) only.',
+    dataSchema: [
+      {
+        key: 'q',
+        type: 'string',
+        description: 'Search query for the location',
+      },
+    ],
+  })
+  async locationSearch(token: string, data: { q: string }) {
+    if (!data?.q) {
+      return [];
+    }
+
+    const [accessToken, userToken] = token.split('___');
+    const searchToken = userToken || accessToken;
+
+    let json: any;
+    try {
+      json = await (
+        await this.fetch(
+          `https://graph.facebook.com/${META_GRAPH_API_VERSION}/pages/search?q=${encodeURIComponent(
+            data.q
+          )}&fields=id,name,location,link&access_token=${searchToken}`
+        )
+      ).json();
+    } catch (err) {
+      if (err instanceof RefreshToken) {
+        throw err;
+      }
+      return [];
+    }
+
+    // Graph answers some failures with HTTP 200 and an error envelope.
+    if (json?.error) {
+      const asString = JSON.stringify(json);
+      const handleError = this.handleErrors(asString, 200);
+      if (handleError?.type === 'refresh-token') {
+        throw new RefreshToken(
+          this.identifier,
+          asString,
+          '{}',
+          handleError.value
+        );
+      }
+      return [];
+    }
+
+    return (Array.isArray(json?.data) ? json.data : [])
+      .filter((page: any) => {
+        const location = page?.location;
+        if (!location || typeof location !== 'object') {
+          return false;
+        }
+        return Array.isArray(location)
+          ? location.length > 0
+          : Object.keys(location).length > 0;
+      })
+      .slice(0, 20)
+      .map((page: any) => {
+        const location = page.location;
+        return {
+          id: String(page.id),
+          name: page.name || '',
+          address: [
+            location.street,
+            location.city,
+            location.state,
+            location.country,
+          ]
+            .filter(Boolean)
+            .join(', '),
+        };
+      });
   }
 
   async postAnalytics(

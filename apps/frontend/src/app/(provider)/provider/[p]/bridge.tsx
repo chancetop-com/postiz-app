@@ -11,11 +11,7 @@ type InitPayload = {
   value?: Record<string, unknown>;
   errors?: string[];
   integration?: ProviderPreviewProps['integration'];
-  /**
-   * Per-post media (outer array = thread entries, inner = media items).
-   * Passed to the provider's `checkValidity` function during validation.
-   */
-  posts?: Array<Array<{ path: string; thumbnail?: string }>>;
+  posts?: ProviderPreviewProps['posts'];
 };
 
 declare global {

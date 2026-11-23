@@ -85,7 +85,7 @@ export class Post {
   settings: AllProvidersSettings;
 }
 
-class Tags {
+export class Tags {
   @IsDefined()
   @IsString()
   value: string;

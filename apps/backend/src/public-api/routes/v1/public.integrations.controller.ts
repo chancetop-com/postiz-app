@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { streamUploadOptions } from '@gitroom/nestjs-libraries/upload/multer.stream.engine';
 import { omit } from 'lodash';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
 import { GetIncludeDeletedFromRequest } from '@gitroom/nestjs-libraries/user/include.deleted.from.request';
 import { GetOAuthUserIdFromRequest } from '@gitroom/nestjs-libraries/user/oauth.user.id.from.request';
@@ -145,6 +145,7 @@ export class PublicIntegrationsController {
   }
 
   @Post('/posts')
+  @ApiBody({ schema: { $ref: getSchemaPath('PublicCreatePost') } })
   @CheckPolicies([AuthorizationActions.Create, Sections.POSTS_PER_MONTH])
   async createPost(
     @GetOrgFromRequest() org: Organization,

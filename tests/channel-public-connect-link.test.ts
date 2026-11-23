@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Test } from '@nestjs/testing';
+import { PublicIntegrationsController } from '@gitroom/backend/public-api/routes/v1/public.integrations.controller';
 import { HttpException } from '@nestjs/common';
 
 /**
@@ -148,11 +150,16 @@ describe('upstream eligibility', () => {
 
 describe('link creation', () => {
   it('issues a one-hour link for a platform outside the dashboard list', async () => {
-    const result = await create(
-      service(),
-      'x',
-      'https://merchant.example/done?keep=1&lang=en'
-    );
+    const module = await Test.createTestingModule({
+      controllers: [PublicIntegrationsController],
+      providers: [{ provide: IntegrationService, useValue: service() }],
+    }).useMocker(() => ({})).compile();
+    const controller = module.get(PublicIntegrationsController);
+    const result = await controller.createConnectLink({ id: 'org-a' } as never, {
+      integration: 'x',
+      redirectUrl: 'https://merchant.example/done?keep=1&lang=en',
+    });
+    await module.close();
 
     expect(result.url).toMatch(
       /^https:\/\/postiz\.example\/integrations\/connect\/[a-f0-9]{64}$/

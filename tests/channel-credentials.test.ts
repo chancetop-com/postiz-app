@@ -735,7 +735,16 @@ describe('pages and shared accounts keep their exact associations', () => {
   });
 });
 
-describe('default deployment without an encryption provider', () => {
+describe('encryption provider configuration', () => {
+  it('rejects a misspelled provider before credentials can be written', () => {
+    vi.stubEnv('ENCRYPTION_PROVIDER', 'unsupported-provider');
+    try {
+      expect(() => new EncryptionService()).toThrow(/Unknown encryption provider/);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('keeps synthetic legacy tokens in their original form through a write and read', async () => {
     const store = createStore();
     const legacy = row({

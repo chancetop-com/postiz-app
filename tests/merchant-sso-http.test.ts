@@ -418,7 +418,9 @@ describe('tab session and request identity over HTTP', () => {
 
     expect(response.status).toBe(401);
     expect(response.headers.get('logout')).toBe('true');
-    expect(response.headers.get('set-cookie')).toContain('auth=;');
+    const cookie = response.headers.get('set-cookie');
+    expect(cookie).toContain('auth=;');
+    expect(cookie).toMatch(/Max-Age=(?:0|-\d+)(?:;|$)/i);
   });
 
   it('signals ordinary logout with the logout header', async () => {
@@ -426,6 +428,7 @@ describe('tab session and request identity over HTTP', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('logout')).toBe('true');
+    expect(response.headers.has('set-cookie')).toBe(false);
   });
 
   it('runs an upload-shaped request in the organisation of its own tab', async () => {

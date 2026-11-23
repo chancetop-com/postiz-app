@@ -12,6 +12,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import pkg from '../package.json';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const entrypoint = path.join(repoRoot, 'var/docker/entrypoint.sh');
@@ -188,7 +189,7 @@ describe.each(runtimeImages)('$name', ({ file, stage }) => {
       expect(body).toMatch(/COPY[^\n]*schema\.prisma/);
       expect(body).toMatch(/COPY[^\n]*entrypoint\.sh/);
     }
-    expect(body).toMatch(/pnpm@10\.6\.1/);
+    expect(body).toContain(pkg.packageManager);
   });
 });
 
@@ -209,8 +210,6 @@ describe.each(runtimeImages)('$name build rules', ({ file }) => {
 });
 
 describe('root package scripts', () => {
-  const pkg = JSON.parse(readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
-
   it('does not enable provider migration for the upgrade', () => {
     const env = readFileSync(path.join(repoRoot, '.env.example'), 'utf8');
     expect(env).not.toMatch(/^MIGRATE_PROVIDERS=/m);

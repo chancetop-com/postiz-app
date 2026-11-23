@@ -11,7 +11,12 @@ import {
   ValidityMedia,
 } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import { InstagramDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/instagram.dto';
-import { InstagramProvider } from '@gitroom/nestjs-libraries/integrations/social/instagram.provider';
+import {
+  INSTAGRAM_AI_RULE,
+  INSTAGRAM_MEDIA_RULE,
+  INSTAGRAM_STANDALONE_LOCATION_RULE,
+  InstagramProvider,
+} from '@gitroom/nestjs-libraries/integrations/social/instagram.provider';
 import { META_GRAPH_API_VERSION } from '@gitroom/nestjs-libraries/integrations/social/facebook.provider';
 import { Integration } from '@prisma/client';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
@@ -19,7 +24,7 @@ import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorato
 const instagramProvider = new InstagramProvider();
 
 @Rules(
-  "Instagram should have at least one attachment, if it's a story, it can have only one picture"
+  `${INSTAGRAM_MEDIA_RULE} ${INSTAGRAM_AI_RULE} ${INSTAGRAM_STANDALONE_LOCATION_RULE}`
 )
 export class InstagramStandaloneProvider
   extends SocialAbstract

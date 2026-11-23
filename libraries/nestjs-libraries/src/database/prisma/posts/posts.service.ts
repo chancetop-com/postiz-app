@@ -1286,6 +1286,18 @@ export class PostsService {
 
     const integration = (root as any).integration;
 
+    // Drafts may be incomplete, but a new Page ID must arrive as a string to preserve its digits.
+    const locationId = settings?.location?.id;
+    if (
+      root.state === 'DRAFT' &&
+      locationId !== undefined &&
+      typeof locationId !== 'string' &&
+      (integration.providerIdentifier === 'instagram' ||
+        integration.providerIdentifier === 'instagram-standalone')
+    ) {
+      throw new BadRequestException('location.id must be a string');
+    }
+
     let existingSettings: Record<string, any>;
     try {
       existingSettings = JSON.parse(root.settings || '{}');

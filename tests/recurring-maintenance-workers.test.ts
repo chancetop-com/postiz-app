@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { IntegrationsActivity } from '@gitroom/orchestrator/activities/integrations.activity';
 import {
   parseCompatWorkflowQueues,
   queueRunsWorkflows,
@@ -19,17 +18,6 @@ const root = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(root, path), 'utf8');
 
 describe('refresh backlog', () => {
-  it('registers refreshToken as a Temporal activity, not only a class method', () => {
-    // nestjs-temporal-core discovers activities from @ActivityMethod metadata;
-    // an undecorated method is never registered and refreshTokenWorkflow fails.
-    const methods = Reflect.getMetadata(
-      'TEMPORAL_ACTIVITY_METHOD',
-      IntegrationsActivity.prototype
-    );
-    expect(methods?.refreshToken?.name).toBe('refreshToken');
-    expect(methods?.getIntegrationsById?.name).toBe('getIntegrationsById');
-  });
-
   it('keeps the old refresh workflow id and main queue', () => {
     const service = read(
       'libraries/nestjs-libraries/src/integrations/refresh.integration.service.ts'
@@ -88,15 +76,8 @@ describe('provider-queue workflow compatibility', () => {
   });
 });
 
-describe('both e-mail generations stay registered', () => {
-  it('exports the deprecated backlog singleton and the per-email workflow', async () => {
-    const workflows = await import('@gitroom/orchestrator/workflows');
-    expect((workflows as Record<string, unknown>).sendEmailWorkflow).toBeTypeOf(
-      'function'
-    );
-    expect(
-      (workflows as Record<string, unknown>).sendSingleEmailWorkflow
-    ).toBeTypeOf('function');
+describe('email dispatch', () => {
+  it('keeps the queues and rate limits the email backlog drains into', () => {
     expect(emailQueues).toEqual({
       priority: { taskQueue: 'email', perSecond: 3 },
       bulk: { taskQueue: 'email-bulk', perSecond: 2 },

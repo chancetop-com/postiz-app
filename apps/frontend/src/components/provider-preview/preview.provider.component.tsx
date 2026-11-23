@@ -54,9 +54,9 @@ export type ProviderPreviewProps = {
   integration?: Partial<MockIntegration>;
   /**
    * Per-post media (outer array = thread entries, inner = media items).
-   * Forwarded to the provider's `checkValidity` during validate().
+   * Used by settings whose availability depends on the attached media.
    */
-  posts?: Array<Array<{ path: string; thumbnail?: string }>>;
+  posts?: Array<Array<{ id?: string; path: string; thumbnail?: string }>>;
   /**
    * Imperative handle populated on mount. The parent calls
    * `controlRef.current?.validate()` / `.getValues()` to pull state on demand.
@@ -188,7 +188,7 @@ export const ProviderPreviewComponent: FC<ProviderPreviewProps> = ({
     return () => {
       if (controlRef.current) controlRef.current = null;
     };
-  }, [controlRef, form, meta, integration, posts]);
+  }, [controlRef, form, meta, integration]);
 
   const contextValue = useMemo<IntegrationContextType>(
     () => ({
@@ -199,9 +199,12 @@ export const ProviderPreviewComponent: FC<ProviderPreviewProps> = ({
         ...integration,
       } as MockIntegration,
       allIntegrations: [],
-      value: [],
+      value: (posts ?? []).map((media) => ({
+        content: '',
+        image: media.map((item) => ({ ...item, id: item.id ?? item.path })),
+      })),
     }),
-    [provider, integration],
+    [provider, integration, posts],
   );
 
   if (!meta) {

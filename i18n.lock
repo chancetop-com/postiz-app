@@ -14,7 +14,7 @@ checksums:
     save: f7a2929f33bc420195e59ac5a8bcd454
     send_test: 6252eb4669859b7f7db4cdbc227580e1
     select_role: 406451b1c9a26f1484164b8b71c1bd7e
-    video_made_with_ai: c37747aaf8107d339d6238a0463f7096
+    made_with_ai: 2802faf2fece45bea413db4008f61bb1
     please_add_at_least: 776aa47593c7961b69172b49f49dc304
     send_invitation_via_email: 9275e0b85147a931421b3bf6c3083cb4
     global_settings: ba55734261d6bc26e792fda32de3e7ec
@@ -462,7 +462,7 @@ checksums:
     self_only: 20fd775216f2e16a432f4720d6daaae0
     post_content_directly_to_tiktok: 2612250f75c43a3128016b99569c5fff
     upload_content_to_tiktok_without_posting: 6c3943e4d796b720933b90d250bd611c
-    choose_upload_without_posting_description: 16c335a4607224a061a9f251ccdecfe0
+    choose_upload_without_posting_description: af3dd4758f66f04639222fab0b004ec9
     faq_am_i_going_to_be_charged_by_postiz: f4aad17d35bcaf45427216a432f23af3
     faq_to_confirm_credit_card_information_postiz_will_hold: ec475e644e3b5db2550c5bc06320b1cd
     faq_can_i_trust_postiz_gitroom: 9ee3c694bc392c339333047484d36003
@@ -884,6 +884,7 @@ checksums:
     post_now_choose_channels: b05d50082b67a05a5b22ab2ba24bfd0e
     schedule_post_choose_channels: 3d5f9c335ca381bc8a0bdcab440cf8b8
     update_post_choose_channels: 972a7e24a15e38ca7f0ae9ed6ba15bda
+    channel_popup_blocked: 1855607bf94679f87800dfc267466761
     unticked_channels_saved_note: 938fac9e8c40ddbd5f8539d6351442aa
     published: ad5e035c44f71ed32d41e47c7643f32f
     scheduled: 1283929a2810dcf6110765f387dc118e

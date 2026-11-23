@@ -2,6 +2,7 @@ import {
   IsBoolean, ValidateIf, IsIn, IsString, MaxLength, IsOptional, IsDefined, IsNumber, Min, Max, ValidateNested
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsOptionalJsonBoolean } from '@gitroom/helpers/utils/optional.json.boolean';
 import { JSONSchema } from 'class-validator-jsonschema';
 
 export class TikTokMusic {
@@ -60,20 +61,21 @@ export class TikTokLocation {
 
 // TikTok only honors most of these settings on a DIRECT_POST. With
 // content_posting_method=UPLOAD the media lands in the user's TikTok inbox as a
-// draft, and TikTok's inbox/upload endpoints accept nothing but the title /
-// description - every other field below is silently discarded.
-// video_made_with_ai / duet / stitch are additionally video-only: TikTok's photo
-// post_info has no is_aigc, disable_duet or disable_stitch field.
+// draft: a photo draft keeps only the title / caption and the top-level
+// is_ai_generated, while a video draft keeps neither the caption nor any other
+// post_info setting. The remaining fields below are silently discarded.
+// duet / stitch are additionally video-only: TikTok's photo post_info has no
+// disable_duet or disable_stitch field.
 // music / location are TikTok Business only: the legacy TikTok provider ignores
 // them (its Content Posting API has no music_sound_info / location fields).
-// Fields stay required here (existing clients depend on it); the constraints are
-// documented, not enforced.
+// Required fields stay required for existing clients; optional enhancements
+// such as is_ai_generated are documented, not enforced.
 export class TikTokDto {
   @ValidateIf((p) => p.title)
   @MaxLength(90)
   @JSONSchema({
     description:
-      'Used as the title of the post. The only setting TikTok keeps when content_posting_method=UPLOAD.',
+      'Used as the title of a photo post. Kept on both DIRECT_POST and UPLOAD / draft; video posts have no title field.',
   })
   title: string;
 
@@ -131,13 +133,15 @@ export class TikTokDto {
   })
   brand_content_toggle: boolean;
 
-  @IsBoolean()
-  @IsOptional()
+  @IsOptionalJsonBoolean()
   @JSONSchema({
     description:
-      'Labels the post as AI generated. Video posts only, and only when content_posting_method=DIRECT_POST. TikTok has no AI-generated label for photo posts, and discards it on UPLOAD.',
+      'Labels the post as AI generated. Only true is sent; false or omitted leaves the post unlabeled. ' +
+      'Video posts: sent only with content_posting_method=DIRECT_POST, as post_info.is_aigc on legacy TikTok and post_info.is_ai_generated on TikTok Business. ' +
+      'Ignored on video UPLOAD / drafts. ' +
+      'Photo posts: sent as the top-level is_aigc on legacy TikTok and the top-level is_ai_generated on TikTok Business, for both DIRECT_POST and UPLOAD / draft.',
   })
-  video_made_with_ai: boolean;
+  is_ai_generated?: boolean;
 
   @IsBoolean()
   @JSONSchema({
@@ -171,7 +175,7 @@ export class TikTokDto {
       'Required. Use "DIRECT_POST" to actually publish the post to TikTok. ' +
       '"UPLOAD" does NOT publish: it only sends the media to the user\'s TikTok app inbox, ' +
       'where they must manually finish and publish it within 24 hours or it is discarded, ' +
-      'and it makes TikTok ignore every other setting here. ' +
+      'and photo uploads can include the title, caption and AI label. ' +
       'Only use "UPLOAD" when the user explicitly asks to review or edit the post inside the TikTok app before publishing.',
   })
   content_posting_method: 'DIRECT_POST' | 'UPLOAD';

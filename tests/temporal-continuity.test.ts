@@ -79,19 +79,19 @@ const emailActivityNames = [
 ];
 
 describe('activity contract', () => {
-  it.each(postActivityNames)('PostActivity still implements %s', (name) => {
-    expect(PostActivity.prototype[name]).toBeTypeOf('function');
-  });
+  const registrations = [
+    [PostActivity, postActivityNames],
+    [EmailActivity, emailActivityNames],
+    [IntegrationsActivity, ['getIntegrationsById', 'refreshToken']],
+    [AutopostActivity, ['autoPost']],
+  ] as const;
 
-  it.each(emailActivityNames)('EmailActivity still implements %s', (name) => {
-    expect(EmailActivity.prototype[name]).toBeTypeOf('function');
-  });
-
-  it('keeps the old refresh and autopost activity names', () => {
-    expect(IntegrationsActivity.prototype.getIntegrationsById).toBeTypeOf('function');
-    expect(IntegrationsActivity.prototype.refreshToken).toBeTypeOf('function');
-    expect(AutopostActivity.prototype.autoPost).toBeTypeOf('function');
-  });
+  for (const [activity, names] of registrations) {
+    it.each([...names])(`${activity.name} registers %s with the worker`, (name) => {
+      const methods = Reflect.getMetadata('TEMPORAL_ACTIVITY_METHOD', activity.prototype);
+      expect(methods?.[name]?.name).toBe(name);
+    });
+  }
 
   it('keeps postSocial blocking while postSocialPending is the opt-in pending path', async () => {
     const activity = Object.create(PostActivity.prototype);

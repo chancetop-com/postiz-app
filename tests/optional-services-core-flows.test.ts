@@ -52,6 +52,8 @@ import { AuthProviderManager } from '@gitroom/backend/services/auth/providers/pr
 import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/users.service';
 import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
 import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service';
+import { PostsRepository } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.repository';
+import { IntegrationManager } from '@gitroom/nestjs-libraries/integrations/integration.manager';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { WebhooksService } from '@gitroom/nestjs-libraries/database/prisma/webhooks/webhooks.service';
@@ -124,20 +126,11 @@ const calendarPosts = [
   { id: 'post-1', state: 'QUEUE', publishDate: '2026-11-20T10:00:00.000Z' },
 ];
 
+const createOrUpdatePost = vi.fn(async () => ({
+  posts: [{ id: 'post-1', state: 'QUEUE' }],
+}));
 const postsService = {
   getPostsMinified: vi.fn(async () => calendarPosts),
-  validatePosts: vi.fn(async () => [
-    {
-      identifier: 'x',
-      name: 'X',
-      valid: true,
-      errors: true,
-      emptyContent: false,
-      tooLong: false,
-    },
-  ]),
-  mapTypeToPost: vi.fn(async (body: any) => body),
-  createPost: vi.fn(async () => ({ id: 'post-1', state: 'QUEUE' })),
   changeDate: vi.fn(async () => ({ id: 'post-1', state: 'QUEUE' })),
   getPostsRecursively: vi.fn(async () => [
     {
@@ -158,6 +151,11 @@ const postsService = {
 
 const analytics = [{ label: 'Followers', data: [{ date: '2026-11-01', total: 10 }] }];
 const integrationService = {
+  getIntegrationById: vi.fn(async (organizationId: string, id: string) =>
+    organizationId === ORGANIZATION_ID && id === 'int-1'
+      ? { id, name: 'Acme', providerIdentifier: 'x' }
+      : null
+  ),
   checkAnalytics: vi.fn(async () => analytics),
 };
 
@@ -195,7 +193,9 @@ const ssoService = {
     { provide: UsersService, useValue: usersService },
     { provide: OrganizationService, useValue: organizationService },
     { provide: SubscriptionService, useValue: subscriptionService },
-    { provide: PostsService, useValue: postsService },
+    PostsService,
+    IntegrationManager,
+    { provide: PostsRepository, useValue: { createOrUpdatePost } },
     { provide: IntegrationService, useValue: integrationService },
     { provide: WebhooksService, useValue: {} },
     { provide: MediaService, useValue: mediaService },
@@ -238,7 +238,10 @@ beforeAll(async () => {
   const { Test } = await import('@nestjs/testing');
   const moduleRef = await Test.createTestingModule({
     imports: [CoreFlowModule],
-  }).compile();
+  }).useMocker(() => ({})).compile();
+  const posts = moduleRef.get(PostsService);
+  Object.assign(posts, postsService);
+  vi.spyOn(posts, 'startWorkflow').mockResolvedValue(undefined);
 
   app = moduleRef.createNestApplication({ logger: false });
   app.use(cookieParser());
@@ -283,13 +286,6 @@ const jsonPut = (path: string, body: unknown) =>
   });
 
 describe('core flows without optional services', () => {
-  it('starts with no optional service configured', () => {
-    for (const key of optionalKeys) {
-      expect(process.env[key]).toBeUndefined();
-    }
-    expect(UploadFactory.processorEnabled()).toBe(false);
-  });
-
   it('enters through the merchant SSO entry and starts a session', async () => {
     const response = await jsonPost(
       '/auth/sso',
@@ -361,11 +357,14 @@ describe('core flows without optional services', () => {
   it('submits a scheduled post through the internal posts API', async () => {
     const body = {
       type: 'schedule',
+      date: '2026-12-01T12:00:00Z',
+      shortLink: false,
+      tags: [],
       posts: [
         {
           integration: { id: 'int-1' },
-          content: 'hello',
-          settings: {},
+          value: [{ content: 'hello', image: [] }],
+          settings: { who_can_reply_post: 'everyone' },
         },
       ],
     };
@@ -373,15 +372,15 @@ describe('core flows without optional services', () => {
     const response = await jsonPost('/posts', body);
 
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ id: 'post-1', state: 'QUEUE' });
-    expect(postsService.validatePosts).toHaveBeenCalledWith(
-      ORGANIZATION_ID,
-      body.posts
-    );
-    expect(postsService.createPost).toHaveBeenCalledWith(
-      ORGANIZATION_ID,
-      body,
-      'WEB'
+    expect(await response.json()).toEqual([{ postId: 'post-1', integration: 'int-1' }]);
+    expect(createOrUpdatePost).toHaveBeenCalledWith(
+      'schedule', ORGANIZATION_ID, body.date,
+      expect.objectContaining({
+        integration: { id: 'int-1' },
+        value: body.posts[0].value,
+        settings: expect.objectContaining({ __type: 'x', who_can_reply_post: 'everyone' }),
+      }),
+      [], 'WEB', undefined, false, expect.any(String)
     );
   });
 

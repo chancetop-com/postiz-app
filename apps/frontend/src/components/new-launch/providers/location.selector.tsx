@@ -1,25 +1,42 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
-import { useSettings } from '@gitroom/frontend/components/launches/helpers/use.values';
+import { FC, useState } from 'react';
+import useSWR from 'swr';
+import { useDebounce } from 'use-debounce';
+import { useIntegration } from '@gitroom/frontend/components/launches/helpers/use.integration';
 import { useCustomProviderFunction } from '@gitroom/frontend/components/launches/helpers/use.custom.provider.function';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 
-interface LocationResult {
-  id: string;
-  name: string;
-  address: string;
-}
-
-interface SelectedLocation {
+// Search-only location picker shared by TikTok Business and Instagram
+// (Facebook Login): 500 ms debounce, Loading / No location found, a result
+// list, and a selected card with an X to remove it. The provider binds it to a
+// settings key and decides whether the control is visible.
+export interface SelectedLocation {
   id: string;
   name: string;
   address?: string;
 }
 
-export const TikTokLocationSelector: FC<{
+const useLocationSearch = (query: string) => {
+  const { integration } = useIntegration();
+  const { get } = useCustomProviderFunction();
+  const [term] = useDebounce(query, 500);
+  const ready = query && query === term && integration?.id;
+  const { data, isLoading, error } = useSWR<SelectedLocation[]>(
+    ready ? ['locationSearch', integration.id, term] : null,
+    ([name, , q]: [string, string, string]) => get(name, { q }),
+    { revalidateOnFocus: false, shouldRetryOnError: false }
+  );
+  return {
+    results: !error && Array.isArray(data) ? data : [],
+    loading: query !== term || isLoading,
+  };
+};
+
+export const LocationSelector: FC<{
   name: string;
   label: string;
+  value?: SelectedLocation;
   onChange: (event: {
     target: {
       value: SelectedLocation | undefined;
@@ -27,81 +44,16 @@ export const TikTokLocationSelector: FC<{
     };
   }) => void;
 }> = (props) => {
-  const { onChange, name, label } = props;
+  const { onChange, name, label, value } = props;
   const t = useT();
-  const { getValues } = useSettings();
-  const customFunc = useCustomProviderFunction();
-  const [value, setValue] = useState<SelectedLocation | undefined>();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<LocationResult[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { results, loading } = useLocationSearch(open && !value?.id ? query : '');
 
-  useEffect(() => {
-    const settings = getValues()[name];
-    if (settings?.id) {
-      setValue(settings);
-    }
-  }, []);
-
-  const emit = useCallback(
-    (newValue: SelectedLocation | undefined) => {
-      setValue(newValue);
-      onChange({
-        target: {
-          value: newValue,
-          name,
-        },
-      });
-    },
-    [onChange, name]
-  );
-
-  useEffect(() => {
-    if (!open || !query) {
-      setResults([]);
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
-    const search = setTimeout(async () => {
-      try {
-        const list = await customFunc.get('locationSearch', { q: query });
-        if (!cancelled) {
-          setResults(Array.isArray(list) ? list : []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setResults([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }, 500);
-    return () => {
-      cancelled = true;
-      clearTimeout(search);
-    };
-  }, [query, open]);
-
-  const selectLocation = useCallback(
-    (location: LocationResult) => {
-      setOpen(false);
-      emit({
-        id: location.id,
-        name: location.name,
-        address: location.address,
-      });
-    },
-    [emit]
-  );
-
-  const removeLocation = useCallback(() => {
-    emit(undefined);
-  }, [emit]);
+  const selectLocation = (location?: SelectedLocation) => {
+    setOpen(false);
+    onChange({ target: { name, value: location } });
+  };
 
   return (
     <div className="flex flex-col gap-[6px]">
@@ -116,7 +68,7 @@ export const TikTokLocationSelector: FC<{
           </div>
           <div
             className="cursor-pointer text-[14px] opacity-70 hover:opacity-100"
-            onClick={removeLocation}
+            onClick={() => selectLocation(undefined)}
           >
             X
           </div>

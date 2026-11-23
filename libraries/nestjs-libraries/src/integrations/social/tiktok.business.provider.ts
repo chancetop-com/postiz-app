@@ -26,8 +26,9 @@ import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
   [
     'TikTok Business can have one video or one picture or multiple pictures (up to 35), it cannot be without an attachment.',
     'content_posting_method=DIRECT_POST publishes the post to the account. content_posting_method=UPLOAD does NOT publish: it only saves the media as a draft in the user inbox of the TikTok app, where the user must manually complete and publish it. Use DIRECT_POST unless the user explicitly asks to review or edit the post inside the TikTok app first.',
-    'With content_posting_method=UPLOAD, TikTok ignores every setting except the title / post content. Never tell the user that video_made_with_ai, privacy_level, duet, stitch, comment, autoAddMusic, brand_content_toggle or brand_organic_toggle will be applied in UPLOAD mode - they are silently discarded. If the user asks for any of those settings, tell them it requires DIRECT_POST.',
-    'video_made_with_ai, duet and stitch apply to video posts only. privacy_level and autoAddMusic apply to photo posts only - the TikTok Business API has no privacy field for video posts, so those settings are discarded when the attachment is a video.',
+    'With content_posting_method=UPLOAD, TikTok ignores every setting except the title / caption and the top-level is_ai_generated on a photo draft. Never tell the user that privacy_level, duet, stitch, comment, autoAddMusic, brand_content_toggle or brand_organic_toggle will be applied in UPLOAD mode - they are silently discarded. A video draft post_info contains only upload_to_draft (no caption, brand flags, AI or location); a photo draft post_info contains only is_draft plus the optional title / caption, so is_ai_generated is not applied to an uploaded video. If the user asks for any of those settings, tell them it requires DIRECT_POST.',
+    'is_ai_generated labels the post as AI generated; only true is sent. For video posts it goes to post_info.is_ai_generated and applies only with content_posting_method=DIRECT_POST. For photo posts it goes to the top-level is_ai_generated and applies to both DIRECT_POST and UPLOAD / draft.',
+    'duet and stitch apply to video posts only. privacy_level and autoAddMusic apply to photo posts only - the TikTok Business API has no privacy field for video posts, so those settings are discarded when the attachment is a video.',
     'The music setting attaches a commercial music library track (found via the musicSearch function) to a video or photo post, and the location setting tags the post with a location (found via the locationSearch function). Both apply only with content_posting_method=DIRECT_POST. music.audio_volume / music.video_volume (0-100, default 50) apply to video posts only. For photos, autoAddMusic=yes attaches a RANDOM commercial music library track and overrides any music selection - use autoAddMusic=no when the user wants a specific track.',
     'Media is pulled by TikTok from its URL, so the media must be uploaded to Postiz and the media domain must be a verified URL property of the TikTok Business app.',
   ].join(' ')
@@ -76,16 +77,9 @@ export class TiktokBusinessProvider
     if ((firstItems?.length ?? 0) === 0) {
       return 'No video / images selected';
     }
-    if (
-      (firstItems?.length ?? 0) > 1 &&
-      firstItems?.some((p) => (p?.path?.indexOf?.('mp4') ?? -1) > -1)
-    ) {
+    const hasVideo = firstItems.some((item) => hasExtension(item?.path, 'mp4'));
+    if (firstItems.length > 1 && hasVideo) {
       return 'Only pictures are supported when selecting multiple items';
-    } else if (
-      firstItems?.length !== 1 &&
-      (firstItems?.[0]?.path?.indexOf?.('mp4') ?? -1) > -1
-    ) {
-      return 'You need one media';
     }
     if ((firstItems?.length ?? 0) > 35) {
       return 'You can select up to 35 pictures';
@@ -93,7 +87,7 @@ export class TiktokBusinessProvider
 
     // TikTok fails the whole photo post when a single image is oversized, and
     // the status only says `picture_size_check_failed` without naming it.
-    if (firstItems?.every((p) => (p?.path?.indexOf?.('mp4') ?? -1) === -1)) {
+    if (!hasVideo) {
       const dimensions = await Promise.all(
         firstItems?.map((p) => this.getImageDimensions(p?.path)) ?? []
       );
@@ -568,53 +562,51 @@ export class TiktokBusinessProvider
         : firstPost?.media?.[0]?.thumbnailTimestamp
         ? { thumbnail_offset: firstPost?.media?.[0]?.thumbnailTimestamp }
         : {}),
-      post_info: {
-        ...(firstPost.message ? { caption: firstPost.message } : {}),
-        // The video endpoint has no privacy_level field - unlike photos,
-        // videos publish with the account default.
-        is_brand_organic: this.assetBoolean(
-          firstPost.settings.brand_organic_toggle
-        ),
-        is_branded_content: this.assetBoolean(
-          firstPost.settings.brand_content_toggle
-        ),
-        ...(isDraft
-          ? { upload_to_draft: true }
-          : {
-              disable_comment: !this.assetBoolean(firstPost.settings.comment),
-              disable_duet: !this.assetBoolean(firstPost.settings.duet),
-              disable_stitch: !this.assetBoolean(firstPost.settings.stitch),
-              is_ai_generated: this.assetBoolean(
-                firstPost.settings.video_made_with_ai
-              ),
-              ...(firstPost.settings.location?.id
-                ? {
-                    location_id: firstPost.settings.location.id,
-                    location_name: firstPost.settings.location.name,
-                  }
-                : {}),
-              // The API defaults both volumes to 0 (muted) - the TikTok app
-              // defaults to 50, so a selected track without explicit volumes
-              // follows the app behavior instead of publishing a silent post.
-              ...(firstPost.settings.music?.id
-                ? {
-                    music_sound_info: {
-                      music_sound_id: firstPost.settings.music.id,
-                      music_sound_volume:
-                        typeof firstPost.settings.music.audio_volume !==
-                        'undefined'
-                          ? +firstPost.settings.music.audio_volume
-                          : 50,
-                      video_original_sound_volume:
-                        typeof firstPost.settings.music.video_volume !==
-                        'undefined'
-                          ? +firstPost.settings.music.video_volume
-                          : 50,
-                    },
-                  }
-                : {}),
-            }),
-      },
+      post_info: isDraft
+        ? { upload_to_draft: true }
+        : {
+            ...(firstPost.message ? { caption: firstPost.message } : {}),
+            // The video endpoint has no privacy_level field - unlike photos,
+            // videos publish with the account default.
+            is_brand_organic: this.assetBoolean(
+              firstPost.settings.brand_organic_toggle
+            ),
+            is_branded_content: this.assetBoolean(
+              firstPost.settings.brand_content_toggle
+            ),
+            disable_comment: !this.assetBoolean(firstPost.settings.comment),
+            disable_duet: !this.assetBoolean(firstPost.settings.duet),
+            disable_stitch: !this.assetBoolean(firstPost.settings.stitch),
+            ...(firstPost.settings.is_ai_generated === true
+              ? { is_ai_generated: true }
+              : {}),
+            ...(firstPost.settings.location?.id
+              ? {
+                  location_id: firstPost.settings.location.id,
+                  location_name: firstPost.settings.location.name,
+                }
+              : {}),
+            // The API defaults both volumes to 0 (muted) - the TikTok app
+            // defaults to 50, so a selected track without explicit volumes
+            // follows the app behavior instead of publishing a silent post.
+            ...(firstPost.settings.music?.id
+              ? {
+                  music_sound_info: {
+                    music_sound_id: firstPost.settings.music.id,
+                    music_sound_volume:
+                      typeof firstPost.settings.music.audio_volume !==
+                      'undefined'
+                        ? +firstPost.settings.music.audio_volume
+                        : 50,
+                    video_original_sound_volume:
+                      typeof firstPost.settings.music.video_volume !==
+                      'undefined'
+                        ? +firstPost.settings.music.video_volume
+                        : 50,
+                  },
+                }
+              : {}),
+          },
     };
   }
 
@@ -654,20 +646,25 @@ export class TiktokBusinessProvider
       business_id: businessId,
       photo_images: firstPost.media?.map((p) => p.path),
       photo_cover_index: 0,
+      // Photos carry the AI label at the top level; it is sent for both
+      // DIRECT_POST and draft (UPLOAD) photo posts.
+      ...(firstPost.settings.is_ai_generated === true
+        ? { is_ai_generated: true }
+        : {}),
       post_info: {
         ...(firstPost.settings.title
           ? { title: firstPost.settings.title.slice(0, 90) }
           : {}),
         ...(firstPost.message ? { caption: firstPost.message } : {}),
-        is_brand_organic: this.assetBoolean(
-          firstPost.settings.brand_organic_toggle
-        ),
-        is_branded_content: this.assetBoolean(
-          firstPost.settings.brand_content_toggle
-        ),
         ...(isDraft
           ? { is_draft: true }
           : {
+              is_brand_organic: this.assetBoolean(
+                firstPost.settings.brand_organic_toggle
+              ),
+              is_branded_content: this.assetBoolean(
+                firstPost.settings.brand_content_toggle
+              ),
               privacy_level:
                 firstPost.settings.privacy_level || 'PUBLIC_TO_EVERYONE',
               disable_comment: !this.assetBoolean(firstPost.settings.comment),

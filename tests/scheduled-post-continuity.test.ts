@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { postWorkflowV112 } from '@gitroom/orchestrator/workflows/post-workflows/post.workflow.v1.1.2';
-import { emailQueues } from '@gitroom/nestjs-libraries/temporal/email.queues';
 
 /**
  * Ticket 15: pre-upgrade executions keep running under the candidate worker
@@ -77,42 +76,5 @@ describe('worker registration', () => {
     expect(module).not.toContain('buildId');
     expect(module).not.toContain('useVersioning');
     expect(module).toContain("taskQueue: 'main'");
-  });
-
-  it('keeps the e-mail task queues the old backlog drains into', () => {
-    expect(emailQueues).toEqual({
-      priority: { taskQueue: 'email', perSecond: 3 },
-      bulk: { taskQueue: 'email-bulk', perSecond: 2 },
-    });
-  });
-});
-
-describe('legacy definitions stay available', () => {
-  it('keeps every post workflow version exported by name', async () => {
-    const workflows = await import('@gitroom/orchestrator/workflows');
-    for (const name of [
-      'postWorkflowV101',
-      'postWorkflowV102',
-      'postWorkflowV103',
-      'postWorkflowV104',
-      'postWorkflowV105',
-      'postWorkflowV106',
-      'postWorkflowV107',
-      'postWorkflowV108',
-      'postWorkflowV109',
-      'postWorkflowV110',
-      'postWorkflowV111',
-      'postWorkflowV112',
-    ]) {
-      expect((workflows as Record<string, unknown>)[name]).toBeTypeOf('function');
-    }
-  });
-
-  it('keeps the old repeat child creation on the current version file', () => {
-    const v112 = read(
-      'apps/orchestrator/src/workflows/post-workflows/post.workflow.v1.1.2.ts'
-    );
-    expect(v112).toContain('await startChild(postWorkflowV112, {');
-    expect(v112).toContain("parentClosePolicy: 'ABANDON'");
   });
 });

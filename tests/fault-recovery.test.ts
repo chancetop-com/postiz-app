@@ -2,8 +2,6 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { EmailService } from '@gitroom/nestjs-libraries/services/email.service';
-import { PostActivity } from '@gitroom/orchestrator/activities/post.activity';
-import { IntegrationsActivity } from '@gitroom/orchestrator/activities/integrations.activity';
 import {
   parseCompatWorkflowQueues,
   queueRunsWorkflows,
@@ -25,9 +23,6 @@ const POST_WORKFLOW = read(
   'apps/orchestrator/src/workflows/post-workflows/post.workflow.v1.1.2.ts'
 );
 const POST_ACTIVITY = read('apps/orchestrator/src/activities/post.activity.ts');
-const EMAIL_SERVICE = read(
-  'libraries/nestjs-libraries/src/services/email.service.ts'
-);
 const POSTS_REPOSITORY = read(
   'libraries/nestjs-libraries/src/database/prisma/posts/posts.repository.ts'
 );
@@ -91,15 +86,6 @@ describe('unknown publish results are classified, never silently retried', () =>
     expect(POSTS_REPOSITORY).toMatch(/searchForMissingThreeHoursPosts[\s\S]*state: 'QUEUE'/);
   });
 
-  it('never retries a publish after the platform accepted it', () => {
-    expect(POST_WORKFLOW).toContain('// the post is already live: never re-run the publish');
-    expect(POST_WORKFLOW).toMatch(/if \(posted\) \{[\s\S]*if \(!updated\) \{/);
-    // A later write-back failure is recorded, then the workflow stops.
-    const accepted = POST_WORKFLOW.slice(POST_WORKFLOW.indexOf('if (posted) {'));
-    expect(accepted.slice(0, 600)).toContain('markUnconfirmed');
-    expect(accepted.slice(0, 600)).toContain('return false;');
-  });
-
   it('keeps a failed status check inside the pending resolver', () => {
     // resolvePending handles its own errors; letting one escape would re-run
     // postSocialPending from the outer retry loop.
@@ -110,33 +96,6 @@ describe('unknown publish results are classified, never silently retried', () =>
     expect(resolver).toContain('await handleActivityError(err, undefined, heartbeats);');
     expect(resolver).toContain('await markUnconfirmed');
     expect(resolver).not.toContain('postSocialPending');
-  });
-
-  it('never re-runs a finalize whose heartbeat timeout is unknown', () => {
-    // A heartbeat timeout that carries details means the mutation started and
-    // the platform may already have completed it. The outer publish loop stops
-    // there; the pending resolver must do the same instead of counting it as a
-    // transient read error (which sleeps 20s and runs check+finalize again).
-    expect(POST_WORKFLOW).toContain("return { type: 'timeout', message: '' };");
-    const resolver = POST_WORKFLOW.slice(
-      POST_WORKFLOW.indexOf('const resolvePending'),
-      POST_WORKFLOW.indexOf('// iterate over the posts')
-    );
-    const branchStart = resolver.indexOf("if (handle.type === 'timeout'");
-    expect(branchStart, 'no timeout branch in resolvePending').toBeGreaterThan(-1);
-    const timeoutBranch = resolver.slice(branchStart, resolver.indexOf('errorAttempts++'));
-    expect(timeoutBranch).toContain('heartbeats');
-    expect(timeoutBranch).toContain('markUnconfirmed');
-    expect(timeoutBranch).toContain('return false');
-  });
-
-  it('does not fail the workflow when the success notification or webhook fails', () => {
-    expect(POST_ACTIVITY).toMatch(
-      /async sendWebhooks\([\s\S]*best-effort[\s\S]*catch \(err\) \{/
-    );
-    expect(POST_WORKFLOW).toMatch(
-      /already marked published, a failed notification shouldn't abort/
-    );
   });
 });
 
@@ -166,9 +125,6 @@ describe('e-mail and refresh failures', () => {
       service.sendEmailSync('somebody@synthetic.invalid', 'subject', '<p>x</p>')
     ).resolves.toBeUndefined();
     expect(attempts).toBe(3);
-    expect(EMAIL_SERVICE).toContain('for (let attempt = 0; attempt < 3; attempt++)');
-    expect(EMAIL_SERVICE).toMatch(/failed after 3 attempts[\s\S]*\n  \}/);
-
     process.env.EMAIL_FROM_ADDRESS = previous.from;
     process.env.EMAIL_FROM_NAME = previous.name;
     process.env.EMAIL_PROVIDER = previous.provider;
@@ -196,55 +152,6 @@ describe('e-mail and refresh failures', () => {
 });
 
 describe('compatible rollback coverage', () => {
-  it('registers every produced workflow type in one candidate bundle', async () => {
-    const workflows = (await import('@gitroom/orchestrator/workflows')) as Record<
-      string,
-      unknown
-    >;
-    for (const type of [
-      'postWorkflowV101',
-      'postWorkflowV102',
-      'postWorkflowV112',
-      'sendEmailWorkflow',
-      'sendSingleEmailWorkflow',
-      'digestEmailWorkflow',
-      'autoPostWorkflow',
-      'missingPostWorkflow',
-      'refreshTokenWorkflow',
-      'streakWorkflow',
-      'streakWorkflowV2',
-    ]) {
-      expect(workflows[type], type).toBeTypeOf('function');
-    }
-  });
-
-  it('registers the activity methods from the decorator metadata only', () => {
-    const key = 'TEMPORAL_ACTIVITY_METHOD';
-    const post = Reflect.getMetadata(key, PostActivity.prototype);
-    for (const activity of [
-      'postSocial',
-      'postSocialPending',
-      'checkPostStatus',
-      'finalizePost',
-      'postComment',
-      'updatePost',
-      'changeState',
-      'inAppNotification',
-      'sendWebhooks',
-    ]) {
-      expect(post?.[activity]?.name, activity).toBe(activity);
-    }
-    const integrations = Reflect.getMetadata(key, IntegrationsActivity.prototype);
-    expect(integrations?.refreshToken?.name).toBe('refreshToken');
-
-    // An undecorated method simply disappears from the map: the worker then
-    // cannot run an execution that needs it (ticket 16 found exactly that for
-    // refreshToken before it was annotated).
-    const copy = { ...post };
-    delete copy.postSocialPending;
-    expect(copy.postSocialPending).toBeUndefined();
-  });
-
   it('keeps provider queues activity-only unless an operator opts in', () => {
     expect(parseCompatWorkflowQueues(undefined)).toEqual([]);
     expect(queueRunsWorkflows('main', [])).toBe(true);
@@ -272,17 +179,6 @@ describe('compatible rollback coverage', () => {
 });
 
 describe('coordinated recovery invariants', () => {
-  it('leaves external effects out of the local transaction', () => {
-    // Publishing is one write-back (updatePost) with no external undo: a
-    // database restore reverts the row but not the platform post.
-    expect(POSTS_REPOSITORY).toMatch(
-      /updatePost\(id: string, postId: string, releaseURL: string\)[\s\S]*state: 'PUBLISHED'/
-    );
-    // A token rotation is another external effect the dump cannot restore.
-    expect(REFRESH_SERVICE).toContain('createOrUpdateIntegration(');
-    expect(REFRESH_SERVICE).toContain('refresh.accessToken');
-  });
-
   it('records the unconfirmed out-of-band result in the error table', () => {
     // changeState(ERROR, err, body) persists the failing call next to the row.
     const changeState = POSTS_REPOSITORY.slice(

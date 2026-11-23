@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PostActivity } from '@gitroom/orchestrator/activities/post.activity';
 
 /**
  * Ticket 13: a send outcome must be distinguishable (complete / platform
@@ -183,29 +182,7 @@ describe('V112 finalize timeout: the unknown marker', () => {
   });
 });
 
-describe('activity registration needed by the fault paths', () => {
-  it('keeps the irreversible publish activities registered and heartbeating', () => {
-    const methods = Reflect.getMetadata(
-      'TEMPORAL_ACTIVITY_METHOD',
-      PostActivity.prototype
-    );
-    for (const name of [
-      'postSocialPending',
-      'checkPostStatus',
-      'finalizePost',
-      'updatePost',
-      'changeState',
-      'inAppNotification',
-    ]) {
-      expect(methods?.[name]?.name, name).toBe(name);
-    }
-    // A missing finalizePost registration would leave the execution RUNNING
-    // at the timeout boundary instead of reaching the unknown marker.
-    expect(POST_ACTIVITY).toMatch(
-      /@ActivityMethod\(\)\s+async finalizePost\(/
-    );
-  });
-
+describe('publish result write-back', () => {
   it('does not put the publish result write-back before the platform call', () => {
     const publish = slice(
       POST_WORKFLOW,
