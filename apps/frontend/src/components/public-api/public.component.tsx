@@ -61,9 +61,6 @@ export type AnyMcpClient = RemoteMcpClient | ChatOnlyMcpClient | McpClient;
 // apikey: the organization API key, as a Bearer header (or inside the URL for remote clients)
 export type McpAuth = 'oauth' | 'apikey';
 
-// Only the self-hosted docker images are built with a version
-export const isSelfHosted = !!process.env.NEXT_PUBLIC_VERSION;
-
 // The directory listings behind the "Official connector" tab
 const officialConnectorClients = [
   'Claude',
@@ -314,8 +311,9 @@ const McpSection = ({
   mcpBase: string;
 }) => {
   const t = useT();
-  const { billingEnabled } = useVariables();
+  const { billingEnabled, version } = useVariables();
   const [activeClient, setActiveClient] = useState<AnyMcpClient>('Claude');
+  const isSelfHosted = !!version;
   const officialConnectors = billingEnabled || isSelfHosted;
   // the directory connectors come first wherever they work
   const tabs: Array<'official' | McpAuth> = officialConnectors

@@ -9,7 +9,7 @@ export default function SsoLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fetch = useFetch();
-  const { isGeneral } = useVariables();
+  const { isGeneral, ssoParentOrigins } = useVariables();
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function SsoLoginPage() {
     }
 
     const handler = (event: MessageEvent) => {
-      const allowedOrigins = (process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS || '')
+      const allowedOrigins = (ssoParentOrigins || '')
         .split(',').filter(Boolean);
       if (!allowedOrigins.includes(event.origin)) return;
 
@@ -30,7 +30,7 @@ export default function SsoLoginPage() {
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []);
+  }, [ssoParentOrigins]);
 
   const handleSsoLogin = async (ssoToken: string) => {
     try {

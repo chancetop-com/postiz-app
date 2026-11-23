@@ -24,7 +24,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@gitroom/react/helpers/variable.context', () => ({
-  useVariables: () => ({ backendUrl, isGeneral }),
+  useVariables: () => ({ backendUrl, isGeneral, ssoParentOrigins: '' }),
 }));
 
 vi.mock('@gitroom/frontend/app/(app)/auth/return.url.component', () => ({

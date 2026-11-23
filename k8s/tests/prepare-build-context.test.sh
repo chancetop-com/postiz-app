@@ -241,7 +241,6 @@ chmod +x "$STUB/docker" "$STUB/az" "$STUB/kubectl"
 cp "$K8S_DIR/build-local.sh" "$CTX/build-local.sh"
 cp "$K8S_DIR/build-postiz.sh" "$CTX/build-postiz.sh"
 cp "$K8S_DIR/deploy-postiz.sh" "$CTX/deploy-postiz.sh"
-cp "$K8S_DIR/public-build-config.env" "$CTX/public-build-config.env"
 chmod +x "$CTX/build-local.sh" "$CTX/build-postiz.sh" "$CTX/deploy-postiz.sh"
 
 echo ""

@@ -19,6 +19,9 @@ interface VariableContextInterface {
   environment: string;
   discordUrl: string;
   uploadDirectory: string;
+  ssoParentOrigins: string;
+  version: string;
+  appVersion: string;
   facebookPixel: string;
   telegramBotName: string;
   neynarClientId: string;
@@ -55,6 +58,9 @@ const VariableContext = createContext({
   backendUrl: '',
   discordUrl: '',
   uploadDirectory: '',
+  ssoParentOrigins: '',
+  version: '',
+  appVersion: '',
   isSecured: false,
   telegramBotName: '',
   facebookPixel: '',

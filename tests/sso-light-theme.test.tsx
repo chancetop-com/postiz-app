@@ -15,6 +15,7 @@ const push = vi.fn();
 const fetchMock = vi.fn();
 let search = 'auth_code=abc';
 let isGeneral = false;
+let ssoParentOrigins = '';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, push }),
@@ -27,7 +28,7 @@ vi.mock('@gitroom/helpers/utils/custom.fetch', () => ({
 }));
 
 vi.mock('@gitroom/react/helpers/variable.context', () => ({
-  useVariables: () => ({ isGeneral }),
+  useVariables: () => ({ isGeneral, ssoParentOrigins }),
 }));
 
 import SsoLoginPage from '@gitroom/frontend/app/(app)/sso/page';
@@ -48,7 +49,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   search = 'auth_code=abc';
   isGeneral = false;
-  delete process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS;
+  ssoParentOrigins = '';
 });
 
 afterEach(() => {
@@ -97,7 +98,7 @@ describe('SSO login page theme', () => {
 
   it('accepts a parent message from an allowed origin only', async () => {
     search = '';
-    process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS = 'https://parent.example';
+    ssoParentOrigins = 'https://parent.example';
     fetchMock.mockResolvedValue({ ok: true });
 
     render(<SsoLoginPage />);

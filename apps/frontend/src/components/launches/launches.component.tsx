@@ -483,7 +483,7 @@ export const MenuComponent: FC<
 export const LaunchesComponent = () => {
   const fetch = useFetch();
   const user = useUser();
-  const { billingEnabled } = useVariables();
+  const { billingEnabled, version } = useVariables();
   const router = useRouter();
   const search = useSearchParams();
   const toast = useToaster();
@@ -797,9 +797,7 @@ export const LaunchesComponent = () => {
                 <div>{capitalize(user?.tier?.current || '')} tier</div>
               )}
               <div>
-                {process.env.NEXT_PUBLIC_VERSION
-                  ? process.env.NEXT_PUBLIC_VERSION
-                  : ''}
+                {version ? version : ''}
               </div>
             </div>
           </div>

@@ -20,7 +20,6 @@ import {
   CopyButton,
   getMcpConfig,
   isChatOnlyMcpClient,
-  isSelfHosted,
   localCliSteps,
   McpAuth,
   McpClient,
@@ -299,7 +298,7 @@ const OnboardingStep2: FC<{ onBack: () => void; onNext: () => void }> = ({
 }) => {
   const t = useT();
   const user = useUser();
-  const { backendUrl, mcpUrl, billingEnabled } = useVariables();
+  const { backendUrl, mcpUrl, billingEnabled, version } = useVariables();
   const [tab, setTab] = useState<OnboardingTab>('Claude');
   const [otherAgent, setOtherAgent] = useState<McpClient>(otherAgents[0]);
   // The client the cards describe: the tab itself, or the pick inside "Other agents"
@@ -311,6 +310,7 @@ const OnboardingStep2: FC<{ onBack: () => void; onNext: () => void }> = ({
   const apiKey = user?.publicApi || '';
   const available = !!apiKey && !!user?.tier?.public_api;
   // the official connectors work for self-hosted installs too
+  const isSelfHosted = !!version;
   const officialConnectors = billingEnabled || isSelfHosted;
 
   const { config, hint } =

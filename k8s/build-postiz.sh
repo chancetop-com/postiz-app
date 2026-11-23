@@ -96,25 +96,14 @@ else
 
   az acr login --name "$ACR_NAME"
 
-  # Same public build-configuration allow-list as build-local.sh: the values
-  # are inlined into the browser bundle by `next build`.
-  PUBLIC_BUILD_ARGS=(--build-arg NODE_ENV=production)
-  if [ -f "$SCRIPT_DIR/public-build-config.env" ]; then
-    while IFS= read -r line || [ -n "$line" ]; do
-      case "$line" in ''|'#'*) continue ;; esac
-      key=${line%%=*}
-      value=${line#*=}
-      if printenv "$key" >/dev/null 2>&1; then value="$(printenv "$key")"; fi
-      PUBLIC_BUILD_ARGS+=(--build-arg "$key=$value")
-    done < "$SCRIPT_DIR/public-build-config.env"
-  fi
-
+  # No NEXT_PUBLIC_* value is baked into the image: environment configuration
+  # is read at runtime from the deployment env.
   az acr build \
     --registry "$ACR_NAME" \
     --image "${IMAGE_NAME}:${GIT_TAG}" \
     --image "${IMAGE_NAME}:latest" \
     --file "$SCRIPT_DIR/Dockerfile" \
-    "${PUBLIC_BUILD_ARGS[@]}" \
+    --build-arg NODE_ENV=production \
     --timeout 3600 \
     "$SCRIPT_DIR"
 fi

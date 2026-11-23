@@ -35,39 +35,12 @@ COPY libraries ./libraries
 RUN pnpm config set store-dir /pnpm-store \
  && pnpm install --frozen-lockfile
 
-# Public build configuration. `next build` inlines these values into the
-# browser bundle, so they must be supplied at build time and cannot be changed
-# by the runtime environment. The allow-list of values the source actually
-# consumes is ./public-build-config.env; build-local.sh/build-postiz.sh pass
-# every entry as a build argument. NEXT_PUBLIC_* : no secret belongs here.
-ARG NEXT_PUBLIC_BACKEND_URL=""
-ARG NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY=""
-ARG NEXT_PUBLIC_SSO_PARENT_ORIGINS=""
-ARG NEXT_PUBLIC_VERSION=""
-ARG NEXT_PUBLIC_APP_VERSION=""
-ARG NEXT_PUBLIC_POLOTNO=""
-ARG NEXT_PUBLIC_FACEBOOK_PIXEL=""
-ARG NEXT_PUBLIC_DISCORD_SUPPORT=""
-ARG NEXT_PUBLIC_POSTIZ_OAUTH_LOGO_URL=""
-ARG NEXT_PUBLIC_POSTIZ_OAUTH_DISPLAY_NAME=""
-ARG NEXT_PUBLIC_TRACKING_TRIAL=""
-ARG NEXT_PUBLIC_GTM_ID=""
-ARG NEXT_PUBLIC_SENTRY_DSN=""
-ARG NEXT_PUBLIC_OVERRIDE_BACKEND_URL=""
-ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
-ENV NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY=$NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY
-ENV NEXT_PUBLIC_SSO_PARENT_ORIGINS=$NEXT_PUBLIC_SSO_PARENT_ORIGINS
-ENV NEXT_PUBLIC_VERSION=$NEXT_PUBLIC_VERSION
-ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
-ENV NEXT_PUBLIC_POLOTNO=$NEXT_PUBLIC_POLOTNO
-ENV NEXT_PUBLIC_FACEBOOK_PIXEL=$NEXT_PUBLIC_FACEBOOK_PIXEL
-ENV NEXT_PUBLIC_DISCORD_SUPPORT=$NEXT_PUBLIC_DISCORD_SUPPORT
-ENV NEXT_PUBLIC_POSTIZ_OAUTH_LOGO_URL=$NEXT_PUBLIC_POSTIZ_OAUTH_LOGO_URL
-ENV NEXT_PUBLIC_POSTIZ_OAUTH_DISPLAY_NAME=$NEXT_PUBLIC_POSTIZ_OAUTH_DISPLAY_NAME
-ENV NEXT_PUBLIC_TRACKING_TRIAL=$NEXT_PUBLIC_TRACKING_TRIAL
-ENV NEXT_PUBLIC_GTM_ID=$NEXT_PUBLIC_GTM_ID
-ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
-ENV NEXT_PUBLIC_OVERRIDE_BACKEND_URL=$NEXT_PUBLIC_OVERRIDE_BACKEND_URL
+# No NEXT_PUBLIC_* build arguments. `next build` would inline them into the
+# browser bundle, which would bind the image to one environment and take the
+# value away from the deployment's ConfigMap/Secret. Environment configuration
+# (backend URL, upload directory, SSO parent origins, OAuth branding, tracking
+# ids, Sentry DSN, version) is read at runtime by the server components and
+# delivered to client code through VariableContext.
 
 # NODE_ENV is set only after the install so dev dependencies needed by the
 # build (TypeScript, Nest CLI, tailwind) are installed.

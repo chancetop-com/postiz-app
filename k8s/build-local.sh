@@ -3,7 +3,7 @@
 # Postiz local image build (build only)
 #
 # Builds the candidate image from the prepared build context with the pinned
-# toolchain and the public build-config allow-list.
+# toolchain.
 # Never logs in to a registry, never pushes, never touches a cluster.
 #
 # Usage:
@@ -11,10 +11,9 @@
 #   ./k8s/build-local.sh --tag NAME   # explicit image tag
 #   ./k8s/build-local.sh --prepare    # re-run the preparer first
 #
-# Public build configuration (NEXT_PUBLIC_*) is read from
-# ./public-build-config.env. Any of those keys exported in the environment
-# overrides the file for this build only; the effective values are recorded in
-# BUILD_PROVENANCE.json.
+# No NEXT_PUBLIC_* value is baked into the image: the runtime reads the
+# deployment's ConfigMap/Secret and passes public values to client code through
+# VariableContext. The build only receives NODE_ENV.
 #
 # For publishing use ./k8s/build-postiz.sh, for deployment
 # ./k8s/deploy-postiz.sh. Neither is implied by this script.
@@ -79,29 +78,6 @@ fi
 . "$SCRIPT_DIR/lib/json.sh"
 
 # ------------------------------------------------------------
-# Public build configuration allow-list
-# ------------------------------------------------------------
-PUBLIC_CONFIG="$SCRIPT_DIR/public-build-config.env"
-[ -f "$PUBLIC_CONFIG" ] || {
-  echo "build-local: missing $PUBLIC_CONFIG" >&2
-  exit 2
-}
-
-PUBLIC_VALUES=()
-while IFS= read -r line || [ -n "$line" ]; do
-  case "$line" in ''|'#'*) continue ;; esac
-  key=${line%%=*}
-  value=${line#*=}
-  # An exported value wins over the file, so a rehearsal can build with a
-  # non-secret sentinel without editing tracked configuration.
-  if printenv "$key" >/dev/null 2>&1; then
-    value="$(printenv "$key")"
-  fi
-  export "$key=$value"
-  PUBLIC_VALUES+=("$key=$value")
-done < "$PUBLIC_CONFIG"
-
-# ------------------------------------------------------------
 # Provenance inputs
 # ------------------------------------------------------------
 MANIFEST="$SCRIPT_DIR/BUILD_CONTEXT_MANIFEST.json"
@@ -134,9 +110,6 @@ echo " node   : 22.23.4 / pnpm 10.6.1 (pinned in the Dockerfile)"
 echo "============================================"
 
 BUILD_ARGS=(--build-arg NODE_ENV=production)
-for entry in "${PUBLIC_VALUES[@]}"; do
-  BUILD_ARGS+=(--build-arg "$entry")
-done
 
 docker build \
   --file "$SCRIPT_DIR/Dockerfile" \
@@ -187,21 +160,9 @@ PROVENANCE="$SCRIPT_DIR/BUILD_PROVENANCE.json"
     "$(sha_of_file "$SCRIPT_DIR/var/docker/nginx.conf")"
   printf '    "entrypoint": { "path": "var/docker/entrypoint.sh", "sha256": "%s" },\n' \
     "$(sha_of_file "$SCRIPT_DIR/var/docker/entrypoint.sh")"
-  printf '    "nextConfig": { "path": "apps/frontend/next.config.js", "sha256": "%s" },\n' \
+  printf '    "nextConfig": { "path": "apps/frontend/next.config.js", "sha256": "%s" }\n' \
     "$(sha_of_file "$SCRIPT_DIR/apps/frontend/next.config.js")"
-  printf '    "publicBuildConfig": { "path": "k8s/public-build-config.env", "sha256": "%s" }\n' \
-    "$(sha_of_file "$PUBLIC_CONFIG")"
   printf '  },\n'
-  printf '  "publicBuildConfig": {\n'
-  printf '    "note": "Inlined by next build. The runtime environment cannot change these browser values.",\n'
-  first=1
-  for entry in "${PUBLIC_VALUES[@]}"; do
-    [ $first -eq 1 ] || printf ',\n'
-    first=0
-    printf '    "%s": "%s"' \
-      "$(json_escape "${entry%%=*}")" "$(json_escape "${entry#*=}")"
-  done
-  printf '\n  },\n'
   printf '  "toolchain": { "node": "22.23.4", "pnpm": "10.6.1", "prisma": "6.5.0" },\n'
   printf '  "baseImages": [\n'
   printf '    { "image": "node:22.23.4-bookworm", "repoDigest": "%s", "id": "%s" },\n' \
@@ -215,7 +176,7 @@ PROVENANCE="$SCRIPT_DIR/BUILD_PROVENANCE.json"
     printf '  "generatedAssets": [ { "path": "apps/frontend/public/g.js", "status": "generated", "sha256": "%s" } ]\n' \
       "$(sha_of_file "$REPO_ROOT/apps/frontend/public/g.js")"
   else
-    printf '  "generatedAssets": [ { "path": "apps/frontend/public/g.js", "status": "not-generated", "reason": "NEXT_PUBLIC_GTM_ID is empty for this profile; no tracking service is added." } ]\n'
+    printf '  "generatedAssets": [ { "path": "apps/frontend/public/g.js", "status": "not-generated", "reason": "GTM is not enabled for this profile; no tracking service is added." } ]\n'
   fi
   printf '}\n'
 } > "$PROVENANCE"

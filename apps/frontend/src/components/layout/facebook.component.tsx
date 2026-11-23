@@ -1,8 +1,11 @@
 'use client';
 
 import Script from 'next/script';
+import { useVariables } from '@gitroom/react/helpers/variable.context';
+
 export const FacebookComponent = () => {
-  if (!process.env.NEXT_PUBLIC_FACEBOOK_PIXEL) {
+  const { facebookPixel } = useVariables();
+  if (!facebookPixel) {
     return null;
   }
   return (
@@ -15,7 +18,7 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 '/f.js');
-fbq('init', '${process.env.NEXT_PUBLIC_FACEBOOK_PIXEL}');
+fbq('init', '${facebookPixel}');
 `}
     </Script>
   );

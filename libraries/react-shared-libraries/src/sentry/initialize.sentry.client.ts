@@ -20,7 +20,11 @@ export const setSentryUser = (
   }
 };
 
-export const initializeSentryClient = (environment: string, dsn: string) => {
+export const initializeSentryClient = (
+  environment: string,
+  dsn: string,
+  releaseVersion: string
+) => {
   // A remounted layout must not build a second replay integration, Sentry throws on it
   if (Sentry.getClient()) {
     return;
@@ -48,5 +52,5 @@ export const initializeSentryClient = (environment: string, dsn: string) => {
     replaysOnErrorSampleRate: 1.0,
 
     profilesSampleRate: 1.0,
-  });
+  }, releaseVersion);
 };

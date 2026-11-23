@@ -22,6 +22,7 @@ const redirect = vi.fn();
 const fetchMock = vi.fn();
 let search = '';
 let isGeneral = false;
+let ssoParentOrigins = '';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, push }),
@@ -36,7 +37,7 @@ vi.mock('@gitroom/helpers/utils/custom.fetch', () => ({
 }));
 
 vi.mock('@gitroom/react/helpers/variable.context', () => ({
-  useVariables: () => ({ isGeneral }),
+  useVariables: () => ({ isGeneral, ssoParentOrigins }),
 }));
 
 import SsoRedirectPage from '@gitroom/frontend/app/(app)/auth/sso/page';
@@ -54,7 +55,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   search = '';
   isGeneral = false;
-  delete process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS;
+  ssoParentOrigins = '';
 });
 
 afterEach(() => {
@@ -92,7 +93,7 @@ describe('/auth/sso legacy handoff', () => {
 describe('/sso URL code precedence', () => {
   it('exchanges the URL code once and ignores parent messages', async () => {
     search = 'auth_code=url-code';
-    process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS = 'https://parent.example';
+    ssoParentOrigins = 'https://parent.example';
     fetchMock.mockResolvedValue({ ok: true });
 
     render(<SsoLoginPage />);
@@ -110,7 +111,7 @@ describe('/sso URL code precedence', () => {
 
   it('falls back to a parent message when the URL code is blank', async () => {
     search = 'auth_code=';
-    process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS = 'https://parent.example';
+    ssoParentOrigins = 'https://parent.example';
     fetchMock.mockResolvedValue({ ok: true });
 
     render(<SsoLoginPage />);
@@ -132,7 +133,7 @@ describe('/sso URL code precedence', () => {
     ['a blank code', { type: 'SSO_TOKEN', auth_code: '' }],
     ['a bare string payload', 'SSO_TOKEN'],
   ])('ignores %s', async (_label, data) => {
-    process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS = 'https://parent.example';
+    ssoParentOrigins = 'https://parent.example';
     fetchMock.mockResolvedValue({ ok: true });
 
     render(<SsoLoginPage />);

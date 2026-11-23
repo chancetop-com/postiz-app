@@ -20,8 +20,8 @@ REPO_ROOT="$(cd -- "$K8S_DIR/.." && pwd)"
 DOCKERFILE="$K8S_DIR/Dockerfile"
 ECOSYSTEM="$REPO_ROOT/var/docker/ecosystem.config.cjs"
 NEXT_CONFIG="$REPO_ROOT/apps/frontend/next.config.js"
-PUBLIC_CONFIG="$K8S_DIR/public-build-config.env"
 BUILD_LOCAL="$K8S_DIR/build-local.sh"
+BUILD_POSTIZ="$K8S_DIR/build-postiz.sh"
 
 PASS=0
 FAIL=0
@@ -72,49 +72,44 @@ else
 fi
 
 # ------------------------------------------------------------
-# Public build configuration allow-list
+# No public build configuration; runtime context is the only channel
+#
+# `next build` must not inline environment values: that would bind the image
+# to one environment and bypass the deployment's ConfigMap/Secret. Every
+# public value is read at runtime by the server components and delivered to
+# client code through VariableContext.
 # ------------------------------------------------------------
-echo "public build config"
-if [ -f "$PUBLIC_CONFIG" ]; then ok "public build config allow-list exists"; else no "public build config allow-list exists ($PUBLIC_CONFIG)"; fi
+echo "runtime configuration"
 
-listed_keys=()
-if [ -f "$PUBLIC_CONFIG" ]; then
-  while IFS= read -r line; do
-    case "$line" in ''|'#'*) continue ;; esac
-    listed_keys+=("${line%%=*}")
-  done < "$PUBLIC_CONFIG"
-fi
+assert_not_contains "Dockerfile declares no NEXT_PUBLIC_* build args" "$DOCKERFILE" "ARG NEXT_PUBLIC_"
+assert_not_contains "Dockerfile sets no NEXT_PUBLIC_* env values" "$DOCKERFILE" "ENV NEXT_PUBLIC_"
+assert_not_contains "build-local.sh passes no NEXT_PUBLIC_* build args" "$BUILD_LOCAL" "--build-arg NEXT_PUBLIC_"
+assert_not_contains "build-postiz.sh passes no NEXT_PUBLIC_* build args" "$BUILD_POSTIZ" "--build-arg NEXT_PUBLIC_"
 
-if [ ${#listed_keys[@]} -gt 0 ]; then
-  ok "allow-list is not empty (${#listed_keys[@]} keys)"
-else
-  no "allow-list is not empty"
-fi
-
-for key in "${listed_keys[@]}"; do
-  assert_contains "Dockerfile declares ARG $key" "$DOCKERFILE" "ARG $key"
-  assert_contains "Dockerfile sets ENV $key before the build" "$DOCKERFILE" "ENV $key"
-done
-
-# Every NEXT_PUBLIC_* the source really reads must be in the allow-list, and
-# every entry must be read somewhere: no unlisted public value can slip into
-# the bundle, and no dead entry can pretend to be configuration.
-consumed="$(
-  grep -rhoE 'process\.env\.NEXT_PUBLIC_[A-Z0-9_]+' \
-    "$REPO_ROOT/apps/frontend/src" \
-    "$REPO_ROOT/apps/backend/src" \
-    "$REPO_ROOT/apps/orchestrator/src" \
-    "$REPO_ROOT/libraries" \
-    --include='*.ts' --include='*.tsx' --include='*.js' 2>/dev/null \
-    | sed 's/^process\.env\.//' | LC_ALL=C sort -u
+# Every 'use client' module must take its public environment values from
+# VariableContext, never from process.env: a client-side process.env lookup is
+# not replaced at runtime and silently evaluates to undefined.
+client_reads="$(
+  for file in $(grep -rl "'use client'" "$REPO_ROOT/apps/frontend/src" "$REPO_ROOT/libraries" --include='*.ts' --include='*.tsx' 2>/dev/null); do
+    grep -oE 'process\.env\.NEXT_PUBLIC_[A-Z0-9_]+' "$file" || true
+  done | sed 's/^process\.env\.//' | LC_ALL=C sort -u
 )"
-listed="$(printf '%s\n' "${listed_keys[@]}" | LC_ALL=C sort -u)"
-if [ "$consumed" = "$listed" ]; then
-  ok "allow-list matches the NEXT_PUBLIC_* values the source consumes"
-else
-  no "allow-list matches the NEXT_PUBLIC_* values the source consumes"
-  diff -u <(printf '%s\n' "$consumed") <(printf '%s\n' "$listed") | sed 's/^/       /'
-fi
+assert_eq "client modules do not read NEXT_PUBLIC_* from process.env" "$client_reads" ""
+
+# The server layouts must pass the public values into the context.
+for layout in "$REPO_ROOT/apps/frontend/src/app/(app)/layout.tsx" \
+              "$REPO_ROOT/apps/frontend/src/app/(provider)/layout.tsx" \
+              "$REPO_ROOT/apps/frontend/src/app/(extension)/layout.tsx"; do
+  assert_contains "runtime SSO origins are passed by $(basename "$(dirname "$layout")")" "$layout" "ssoParentOrigins={process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS"
+  assert_contains "runtime version is passed by $(basename "$(dirname "$layout")")" "$layout" "version={process.env.NEXT_PUBLIC_VERSION"
+  assert_contains "runtime app version is passed by $(basename "$(dirname "$layout")")" "$layout" "appVersion={process.env.NEXT_PUBLIC_APP_VERSION"
+done
+assert_not_contains "the SSO page does not read the SSO origins from process.env" \
+  "$REPO_ROOT/apps/frontend/src/app/(app)/sso/page.tsx" "process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS"
+assert_not_contains "the Facebook component does not read the pixel from process.env" \
+  "$REPO_ROOT/apps/frontend/src/components/layout/facebook.component.tsx" "process.env.NEXT_PUBLIC_FACEBOOK_PIXEL"
+assert_not_contains "the public API component does not read the version from process.env" \
+  "$REPO_ROOT/apps/frontend/src/components/public-api/public.component.tsx" "process.env.NEXT_PUBLIC_VERSION"
 
 # ------------------------------------------------------------
 # Next output: plain `next start`, no standalone

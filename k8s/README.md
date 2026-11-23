@@ -78,24 +78,30 @@ context-only file: like the build scripts, it is preserved, not regenerated.
 - the entrypoint still runs `pnpm run prisma-db-push` before the application
   command; see `var/docker/entrypoint.sh`.
 
-### Public build configuration
+### Runtime configuration, no public build args
 
-`public-build-config.env` is the allow-list of `NEXT_PUBLIC_*` values the source
-actually reads. `next build` inlines them into the browser bundle, so a runtime
-`envFrom` value cannot change what the browser received. `build-local.sh` and
-`build-postiz.sh` pass every entry to the build as a build argument and an
-exported value overrides the file for one build. No secret belongs in it.
+No `NEXT_PUBLIC_*` value is baked into the image. `next build` would inline it
+into the browser bundle, binding the image to one environment and bypassing the
+deployment's ConfigMap/Secret. Instead, the server components in
+`apps/frontend/src/app/*/layout.tsx` read `process.env` at request time and
+deliver the public values to client code through `VariableContext`
+(`NEXT_PUBLIC_BACKEND_URL`, upload directory, SSO parent origins, OAuth
+branding, tracking ids, Sentry DSN, version, …).
 
-`SSO_PARENT_ORIGINS` is not in this file: the server has no consumer for it, so
-it is not an enforced server-side restriction. The client-side check reads
-`NEXT_PUBLIC_SSO_PARENT_ORIGINS`.
+The ConfigMap/Secret is therefore the single source of truth: changing a value
+needs a pod restart, not a rebuild, and the same image can run in any
+environment. A new public value must be passed through the context; a direct
+`process.env.NEXT_PUBLIC_*` lookup in a `'use client'` module is a bug because
+it evaluates to `undefined` at runtime.
+
+`build-local.sh` and `build-postiz.sh` pass only `NODE_ENV` to the build.
 
 ### Provenance
 
 `build-local.sh` writes `BUILD_PROVENANCE.json` (gitignored) with the context
 commit, the input manifest digest, the lockfile, Dockerfile, PM2, nginx,
-entrypoint and Next-config digests, the effective public build values, the
-pinned toolchain versions, the base-image repo digest (when the local daemon
+entrypoint and Next-config digests, the pinned toolchain versions, the
+base-image repo digest (when the local daemon
 knows it), the target platform, the generated-asset state and the final local
 image ID. A local build has **no registry digest**: nothing is pushed, and the
 image ID is local to that Docker daemon.
