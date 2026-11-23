@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   Post,
@@ -108,7 +109,9 @@ export class AuthController {
         register: true,
       });
     } catch (e: any) {
-      response.status(400).send(e.message);
+      response
+        .status(e instanceof ForbiddenException ? e.getStatus() : 400)
+        .send(e.message);
     }
   }
 
@@ -142,7 +145,9 @@ export class AuthController {
         login: true,
       });
     } catch (e: any) {
-      response.status(400).send(e.message);
+      response
+        .status(e instanceof ForbiddenException ? e.getStatus() : 400)
+        .send(e.message);
     }
   }
 

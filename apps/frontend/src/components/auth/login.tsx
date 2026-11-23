@@ -3,6 +3,7 @@
 import { useForm, SubmitHandler, FormProvider } from 'react-hook-form';
 import { useLegacySession } from '@gitroom/frontend/components/layout/layout.context';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
+import { SELF_REGISTRATION_ENABLED } from '@gitroom/helpers/auth/self.registration';
 import Link from 'next/link';
 import { Button } from '@gitroom/react/form/button';
 import { Input } from '@gitroom/react/form/input';
@@ -208,12 +209,14 @@ export function Login() {
                     {t('sign_in_1', 'Sign in')}
                   </Button>
                 </div>
-                <p className="mt-4 text-sm">
-                  {t('don_t_have_an_account', "Don't Have An Account?")}&nbsp;
-                  <Link href="/auth" className="underline cursor-pointer">
-                    {t('sign_up', 'Sign Up')}
-                  </Link>
-                </p>
+                {SELF_REGISTRATION_ENABLED && (
+                  <p className="mt-4 text-sm">
+                    {t('don_t_have_an_account', "Don't Have An Account?")}&nbsp;
+                    <Link href="/auth" className="underline cursor-pointer">
+                      {t('sign_up', 'Sign Up')}
+                    </Link>
+                  </p>
+                )}
                 <p className="mt-4 text-sm">
                   <Link
                     href="/auth/forgot"

@@ -42,6 +42,29 @@ afterEach(() => {
 });
 
 describe('the OAuth login callback UI', () => {
+  it.each(['', 'provider=GENERIC'])(
+    'hides the registration form on direct visits (%s)',
+    (params) => {
+      query.value = params;
+      render(<Register />);
+      expect(screen.getByRole('alert').textContent).toContain(
+        'Registration is disabled'
+      );
+      expect(document.querySelector('form')).toBeNull();
+    }
+  );
+
+  it('explains when registration is disabled for a new OAuth user', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(null, { status: 403 }))
+    );
+    render(<Register />);
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'Registration is disabled'
+    );
+    expect(document.querySelector('form')).toBeNull();
+  });
   it('exchanges once in StrictMode with the proof from this tab', async () => {
     window.sessionStorage.setItem('oauth_state:GITHUB', 'signed-proof');
     const fetchMock = vi.fn(
@@ -97,7 +120,7 @@ describe('the OAuth login callback UI', () => {
     );
   });
 
-  it('keeps the invite for the registration form when the provider account is new', async () => {
+  it('keeps the invite and hides the form if an older backend returns a registration token', async () => {
     window.sessionStorage.setItem('oauth_state:GITHUB', 'signed-proof');
     window.sessionStorage.setItem('org-invite', 'signed-invite');
     const fetchMock = vi.fn(
@@ -106,7 +129,10 @@ describe('the OAuth login callback UI', () => {
     vi.stubGlobal('fetch', fetchMock);
     render(<Register />);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'Registration is disabled'
+    );
+    expect(document.querySelector('form')).toBeNull();
     expect(window.sessionStorage.getItem('org-invite')).toBe('signed-invite');
   });
 

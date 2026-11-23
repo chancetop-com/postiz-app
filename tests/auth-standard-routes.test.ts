@@ -174,7 +174,87 @@ describe('email and password login', () => {
   });
 });
 
-describe('register and activate', () => {
+describe('parent-managed registration', () => {
+  it.each(['LOCAL', 'GENERIC'])(
+    'refuses public %s registration, including the first account',
+    async (provider) => {
+      const { controller, userService, organizationService } = build();
+      const body = await localRegister({
+        email: 'new@example.test',
+        password: 'a password',
+        company: 'New Co',
+        provider,
+      });
+      const { response, headers, state } = recordedResponse();
+
+      expect(await controller.canRegister()).toEqual({ register: false });
+      await controller.register(
+        {
+          headers: { 'org-invite': inviteToken({ email: body.email }) },
+        } as never,
+        body,
+        response as never,
+        '203.0.113.7',
+        'test'
+      );
+
+      expect(state.status).toBe(403);
+      expect(state.sent).toContain('Register in the parent application');
+      expect(headers).toEqual({});
+      expect(userService.getUserByEmail).not.toHaveBeenCalled();
+      expect(organizationService.createOrgAndUser).not.toHaveBeenCalled();
+    }
+  );
+
+  it('refuses a new provider account at login and during the OAuth exchange', async () => {
+    const { controller, organizationService } = build({
+      providerManager: {
+        getProvider: () => ({
+          getToken: async () => 'token',
+          getUser: async () => ({ id: 'new-provider-user' }),
+        }),
+      },
+    });
+    const body = await localLogin({
+      email: 'new@example.test',
+      provider: 'GENERIC',
+      providerToken: 'token',
+    });
+    const { response, headers, state } = recordedResponse();
+    await controller.login(
+      { headers: {} } as never,
+      body,
+      response as never,
+      '203.0.113.7',
+      'test'
+    );
+    expect(state.status).toBe(403);
+    await expect(
+      controller.oauthExists(
+        {
+          headers: { 'content-type': 'application/json' },
+          get: () => undefined,
+        } as never,
+        'code',
+        'postiz://callback',
+        undefined,
+        'GENERIC',
+        response as never
+      )
+    ).rejects.toMatchObject({ status: 403 });
+    expect(headers).toEqual({});
+    expect(organizationService.createOrgAndUser).not.toHaveBeenCalled();
+  });
+});
+
+describe('when self-registration is enabled', () => {
+  beforeEach(() => {
+    vi.spyOn(AuthService.prototype, 'canRegister').mockResolvedValue(true);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('registers a local account and starts onboarding', async () => {
     const { controller, organizationService } = build();
     const body = await localRegister({
@@ -253,7 +333,9 @@ describe('register and activate', () => {
     expect(organizationService.addUserToOrg).not.toHaveBeenCalled();
     expect(headers.showorg).toBeUndefined();
   });
+});
 
+describe('account activation', () => {
   it('activates an account with auth and onboarding headers', async () => {
     const { controller } = build();
     const authService = (controller as any)._authService;

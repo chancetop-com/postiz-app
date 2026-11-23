@@ -1,10 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { Provider, User } from '@prisma/client';
 import { CreateOrgUserDto } from '@gitroom/nestjs-libraries/dtos/auth/create.org.user.dto';
 import { LoginUserDto } from '@gitroom/nestjs-libraries/dtos/auth/login.user.dto';
 import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/users.service';
 import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
 import { AuthService as AuthChecker } from '@gitroom/helpers/auth/auth.service';
+import { SELF_REGISTRATION_ENABLED } from '@gitroom/helpers/auth/self.registration';
 import { AuthProviderManager } from '@gitroom/backend/services/auth/providers/providers.manager';
 import { SsoService } from '@gitroom/backend/services/auth/sso.service';
 import dayjs from 'dayjs';
@@ -24,6 +29,9 @@ export class AuthService {
     private _attributionService: AttributionService
   ) {}
   async canRegister(provider: string) {
+    if (!SELF_REGISTRATION_ENABLED) {
+      return false;
+    }
     if (
       process.env.DISABLE_REGISTRATION !== 'true' ||
       provider === Provider.GENERIC
@@ -34,6 +42,14 @@ export class AuthService {
     return (await this._organizationService.getCount()) === 0;
   }
 
+  private async requireRegistrationEnabled(provider: string) {
+    if (!(await this.canRegister(provider))) {
+      throw new ForbiddenException(
+        'Registration is disabled. Register in the parent application.'
+      );
+    }
+  }
+
   async routeAuth(
     provider: Provider,
     body: CreateOrgUserDto | LoginUserDto,
@@ -41,6 +57,9 @@ export class AuthService {
     userAgent: string,
     addToOrg?: boolean | { orgId: string; role: 'USER' | 'ADMIN'; id: string }
   ) {
+    if (body instanceof CreateOrgUserDto) {
+      await this.requireRegistrationEnabled(provider);
+    }
     if (provider === Provider.LOCAL) {
       if (process.env.DISALLOW_PLUS && body.email.includes('+')) {
         throw new Error('Email with plus sign is not allowed');
@@ -52,10 +71,6 @@ export class AuthService {
       if (body instanceof CreateOrgUserDto) {
         if (user) {
           throw new Error('Email already exists');
-        }
-
-        if (!(await this.canRegister(provider))) {
-          throw new Error('Registration is disabled');
         }
 
         const create = await this._organizationService.createOrgAndUser(
@@ -239,9 +254,7 @@ export class AuthService {
       return user;
     }
 
-    if (!(await this.canRegister(provider))) {
-      throw new Error('Registration is disabled');
-    }
+    await this.requireRegistrationEnabled(provider);
 
     const create = await this._organizationService.createOrgAndUser(
       {
@@ -467,6 +480,7 @@ export class AuthService {
       return { jwt: await this.signJwt(checkExists), addedOrg };
     }
 
+    await this.requireRegistrationEnabled(provider);
     return { token };
   }
 

@@ -215,6 +215,12 @@ describe('a signed-in tab accepting an invitation', () => {
 });
 
 describe('password login with a pending invitation', () => {
+  it('shows login without a public registration link', () => {
+    renderLogin();
+    expect(document.querySelector('input[type="password"]')).toBeTruthy();
+    expect(document.querySelector('a[href="/auth"]')).toBeNull();
+  });
+
   const submitCredentials = () => {
     fireEvent.change(document.querySelector('input[type="email"]')!, {
       target: { value: 'merchant@example.test' },

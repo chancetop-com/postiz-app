@@ -2,6 +2,7 @@
 
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
+import { SELF_REGISTRATION_ENABLED } from '@gitroom/helpers/auth/self.registration';
 import Link from 'next/link';
 import { Button } from '@gitroom/react/form/button';
 import { Input } from '@gitroom/react/form/input';
@@ -44,6 +45,7 @@ type Inputs = {
   provider: string;
 };
 export function Register() {
+  const t = useT();
   const getQuery = useSearchParams();
   const fetch = useFetch();
   const [provider] = useState(getQuery?.get('provider')?.toUpperCase());
@@ -64,6 +66,10 @@ export function Register() {
           state,
         }),
       });
+      if (response.status === 403) {
+        setError(t('registration_is_disabled', 'Registration is disabled'));
+        return;
+      }
       if (!response.ok) {
         throw new Error('Sign-in failed');
       }
@@ -79,19 +85,25 @@ export function Register() {
     } catch {
       setError('Sign-in could not be completed. Please sign in again.');
     }
-  }, [provider, code, state, fetch]);
+  }, [provider, code, state, fetch, t]);
   useEffect(() => {
     if (provider && code && !error && !exchanging.current) {
       exchanging.current = true;
       void load();
     }
   }, [provider, code, error, load]);
-  if (error) {
+  const needsRegistration = !provider || !code || show;
+  const message =
+    error ||
+    (!SELF_REGISTRATION_ENABLED &&
+      needsRegistration &&
+      t('registration_is_disabled', 'Registration is disabled'));
+  if (message) {
     return (
       <div role="alert" className="text-center text-textColor">
-        <p>{error}</p>
+        <p>{message}</p>
         <Link href="/auth/login" className="underline">
-          Sign in again
+          {error ? 'Sign in again' : t('login_instead', 'Login instead')}
         </Link>
       </div>
     );
