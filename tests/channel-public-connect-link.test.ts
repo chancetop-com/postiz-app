@@ -5,7 +5,7 @@ import { HttpException } from '@nestjs/common';
  * Ticket 06: public connect links.
  *
  * The API and MCP issue a one-hour link for any platform the upstream
- * eligibility allows, including platforms outside the dashboard's six entries.
+ * eligibility allows, including platforms outside the dashboard list.
  * The signing organisation lives in the link, not in the browser that opens it.
  * Opening the page is read-only; only pressing continue creates OAuth state.
  */
@@ -34,17 +34,9 @@ import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/in
 import { IntegrationManager } from '@gitroom/nestjs-libraries/integrations/integration.manager';
 import { IntegrationConnectTool } from '@gitroom/nestjs-libraries/chat/tools/integration.connect.tool';
 import { NoAuthIntegrationsController } from '@gitroom/backend/api/routes/no.auth.integrations.controller';
+import { ALLOWED_ADD_CHANNEL_IDENTIFIERS } from '@gitroom/frontend/components/launches/allowed.channels';
 
-const SIX = [
-  'youtube',
-  'linkedin',
-  'tiktok',
-  'facebook',
-  'instagram',
-  'instagram-standalone',
-];
-
-const OUTSIDE_SIX = ['x', 'reddit', 'linkedin-page', 'threads', 'pinterest'];
+const OUTSIDE_DASHBOARD = ['x', 'reddit', 'linkedin-page', 'threads', 'pinterest'];
 
 const repository = () => ({
   createOrUpdateIntegration: vi.fn(),
@@ -116,12 +108,14 @@ afterEach(() => {
 describe('upstream eligibility', () => {
   it('can link every dashboard platform', () => {
     const linkable = new IntegrationManager().getLinkableSocialsIntegrations();
-    expect(linkable).toEqual(expect.arrayContaining(SIX));
+    expect(linkable).toEqual(
+      expect.arrayContaining([...ALLOWED_ADD_CHANNEL_IDENTIFIERS])
+    );
   });
 
-  it('can link eligible platforms outside the dashboard six', () => {
+  it('can link eligible platforms outside the dashboard list', () => {
     const linkable = new IntegrationManager().getLinkableSocialsIntegrations();
-    expect(linkable).toEqual(expect.arrayContaining(OUTSIDE_SIX));
+    expect(linkable).toEqual(expect.arrayContaining(OUTSIDE_DASHBOARD));
   });
 
   it('refuses platforms that need fields, an instance, web3 or an extension', () => {
@@ -153,7 +147,7 @@ describe('upstream eligibility', () => {
 });
 
 describe('link creation', () => {
-  it('issues a one-hour link for a platform outside the dashboard six', async () => {
+  it('issues a one-hour link for a platform outside the dashboard list', async () => {
     const result = await create(
       service(),
       'x',

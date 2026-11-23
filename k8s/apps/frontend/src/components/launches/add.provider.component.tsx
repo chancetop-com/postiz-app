@@ -788,7 +788,9 @@ export const AddProviderComponent: FC<{
                     'text-center'
                   )}
                 >
-                  {item.name}
+                  {item.identifier === 'tiktok-business'
+                    ? 'TikTok Business'
+                    : item.name}
                   {!!item.toolTip && !isMobile && (
                     <svg
                       width="15"

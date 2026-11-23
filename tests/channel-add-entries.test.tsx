@@ -1,17 +1,17 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 
 /**
  * Ticket 07: every add-channel entry comes from the same filtered social list,
  * so the desktop modal, the mobile drawer and onboarding all show exactly the
- * six agreed identifiers.
+ * agreed identifiers.
  *
  * The payload below mirrors what `GET /integrations` returns from the stable
  * release: the new providers are present with their own names — `tiktok-business`
  * is also called "TikTok", `linkedin-page` is also "LinkedIn" — so a
- * display-name filter would let them through.
+ * display-name filter cannot distinguish the variants.
  */
 
 vi.mock('next/navigation', () => ({
@@ -27,8 +27,9 @@ vi.mock('@gitroom/react/toaster/toaster', () => ({
 vi.mock('@gitroom/frontend/components/layout/new-modal', () => ({
   useModals: () => ({ openModal: vi.fn(), closeAll: vi.fn() }),
 }));
+const request = vi.fn(async () => new Response(null, { status: 402 }));
 vi.mock('@gitroom/helpers/utils/custom.fetch', () => ({
-  useFetch: () => vi.fn(async () => new Response('{}')),
+  useFetch: () => request,
 }));
 vi.mock('@gitroom/react/translation/get.transation.service.client', () => ({
   useT: () => (key: string, fallback?: string) => fallback || key,
@@ -78,10 +79,11 @@ const renderAdd = (props: Record<string, unknown> = {}) =>
 
 afterEach(() => {
   cleanup();
+  request.mockClear();
 });
 
 describe('the add-channel entries', () => {
-  it('offers exactly the six agreed identifiers, in server order', () => {
+  it('offers exactly the agreed identifiers, in server order', () => {
     const { container } = renderAdd();
 
     // entry order follows `GET /integrations`, only the set is the contract
@@ -92,20 +94,30 @@ describe('the add-channel entries', () => {
       '/icons/platforms/instagram-standalone.png',
       '/icons/platforms/youtube.svg',
       '/icons/platforms/tiktok.png',
+      '/icons/platforms/tiktok-business.png',
     ]);
   });
 
-  it('keeps the similarly named TikTok Business and LinkedIn Page out', () => {
+  it.each([
+    ['Tiktok', 'tiktok'],
+    ['TikTok Business', 'tiktok-business'],
+  ])('starts the matching connection for %s', (label, identifier) => {
+    const { getByText } = renderAdd();
+    fireEvent.click(getByText(label));
+    expect(request).toHaveBeenCalledOnce();
+    expect(request).toHaveBeenCalledWith(
+      expect.stringContaining(`/integrations/social/${identifier}?`)
+    );
+  });
+
+  it('keeps LinkedIn Page and Tumblr out', () => {
     const { container } = renderAdd();
     const sources = icons(container);
 
-    expect(sources).not.toContain('/icons/platforms/tiktok-business.png');
     expect(sources).not.toContain('/icons/platforms/linkedin-page.png');
     expect(sources).not.toContain('/icons/platforms/tumblr.png');
     expect(container.textContent).not.toContain('Tumblr');
     expect(container.textContent).not.toContain('LinkedIn Page');
-    // both "TikTok"-named providers exist; only the agreed identifier shows
-    expect(container.textContent?.match(/TikTok|Tiktok/g)).toHaveLength(1);
   });
 
   it('keeps the two Instagram entries distinguishable', () => {
@@ -120,7 +132,6 @@ describe('the add-channel entries', () => {
 
   it('does not render article providers as add entries', () => {
     const { container } = renderAdd();
-    expect(icons(container)).toHaveLength(6);
     expect(container.textContent).not.toContain('Medium');
   });
 

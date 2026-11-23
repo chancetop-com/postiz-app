@@ -11,7 +11,7 @@ import {
 } from '@gitroom/nestjs-libraries/integrations/integration.manager';
 
 /**
- * Ticket 07: the add-channel surface offers exactly the six agreed identifiers
+ * The add-channel surface offers exactly the agreed identifiers
  * and nothing else. The match is by identifier, never by display name or
  * platform family: `tiktok-business` is also called "TikTok" and
  * `linkedin-page` is also "LinkedIn".
@@ -24,6 +24,7 @@ const CONTRACT = [
   'youtube',
   'linkedin',
   'tiktok',
+  'tiktok-business',
   'facebook',
   'instagram',
   'instagram-standalone',
@@ -35,7 +36,7 @@ const read = (relative: string) =>
   readFileSync(path.resolve(SOURCE_ROOT, relative), 'utf8');
 
 describe('the add-channel identifier contract', () => {
-  it('is exactly the six agreed identifiers, in the agreed order', () => {
+  it('is exactly the agreed identifiers, in the agreed order', () => {
     expect([...ALLOWED_ADD_CHANNEL_IDENTIFIERS]).toEqual(CONTRACT);
   });
 
@@ -45,7 +46,7 @@ describe('the add-channel identifier contract', () => {
     }
     for (const identifier of [
       'linkedin-page',
-      'tiktok-business',
+      'tiktok-business-extra',
       'tumblr',
       'x',
       'devto',
@@ -67,7 +68,6 @@ describe('the hidden providers keep their registration', () => {
       expect.arrayContaining([
         ...CONTRACT,
         'linkedin-page',
-        'tiktok-business',
         'tumblr',
       ])
     );

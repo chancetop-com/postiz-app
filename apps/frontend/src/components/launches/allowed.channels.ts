@@ -12,6 +12,7 @@ export const ALLOWED_ADD_CHANNEL_IDENTIFIERS = [
   'youtube',
   'linkedin',
   'tiktok',
+  'tiktok-business',
   'facebook',
   'instagram',
   'instagram-standalone',
