@@ -11,7 +11,7 @@
 #   ./k8s/publish-and-deploy.sh <git_tag>          # explicit image tag
 #   ./k8s/publish-and-deploy.sh --local <image>    # push an image from build-local.sh
 #   ./k8s/publish-and-deploy.sh --skip-prepare     # reuse the current context
-#   ./k8s/publish-and-deploy.sh --namespace NAME   # deployment namespace (default dev-ai)
+#   ./k8s/publish-and-deploy.sh --namespace NAME   # deployment namespace (default dev)
 #   ./k8s/publish-and-deploy.sh --dry-run          # print the plan, run nothing
 #
 # --local implies --skip-prepare: that image was already built from the
@@ -31,7 +31,7 @@ DRY_RUN=0
 LOCAL_MODE=0
 LOCAL_IMAGE=""
 GIT_TAG=""
-NAMESPACE="${DEPLOY_NAMESPACE:-dev-ai}"
+NAMESPACE="${DEPLOY_NAMESPACE:-dev}"
 
 while [ $# -gt 0 ]; do
   case "$1" in

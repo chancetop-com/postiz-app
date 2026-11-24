@@ -10,7 +10,7 @@
 # ============================================================
 set -euo pipefail
 
-NAMESPACE="${DEPLOY_NAMESPACE:-dev-ai}"
+NAMESPACE="${DEPLOY_NAMESPACE:-dev}"
 DEPLOYMENT_NAME="${DEPLOY_DEPLOYMENT:-postiz}"
 IMAGE=""
 
