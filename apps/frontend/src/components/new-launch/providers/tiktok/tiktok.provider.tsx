@@ -165,17 +165,6 @@ const TikTokSettings: FC<{
         ))}
       </Select>
       {isUploadMode && <div className="-mt-[23px] mb-[23px] text-red-600">After posting you fill find a notification inside your Inbox about your post (not content studio)</div>}
-      {/* One AI checkbox for both photos and videos. It stays mounted so the
-          value survives a switch to video UPLOAD, where TikTok has no label. */}
-      <div className={clsx(isUploadMode && isVideo && 'invisible h-0 overflow-hidden')}>
-        <Checkbox
-          label={t('made_with_ai', 'Made with AI')}
-          variant="hollow"
-          {...register('is_ai_generated', {
-            value: false,
-          })}
-        />
-      </div>
       <div className={clsx('flex flex-col', directPostOnly)}>
         <Select
           label={
@@ -253,7 +242,7 @@ const TikTokSettings: FC<{
           />
         </div>
         <hr className="my-[15px] mb-[25px] border-tableBorder" />
-        <div className="flex flex-col gap-[20px]">
+        <div className="mb-[20px]">
           <Checkbox
             label={t('label_comments', 'Allow Comments')}
             variant="hollow"
@@ -262,6 +251,26 @@ const TikTokSettings: FC<{
               value: true,
             })}
           />
+        </div>
+      </div>
+      {/* One AI checkbox for both photos and videos. Kept outside directPostOnly
+          so photo UPLOADs still show it, and mounted so its value survives
+          switching to video UPLOAD where TikTok has no label. */}
+      <div
+        className={clsx(
+          isUploadMode && isVideo && 'invisible h-0 overflow-hidden'
+        )}
+      >
+        <Checkbox
+          label={t('made_with_ai', 'Made with AI')}
+          variant="hollow"
+          {...register('is_ai_generated', {
+            value: false,
+          })}
+        />
+      </div>
+      <div className={clsx('flex flex-col', directPostOnly)}>
+        <div className="flex flex-col gap-[20px] mt-[20px]">
           <Checkbox
             variant="hollow"
             label={t('label_disclose_video_content', 'Disclose Video Content')}

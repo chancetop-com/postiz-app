@@ -5,6 +5,7 @@ import {
   withProvider,
 } from '@gitroom/frontend/components/new-launch/providers/high.order.provider';
 import { FC } from 'react';
+import clsx from 'clsx';
 import { Select } from '@gitroom/react/form/select';
 import { Checkbox } from '@gitroom/react/form/checkbox';
 import { useSettings } from '@gitroom/frontend/components/launches/helpers/use.values';
@@ -47,8 +48,7 @@ const InstagramCollaborators: FC<{
   const isTrialReel = watch('is_trial_reel');
   // The Audio API is only available with Facebook Login, not Instagram Login
   const supportsAudio = integration?.identifier === 'instagram';
-  const storyHidden =
-    postCurrentType === 'story' ? ' invisible h-0 overflow-hidden' : '';
+  const isStory = postCurrentType === 'story';
   return (
     <>
       <Select
@@ -65,17 +65,12 @@ const InstagramCollaborators: FC<{
         ))}
       </Select>
 
-      <div className={`mt-[18px]${storyHidden}`}>
-        <Checkbox
-          {...register('is_ai_generated', {
-            value: false,
-          })}
-          label={t('made_with_ai', 'Made with AI')}
-        />
-      </div>
-
       {integration?.identifier === 'instagram' && (
-        <div className={`mt-[18px]${storyHidden}`}>
+        <div
+          className={clsx(
+            isStory ? 'invisible h-0 overflow-hidden' : 'mt-[18px]'
+          )}
+        >
           <LocationSelector
             label={t('tiktok_location_label', 'Location')}
             value={location}
@@ -84,13 +79,15 @@ const InstagramCollaborators: FC<{
         </div>
       )}
 
-      {postCurrentType !== 'story' && (
-        <InstagramCollaboratorsTags
-          label="Collaborators (max 3) - accounts can't be private"
-          {...register('collaborators', {
-            value: [],
-          })}
-        />
+      {!isStory && (
+        <div className="mt-[18px]">
+          <InstagramCollaboratorsTags
+            label="Collaborators (max 3) - accounts can't be private"
+            {...register('collaborators', {
+              value: [],
+            })}
+          />
+        </div>
       )}
 
       {postCurrentType === 'post' && (
@@ -105,6 +102,19 @@ const InstagramCollaborators: FC<{
           />
         </div>
       )}
+
+      <div
+        className={clsx(
+          isStory ? 'invisible h-0 overflow-hidden' : 'mt-[18px]'
+        )}
+      >
+        <Checkbox
+          {...register('is_ai_generated', {
+            value: false,
+          })}
+          label={t('made_with_ai', 'Made with AI')}
+        />
+      </div>
 
       {postCurrentType === 'post' && (
         <div className="mt-[18px] flex flex-col gap-[18px]">

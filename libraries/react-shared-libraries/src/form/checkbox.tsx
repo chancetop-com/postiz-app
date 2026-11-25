@@ -1,12 +1,13 @@
 'use client';
 
-import { FC, forwardRef, useCallback, useState } from 'react';
+import { forwardRef, KeyboardEvent, useCallback } from 'react';
 import clsx from 'clsx';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 export const Checkbox = forwardRef<
   null,
   {
     checked?: boolean;
+    disabled?: boolean;
     disableForm?: boolean;
     name?: string;
     className?: string;
@@ -20,62 +21,98 @@ export const Checkbox = forwardRef<
     variant?: 'default' | 'hollow';
   }
 >((props, ref: any) => {
-  const { checked, className, label, disableForm, variant } = props;
+  const { checked, className, label, disableForm, disabled, name, onChange } =
+    props;
   const form = useFormContext();
-  const register = disableForm ? {} : form.register(props.name!);
-  const watch = disableForm ? false : form.watch(props.name!);
-  const val = watch || checked;
+  const registered = disableForm ? {} : form.register(name!);
+  const watch = disableForm ? false : form.watch(name!);
+  const val = Boolean(watch || checked);
 
   const changeStatus = useCallback(() => {
-    props?.onChange?.({
+    if (disabled) {
+      return;
+    }
+    onChange?.({
       target: {
-        name: props.name!,
+        name: name!,
         value: !val,
       },
     });
     if (!disableForm) {
-      // @ts-ignore
-      register?.onChange?.({
+      form.register(name!).onChange({
         target: {
-          name: props.name!,
+          name: name!,
           value: !val,
         },
       });
     }
-  }, [val]);
+  }, [val, disabled, onChange, name, disableForm, form]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        changeStatus();
+      }
+    },
+    [changeStatus]
+  );
+
   return (
-    <div className="flex gap-[10px]">
+    <div
+      className={clsx(
+        'group flex w-fit items-center gap-[8px]',
+        disabled && 'opacity-50'
+      )}
+    >
       <div
         ref={ref}
-        {...disableForm ? {} : form.register(props.name!)}
+        {...registered}
+        role="checkbox"
+        aria-checked={val}
+        aria-disabled={disabled || undefined}
+        tabIndex={disabled ? -1 : 0}
         onClick={changeStatus}
+        onKeyDown={handleKeyDown}
         className={clsx(
-          'cursor-pointer rounded-[4px] select-none w-[24px] h-[24px] justify-center items-center flex text-white',
-          variant === 'default' || !variant
-            ? 'bg-forth'
-            : 'border-customColor1 border-2 bg-customColor2',
+          'select-none w-[18px] h-[18px] min-w-[18px] min-h-[18px] rounded-[5px] border-[1.5px] justify-center items-center flex transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-btnPrimary focus-visible:ring-offset-1 focus-visible:ring-offset-newBgColorInner',
+          disabled ? 'cursor-not-allowed' : 'cursor-pointer',
+          val
+            ? 'bg-btnPrimary border-btnPrimary text-white'
+            : clsx(
+                'bg-newBgColorInner border-newTextColor/25',
+                !disabled && 'group-hover:border-btnPrimary'
+              ),
           className
         )}
       >
         {val && (
-          <div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 14 14"
+            width="12"
+            height="12"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="2.5 7.2 5.5 10.2 11.5 3.8" />
+          </svg>
         )}
       </div>
-      {!!label && <div>{label}</div>}
+      {!!label && (
+        <div
+          onClick={changeStatus}
+          className={clsx(
+            'text-[14px] leading-[20px] select-none',
+            disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+          )}
+        >
+          {label}
+        </div>
+      )}
     </div>
   );
 });

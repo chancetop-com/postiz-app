@@ -130,4 +130,16 @@ describe('Instagram "Made with AI" setting', () => {
     expect(hiddenAiControl()).not.toBeNull();
     expect(settings.form().getValues('is_ai_generated')).toBe(true);
   });
+
+  it('places Made with AI in the lower checkbox section below Location', () => {
+    renderSettings({ post_type: 'post' }, 'instagram');
+
+    const locationLabel = screen.getByText('Location');
+    const aiLabel = screen.getByText(zh.made_with_ai);
+
+    expect(
+      locationLabel.compareDocumentPosition(aiLabel) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
 });

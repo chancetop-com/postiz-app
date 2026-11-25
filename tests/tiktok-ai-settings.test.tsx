@@ -136,6 +136,36 @@ describe('TikTok settings — Made with AI', () => {
 
     expect(aiControlHidden()).toBe(false);
   });
+
+  it('places Made with AI below the dropdowns in the lower checkbox section and toggles by label', () => {
+    const form = renderSettings({ media: VIDEO_MEDIA });
+
+    const musicLabel = screen.getByText('Auto add music');
+    const commentsLabel = screen.getByText('Allow Comments');
+    const discloseLabel = screen.getByText('Disclose Video Content');
+    const ai = aiLabel();
+
+    expect(
+      musicLabel.compareDocumentPosition(ai) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      commentsLabel.compareDocumentPosition(ai) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      ai.compareDocumentPosition(discloseLabel) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+
+    const box = ai.previousElementSibling as HTMLElement;
+    expect(box.getAttribute('aria-checked')).toBe('false');
+    expect(box.className).toContain('bg-newBgColorInner');
+    expect(box.className).not.toContain('bg-btnPrimary');
+
+    fireEvent.click(ai);
+    expect(form.getValues('is_ai_generated')).toBe(true);
+    expect(box.getAttribute('aria-checked')).toBe('true');
+    expect(box.className).toContain('bg-btnPrimary');
+    expect(box.className).toContain('text-white');
+  });
 });
 
 describe('TikTok settings — Business location', () => {
