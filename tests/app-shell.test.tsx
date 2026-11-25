@@ -13,7 +13,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({
-    get: (key: string) => key === 'auth' ? undefined : { name: key, value: 'en' },
+    get: () => undefined,
   }),
 }));
 

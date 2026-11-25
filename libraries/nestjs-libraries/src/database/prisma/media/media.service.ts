@@ -1,9 +1,15 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { MediaRepository } from '@gitroom/nestjs-libraries/database/prisma/media/media.repository';
 import { OpenaiService } from '@gitroom/nestjs-libraries/openai/openai.service';
 import { generationError } from '@gitroom/nestjs-libraries/openai/generation.error';
 import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service';
-import { Organization } from '@prisma/client';
+import { Organization, Prisma } from '@prisma/client';
 import { SaveMediaInformationDto } from '@gitroom/nestjs-libraries/dtos/media/save.media.information.dto';
 import { VideoManager } from '@gitroom/nestjs-libraries/videos/video.manager';
 import { VideoDto } from '@gitroom/nestjs-libraries/dtos/videos/video.dto';
@@ -14,15 +20,42 @@ import {
   SubscriptionException,
 } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
 import { TemporalService } from 'nestjs-temporal-core';
-import { TypedSearchAttributes } from '@temporalio/common';
+import {
+  TypedSearchAttributes,
+  WorkflowExecutionAlreadyStartedError,
+} from '@temporalio/common';
 import { organizationId } from '@gitroom/nestjs-libraries/temporal/temporal.search.attribute';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import { MediaProcessorJob } from '@gitroom/nestjs-libraries/upload/media.processor.interface';
 import { extname } from 'path';
+import axios from 'axios';
+import sharp from 'sharp';
+import { AzureBlobStorage } from '@gitroom/nestjs-libraries/upload/azure.storage';
+import {
+  abortMultipartUpload,
+  completeMultipartUpload,
+  createMultipartUpload,
+  listParts,
+  type MultipartCompletion,
+  type MultipartOperation,
+  prepareUploadParts,
+  signMultipartUploadId,
+  signPart,
+  verifyMultipartUploadId,
+} from '@gitroom/nestjs-libraries/upload/r2.uploader';
+import { multipartMediaId } from '@gitroom/helpers/utils/multipart.media.id';
+import {
+  type AzureUploadRequest,
+  isUploadPurpose,
+  isTiffPath,
+  MAX_UPLOAD_IMAGE_BYTES,
+} from '@gitroom/helpers/utils/media.upload';
 import { randomBytes } from 'crypto';
 import { ioRedis } from '@gitroom/nestjs-libraries/redis/redis.service';
+import { isSafePublicHttpsUrl } from '@gitroom/nestjs-libraries/dtos/webhooks/webhook.url.validator';
 import { ssrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 import {
+  UPLOAD_EXTENSIONS,
   getMaxSize,
   uploadStreamToStorage,
 } from '@gitroom/nestjs-libraries/upload/custom.upload.validation';
@@ -94,6 +127,109 @@ export class MediaService {
     private _temporalService: TemporalService
   ) {}
 
+  private azureUploadExtension(request: AzureUploadRequest) {
+    const extension = UPLOAD_EXTENSIONS.get(request?.contentType);
+    if (
+      !extension ||
+      !isUploadPurpose(request.purpose) ||
+      (request.purpose === 'thumbnail' &&
+        !request.contentType.startsWith('image/'))
+    ) {
+      throw new BadRequestException('Unsupported file type or upload purpose.');
+    }
+    if (
+      !Number.isSafeInteger(request.size) ||
+      request.size <= 0 ||
+      request.size > getMaxSize(request.contentType)
+    ) {
+      throw new BadRequestException('Invalid upload size.');
+    }
+    if (
+      typeof request.name !== 'string' ||
+      !request.name.trim() ||
+      request.name.length > 255
+    ) {
+      throw new BadRequestException('Invalid file name.');
+    }
+    return extension;
+  }
+
+  async createAzureUpload(merchantId: string, request: AzureUploadRequest) {
+    if (!(this.storage instanceof AzureBlobStorage))
+      throw new HttpException('Azure uploads are unavailable', 404);
+    return this.storage.createDirectUpload(
+      merchantId,
+      request,
+      this.azureUploadExtension(request)
+    );
+  }
+
+  async confirmAzureUpload(
+    merchantId: string,
+    uploadId: string,
+    request: AzureUploadRequest
+  ) {
+    if (!(this.storage instanceof AzureBlobStorage))
+      throw new HttpException('Azure uploads are unavailable', 404);
+    const upload = await this.storage.confirmDirectUpload(
+      merchantId,
+      uploadId,
+      request,
+      this.azureUploadExtension(request)
+    );
+    if (request.purpose === 'thumbnail') return { path: upload.path };
+    return this._mediaRepository.saveAzureMedia(merchantId, uploadId, upload);
+  }
+
+  async tiffPreview(org: string, id: string) {
+    const media = await this.getMediaStatus(org, id);
+    if (!isTiffPath(media.path))
+      throw new BadRequestException('Expected a TIFF image.');
+    const url = new URL(media.path);
+    const sources = [
+      this.storage.publicUrl?.(''),
+      process.env.CLOUDFLARE_BUCKET_URL,
+      process.env.FRONTEND_URL && process.env.FRONTEND_URL + '/uploads/',
+    ];
+    // Only fetch a saved object under a configured media root. Disable redirects
+    // so an upstream cannot redirect the preview service to another destination.
+    if (
+      url.username ||
+      url.password ||
+      !sources.some(
+        (base) => base && url.href.startsWith(base.replace(/\/+$/, '') + '/')
+      )
+    )
+      throw new BadRequestException('Unknown media source.');
+
+    const { data } = await axios.get<Buffer>(url.href, {
+      responseType: 'arraybuffer',
+      maxContentLength: MAX_UPLOAD_IMAGE_BYTES,
+      maxRedirects: 0,
+      timeout: 15_000,
+      signal: AbortSignal.timeout(15_000),
+    });
+    try {
+      // Keep Sharp's pixel limit when decoding compressed originals for display.
+      const image = sharp(data);
+      if ((await image.metadata()).format !== 'tiff')
+        throw new Error('Expected TIFF');
+      const preview = await image
+        .autoOrient()
+        .resize({
+          width: 1280,
+          height: 1280,
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .webp()
+        .toBuffer();
+      return { src: 'data:image/webp;base64,' + preview.toString('base64') };
+    } catch {
+      throw new BadRequestException('Could not render this TIFF preview.');
+    }
+  }
+
   async deleteMedia(org: string, id: string) {
     return this._mediaRepository.deleteMedia(org, id);
   }
@@ -129,20 +265,10 @@ export class MediaService {
   // Streams the remote body straight into storage: only the sniffing prefix
   // and a few upload parts are ever in memory, so a 1 GB video does not cost
   // 1 GB of heap
-  async uploadFromUrl(org: string, url: string, adjust?: boolean) {
-    let response: globalThis.Response;
-    try {
-      response = await fetch(url, {
-        // @ts-ignore — undici option, not in lib.dom fetch types
-        dispatcher: ssrfSafeDispatcher,
-      });
-    } catch (err) {
-      // Network-level failure (DNS, connection refused, SSRF block, etc.) —
-      // fetch rejects rather than returning a non-ok response. Keep the real
-      // reason reachable for callers that want to surface it
-      throw new BadRequestException('Failed to fetch URL', { cause: err });
-    }
+  async uploadFromUrl(org: string, url: string, adjust = false, name?: string) {
+    const response = await this.fetchImportSource(url);
     if (!response.ok || !response.body) {
+      await response.body?.cancel();
       throw new BadRequestException('Failed to fetch URL');
     }
 
@@ -158,11 +284,40 @@ export class MediaService {
     const uploaded = await uploadStreamToStorage(
       this.storage,
       response.body,
-      declaredSize
+      declaredSize,
+      org
     );
+    const fileName = name || uploaded.originalname;
     return adjust
-      ? this.saveUploadedFile(org, uploaded.originalname, uploaded.path)
-      : this.saveFile(org, uploaded.originalname, uploaded.path);
+      ? this.saveUploadedFile(org, fileName, uploaded.path)
+      : this.saveFile(org, fileName, uploaded.path);
+  }
+
+  private async fetchImportSource(url: string) {
+    try {
+      for (let redirects = 0; redirects <= 5; redirects++) {
+        if (!(await isSafePublicHttpsUrl(url))) break;
+        const response = await fetch(url, {
+          redirect: 'manual',
+          // @ts-ignore — undici option, not in lib.dom fetch types
+          dispatcher: ssrfSafeDispatcher,
+        });
+        if (![301, 302, 303, 307, 308].includes(response.status))
+          return response;
+        await response.body?.cancel();
+        const location = response.headers.get('location');
+        if (!location) break;
+        url = new URL(location, url).href;
+      }
+    } catch (cause) {
+      throw new BadRequestException('Failed to fetch URL', { cause });
+    }
+    throw new BadRequestException('Failed to fetch URL');
+  }
+
+  async storeMedia(merchantId: string, source: string) {
+    const path = await this.storage.uploadSimple(source, merchantId);
+    return this.saveFile(merchantId, path.split('/').pop()!, path);
   }
 
   saveFile(
@@ -179,28 +334,116 @@ export class MediaService {
     );
   }
 
+  async r2UploadOperation(
+    org: string,
+    endpoint: string,
+    request: MultipartOperation
+  ) {
+    const storageId = (identity?: { key?: string; uploadId?: string }) =>
+      verifyMultipartUploadId(org, identity?.key, identity?.uploadId);
+    switch (endpoint) {
+      case 'create-multipart-upload': {
+        const { key, uploadId } = await createMultipartUpload(
+          request.file?.name,
+          request.fileHash
+        );
+        return { key, uploadId: signMultipartUploadId(org, key, uploadId) };
+      }
+      case 'prepare-upload-parts': {
+        const parts = request.partData;
+        const id = storageId(parts);
+        return prepareUploadParts(parts.key, id, parts.parts);
+      }
+      case 'list-parts':
+        return listParts(request.key, storageId(request));
+      case 'abort-multipart-upload':
+        return abortMultipartUpload(request.key, storageId(request));
+      case 'sign-part':
+        return signPart(
+          request.key,
+          storageId(request),
+          Number(request.partNumber)
+        );
+      default:
+        throw new NotFoundException('Unknown multipart upload operation.');
+    }
+  }
+
+  async completeR2Upload(org: string, request: MultipartCompletion) {
+    const { key, uploadId } = request;
+    const storageId = verifyMultipartUploadId(org, key, uploadId);
+    const id = multipartMediaId(key, uploadId);
+    const previous = await this._mediaRepository.getMediaStatus(org, id);
+    if (previous) {
+      const saved = await this.dispatchMediaProcessing(org, previous);
+      return { Location: saved.path, saved };
+    }
+
+    const upload = await completeMultipartUpload(request, storageId);
+    try {
+      const saved = await this.saveUploadedFile(
+        org,
+        key,
+        upload.Location,
+        request.file?.name || undefined,
+        id
+      );
+      return { ...upload, Location: saved.path, saved };
+    } catch (error) {
+      // The inserting request may have stopped before it dispatched the job.
+      if (
+        !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+        error.code !== 'P2002'
+      ) {
+        throw error;
+      }
+      const registered = await this.getMediaStatus(org, id);
+      const saved = await this.dispatchMediaProcessing(org, registered);
+      return { Location: saved.path, saved };
+    }
+  }
+
   // Saves an upload and, when a normalizer is configured, hands it to the
   // processing workflow; the caller polls getMediaStatus until it is ready
   async saveUploadedFile(
     org: string,
     fileName: string,
     filePath: string,
-    originalName?: string
+    originalName?: string,
+    id?: string
   ) {
-    const media = await this.saveFile(org, fileName, filePath, originalName);
     const client = this._temporalService.client.getRawClient();
-    if (
-      !this.processor ||
-      !PROCESSABLE[extname(fileName).toLowerCase()] ||
-      !client
-    ) {
-      return media;
-    }
+    const shouldProcess =
+      this.processor && PROCESSABLE[extname(fileName).toLowerCase()] && client;
+    // Status readers can arrive before the completion response. Publish the
+    // initial processing state atomically with the record.
+    const media = await this._mediaRepository.saveFile(
+      org,
+      fileName,
+      filePath,
+      originalName,
+      { id, status: shouldProcess ? 'processing' : 'ready' }
+    );
+    if (!shouldProcess) return media;
+    return this.dispatchMediaProcessing(org, media, !!id);
+  }
 
-    await this._mediaRepository.startProcessing(org, media.id);
+  // R2 confirmation is replayable even after an API restart. All attempts
+  // join the same workflow, including when Temporal accepted a start but its
+  // response was lost. A completed workflow is never restarted.
+  private async dispatchMediaProcessing(
+    org: string,
+    media: Awaited<ReturnType<MediaRepository['saveFile']>>,
+    replayable = true
+  ) {
+    if (media.status !== 'processing') return media;
+    const client = this._temporalService.client.getRawClient();
     try {
+      if (!client) throw new Error('Temporal client unavailable');
       await client.workflow.start('processMediaWorkflow', {
         workflowId: `media_${media.id}`,
+        workflowIdConflictPolicy: 'USE_EXISTING',
+        workflowIdReusePolicy: 'REJECT_DUPLICATE',
         taskQueue: 'main',
         args: [{ mediaId: media.id }],
         typedSearchAttributes: new TypedSearchAttributes([
@@ -210,12 +453,19 @@ export class MediaService {
           },
         ]),
       });
-    } catch (err) {
-      // no workflow means nothing will ever flip the status
-      return this.releaseUnprocessed(org, media.id, media.name);
+    } catch (error) {
+      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) {
+        if (!replayable) {
+          return this.releaseUnprocessed(org, media.id, media.name);
+        }
+        throw new ServiceUnavailableException(
+          'Could not confirm media processing.',
+          { cause: error }
+        );
+      }
     }
-
-    return { ...media, status: 'processing' };
+    // The worker may already have written the terminal status and final path.
+    return this.getMediaStatus(org, media.id);
   }
 
   // Lets go of a media the normalizer will not touch. A source the platforms
@@ -558,11 +808,11 @@ export class MediaService {
         async () => {
           const loadedData = await video.instance.process(
             body.output,
-            body.customParams
+            body.customParams,
+            org.id
           );
 
-          const file = await this.storage.uploadSimple(loadedData);
-          return this.saveFile(org.id, file.split('/').pop(), file);
+          return this.storeMedia(org.id, loadedData);
         }
       );
     } catch (err) {

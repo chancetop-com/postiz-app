@@ -256,7 +256,8 @@ export class PostActivity {
               media: await this._postService.updateMedia(
                 p.id,
                 JSON.parse(p.image || '[]'),
-                getIntegration?.convertToJPEG || false
+                getIntegration?.prepareTikTokPhotos || false,
+                integration.organizationId
               ),
             }))
           ),
@@ -445,7 +446,8 @@ export class PostActivity {
         media: await this._postService.updateMedia(
           p.id,
           JSON.parse(p.image || '[]'),
-          getIntegration?.convertToJPEG || false
+          getIntegration?.prepareTikTokPhotos || false,
+          integration.organizationId
         ),
       }))
     );

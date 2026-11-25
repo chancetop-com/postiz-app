@@ -1,14 +1,65 @@
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
+import type { AzureUploadRequest } from '@gitroom/helpers/utils/media.upload';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { SaveMediaInformationDto } from '@gitroom/nestjs-libraries/dtos/media/save.media.information.dto';
+
+const uploadedMediaFields = {
+  id: true,
+  name: true,
+  originalName: true,
+  path: true,
+  thumbnail: true,
+  alt: true,
+  status: true,
+} as const;
 
 @Injectable()
 export class MediaRepository {
   constructor(private _media: PrismaRepository<'media'>) {}
 
-  saveFile(org: string, fileName: string, filePath: string, originalName?: string) {
+  async saveAzureMedia(
+    merchantId: string,
+    id: string,
+    upload: AzureUploadRequest & { filename: string; path: string }
+  ) {
+    // Concurrent confirmations share the grant's UUID as the Media primary key.
+    const [created] = await this._media.model.media.createManyAndReturn({
+      data: {
+        id,
+        organizationId: merchantId,
+        name: upload.filename,
+        originalName: upload.name,
+        path: upload.path,
+        fileSize: upload.size,
+        type: upload.contentType.startsWith('video/') ? 'video' : 'image',
+      },
+      skipDuplicates: true,
+      select: uploadedMediaFields,
+    });
+    if (created) return created;
+    const saved = await this._media.model.media.findFirst({
+      where: {
+        id,
+        organizationId: merchantId,
+        path: upload.path,
+        deletedAt: null,
+      },
+      select: uploadedMediaFields,
+    });
+    if (!saved) throw new ConflictException('Upload could not be registered.');
+    return saved;
+  }
+
+  saveFile(
+    org: string,
+    fileName: string,
+    filePath: string,
+    originalName?: string,
+    registration?: { id?: string; status: 'processing' | 'ready' }
+  ) {
     return this._media.model.media.create({
       data: {
+        ...registration,
         organization: {
           connect: {
             id: org,
@@ -18,23 +69,7 @@ export class MediaRepository {
         path: filePath,
         originalName: originalName || null,
       },
-      select: {
-        id: true,
-        name: true,
-        originalName: true,
-        path: true,
-        thumbnail: true,
-        alt: true,
-        status: true,
-      },
-    });
-  }
-
-  startProcessing(org: string, id: string) {
-    return this._media.model.media.update({
-      where: { id, organizationId: org },
-      data: { status: 'processing', processingError: null },
-      select: { id: true, status: true },
+      select: uploadedMediaFields,
     });
   }
 

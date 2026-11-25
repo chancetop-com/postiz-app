@@ -1,3 +1,4 @@
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -63,7 +64,7 @@ export class InstagramStandaloneProvider
         return 'Trial Reels can only have one video';
       }
       const hasVideo = firstPost?.some(
-        (f) => (f?.path?.indexOf?.('mp4') ?? -1) > -1
+        (f) => hasExtension(f?.path, 'mp4')
       );
       if (!hasVideo) {
         return 'Trial Reels must be a video';

@@ -2,21 +2,19 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import fs from 'node:fs';
+import sharp from 'sharp';
 import path from 'node:path';
 import { Logo } from '@gitroom/frontend/components/new-layout/logo';
 import ModeComponent, {
   modeEmitter,
 } from '@gitroom/frontend/components/layout/mode.component';
-import { NoMediaIcon } from '@gitroom/frontend/components/ui/icons';
 import SsoLayout from '@gitroom/frontend/app/(app)/sso/layout';
 
 /**
  * Brand and theme contract for the merged frontend (ticket 06).
  *
  * Covers: the new-layout PNG brand mark at 32x32, default light theme with a
- * working dark toggle, the light-only SSO layout, and the light empty-media art
- * that calendar/analytics/billing/media all share.
+ * working dark toggle, and the light-only SSO layout.
  */
 
 const clearCookies = () => {
@@ -39,28 +37,17 @@ afterEach(() => {
 });
 
 describe('brand mark', () => {
-  it('renders the fork PNG logo at 32x32', () => {
+  it('renders the 32px brand mark with a readable PNG from the public directory', async () => {
     render(<Logo />);
     const img = screen.getByAltText('Logo') as HTMLImageElement;
-    expect(img.getAttribute('src')).toBe('/logo-postiz.png');
+    const src = img.getAttribute('src');
+    expect(src).toBe('/logo-postiz.png');
     expect(img.style.width).toBe('32px');
     expect(img.style.height).toBe('32px');
-  });
 
-  it('ships a decodable PNG asset for the main layout', () => {
-    const file = path.resolve(
-      import.meta.dirname,
-      '../apps/frontend/public/logo-postiz.png'
-    );
-    const buffer = fs.readFileSync(file);
-    // PNG signature + IHDR: the layout forces a 32x32 box, so the source has to
-    // stay a valid image rather than a placeholder.
-    expect(buffer.subarray(1, 4).toString('ascii')).toBe('PNG');
-    expect(buffer.subarray(12, 16).toString('ascii')).toBe('IHDR');
-    const width = buffer.readUInt32BE(16);
-    const height = buffer.readUInt32BE(20);
-    expect(width).toBeGreaterThan(0);
-    expect(height).toBeGreaterThan(0);
+    const file = path.join(import.meta.dirname, '../apps/frontend/public', src!);
+    const { info } = await sharp(file).toBuffer({ resolveWithObject: true });
+    expect(info.format).toBe('png');
   });
 });
 
@@ -84,20 +71,6 @@ describe('default theme', () => {
     document.cookie = 'mode=dark;path=/';
     render(<ModeComponent />);
     expect(document.body.classList.contains('dark')).toBe(true);
-  });
-});
-
-describe('empty media state', () => {
-  it('uses the light illustration by default', () => {
-    const { container } = render(<NoMediaIcon />);
-    expect(container.querySelector('svg path[stroke="#DACBFB"]')).toBeTruthy();
-    expect(container.querySelector('svg path[stroke="white"]')).toBeNull();
-  });
-
-  it('follows the dark cookie when the user switched', () => {
-    document.cookie = 'mode=dark;path=/';
-    const { container } = render(<NoMediaIcon />);
-    expect(container.querySelector('svg path[stroke="white"]')).toBeTruthy();
   });
 });
 

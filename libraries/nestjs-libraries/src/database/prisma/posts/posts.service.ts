@@ -31,8 +31,7 @@ import {
   minifyPostsList,
   minifyPosts,
 } from '@gitroom/helpers/utils/posts.list.minify';
-import { getSsrfSafeAxios } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
-import sharp from 'sharp';
+import { prepareTikTokPhoto } from '@gitroom/nestjs-libraries/integrations/social/tiktok.photo';
 import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 import { Readable } from 'stream';
 import { resolve, sep } from 'path';
@@ -507,7 +506,12 @@ export class PostsService {
     );
   }
 
-  async updateMedia(id: string, imagesList: any[], convertToJPEG = false) {
+  async updateMedia(
+    id: string,
+    imagesList: any[],
+    prepareTikTokPhotos: boolean,
+    merchantId: string
+  ) {
     try {
       let imageUpdateNeeded = false;
       const getImageList = await Promise.all(
@@ -554,57 +558,22 @@ export class PostsService {
             };
           })
           .map(async (m) => {
-            if (!convertToJPEG) {
-              return m;
-            }
-
-            if (hasExtension(m.path, 'png')) {
-              imageUpdateNeeded = true;
-              // the media url is user-influenced, so it goes through the same
-              // SSRF-safe client as the providers' media reads
-              const response = await getSsrfSafeAxios().get(m.url, {
-                responseType: 'arraybuffer',
-              });
-
-              const imageBuffer = Buffer.from(response.data);
-
-              // Use sharp to get the metadata of the image
-              const buffer = await sharp(imageBuffer)
-                .jpeg({ quality: 100 })
-                .toBuffer();
-
-              const { path, originalname } = await this.storage.uploadFile({
-                buffer,
-                mimetype: 'image/jpeg',
-                size: buffer.length,
-                path: '',
-                fieldname: '',
-                destination: '',
-                stream: new Readable(),
-                filename: '',
-                originalname: '',
-                encoding: '',
-              });
-
-              return {
-                ...m,
-                name: originalname,
-                url:
-                  path.indexOf('http') === -1
-                    ? process.env.FRONTEND_URL +
-                      '/' +
-                      process.env.NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY +
-                      path
-                    : path,
-                type: 'image',
-                path:
-                  path.indexOf('http') === -1
-                    ? process.env.UPLOAD_DIRECTORY + path
-                    : path,
-              };
-            }
-
-            return m;
+            if (!prepareTikTokPhotos || hasExtension(m.path, 'mp4')) return m;
+            const jpeg = await prepareTikTokPhoto(m.url, true);
+            if (!jpeg) return m;
+            const copy = await this.storage.uploadStream(
+              Readable.from([jpeg]),
+              'image/jpeg',
+              'jpg',
+              merchantId
+            );
+            imageUpdateNeeded = true;
+            return {
+              ...m,
+              name: copy.originalname,
+              path: copy.path,
+              url: copy.path,
+            };
           })
       );
 
@@ -617,6 +586,7 @@ export class PostsService {
 
       return getImageList;
     } catch (err: any) {
+      if (prepareTikTokPhotos) throw err;
       return (imagesList || []).filter((m) =>
         this.isAllowedMediaPath(m?.path)
       );
@@ -728,7 +698,7 @@ export class PostsService {
   // the post as the editor loads it, its channel without the tokens
   private async groupForEditor(
     posts: PostWithConditionals[],
-    convertToJPEG = false
+    prepareTikTokPhotos = false
   ) {
     return {
       group: posts?.[0]?.group,
@@ -749,7 +719,8 @@ export class PostsService {
           image: await this.updateMedia(
             post.id,
             JSON.parse(post.image || '[]'),
-            convertToJPEG
+            prepareTikTokPhotos,
+            post.organizationId
           ),
         }))
       ),
@@ -777,13 +748,13 @@ export class PostsService {
     ];
   }
 
-  async getPost(orgId: string, id: string, convertToJPEG = false) {
+  async getPost(orgId: string, id: string, prepareTikTokPhotos = false) {
     const posts = await this.getPostsRecursively(id, true, orgId, true);
     if (!posts?.[0]) {
       throw new NotFoundException('Post not found');
     }
 
-    return this.groupForEditor(posts, convertToJPEG);
+    return this.groupForEditor(posts, prepareTikTokPhotos);
   }
 
   async getOldPosts(orgId: string, date: string) {

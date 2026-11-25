@@ -12,6 +12,11 @@ import { Dashboard, FileInput, ProgressBar } from '@uppy/react';
 // Uppy styles
 import { useVariables } from '@gitroom/react/helpers/variable.context';
 import Compressor from '@uppy/compressor';
+import {
+  MAX_UPLOAD_IMAGE_BYTES,
+  MAX_UPLOAD_VIDEO_BYTES,
+  UPLOAD_EXTENSIONS,
+} from '@gitroom/helpers/utils/media.upload';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useLaunchStore } from '@gitroom/frontend/components/new-launch/store';
@@ -66,7 +71,8 @@ export function useUppyUploader(props: {
       restrictions: {
         // maxNumberOfFiles: 5,
         // allowedFileTypes: allowedFileTypes.split(','),
-        maxFileSize: 1000000000, // Default 1GB, but we'll override with custom validation
+        maxFileSize:
+          storageProvider === 'azure' ? MAX_UPLOAD_VIDEO_BYTES : 1000000000,
       },
     });
 
@@ -81,6 +87,13 @@ export function useUppyUploader(props: {
 
         // Expand generic types to specific ones
         const expandedTypes = allowedTypes.flatMap((type) => {
+          if (storageProvider === 'azure') {
+            return [...UPLOAD_EXTENSIONS.keys()].filter((mime) =>
+              type.endsWith('/*')
+                ? mime.startsWith(type.slice(0, -1))
+                : mime === type
+            );
+          }
           if (type === 'image/*') {
             return [
               'image/png',
@@ -145,17 +158,25 @@ export function useUppyUploader(props: {
             const isImage = file.type?.startsWith('image/');
             const isVideo = file.type?.startsWith('video/');
 
-            const maxImageSize = 30 * 1024 * 1024; // 30MB
-            const maxVideoSize = 1000 * 1024 * 1024; // 1GB
+            // Compression may shrink a larger source before the server validates the uploaded bytes.
+            const maxImageSize =
+              storageProvider === 'azure' &&
+              (disableImageCompression || file.type === 'image/gif')
+                ? MAX_UPLOAD_IMAGE_BYTES
+                : 30 * 1024 ** 2;
+            const maxVideoSize =
+              storageProvider === 'azure'
+                ? MAX_UPLOAD_VIDEO_BYTES
+                : 1000 * 1024 ** 2;
 
             if (isImage && file.size > maxImageSize) {
               const error = new Error(
-                `Image file "${file.name}" is too large. Maximum size allowed is 30MB.`
+                `Image file "${file.name}" is too large. Maximum size allowed is ${maxImageSize / 1024 ** 2} MiB.`
               );
               uppy2.log(error.message, 'error');
               uppy2.info(error.message, 'error', 5000);
               toast.show(
-                `Image file is too large. Maximum size allowed is 30MB.`
+                `Image file is too large. Maximum size allowed is ${maxImageSize / 1024 ** 2} MiB.`
               );
               uppy2.removeFile(file.id); // Remove file from queue
               return reject(error);
@@ -182,7 +203,7 @@ export function useUppyUploader(props: {
 
     // The normalizer takes precedence over Transloadit, so both can stay
     // configured and turning the normalizer off falls back to Transloadit
-    const useTransloadit = !mediaProcessing && transloadit.length > 0;
+    const useTransloadit = storageProvider !== 'azure' && !mediaProcessing && transloadit.length > 0;
     const { plugin, options } = getUppyUploadPlugin(
       useTransloadit ? 'transloadit' : storageProvider,
       fetch,

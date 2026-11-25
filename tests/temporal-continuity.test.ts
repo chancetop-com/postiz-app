@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { Integration, Post } from '@prisma/client';
 import * as workflows from '@gitroom/orchestrator/workflows';
 import { PostActivity } from '@gitroom/orchestrator/activities/post.activity';
 import { EmailActivity } from '@gitroom/orchestrator/activities/email.activity';
@@ -87,31 +88,71 @@ describe('activity contract', () => {
   ] as const;
 
   for (const [activity, names] of registrations) {
-    it.each([...names])(`${activity.name} registers %s with the worker`, (name) => {
-      const methods = Reflect.getMetadata('TEMPORAL_ACTIVITY_METHOD', activity.prototype);
-      expect(methods?.[name]?.name).toBe(name);
-    });
+    it.each([...names])(
+      `${activity.name} registers %s with the worker`,
+      (name) => {
+        const methods = Reflect.getMetadata(
+          'TEMPORAL_ACTIVITY_METHOD',
+          activity.prototype
+        );
+        expect(methods?.[name]?.name).toBe(name);
+      }
+    );
   }
 
   it('keeps postSocial blocking while postSocialPending is the opt-in pending path', async () => {
-    const activity = Object.create(PostActivity.prototype);
-    const seen: boolean[] = [];
-    const spy = vi
-      .spyOn(PostActivity.prototype, 'postSocialInternal')
-      .mockImplementation(async (...args: unknown[]) => {
-        seen.push(args[2] as boolean);
-        return [];
-      });
+    const provider = {
+      editor: 'normal',
+      post: async () => [
+        {
+          id: 'post-1',
+          status: 'completed',
+          postId: 'published',
+          releaseURL: 'https://example.org/published',
+        },
+      ],
+      postPending: async () => [
+        {
+          id: 'post-1',
+          status: 'pending',
+          postId: '',
+          releaseURL: '',
+          pendingData: { job: 'job-1' },
+        },
+      ],
+    };
+    const posts = [
+      { id: 'post-1', content: 'Hello', settings: '{}', image: '[]' },
+    ] as Post[];
+    const integration = {
+      providerIdentifier: 'example',
+      organizationId: 'org-1',
+      internalId: 'channel',
+      token: 'token',
+    } as Integration;
+    const activity = new PostActivity(
+      {
+        updateTags: async (_org: string, items: Post[]) => items,
+        updateMedia: async () => [],
+      } as never,
+      undefined!,
+      { getSocialIntegration: () => provider } as never,
+      { decryptTokens: async (value: Integration) => value } as never,
+      undefined!,
+      undefined!,
+      {
+        client: { getRawClient: () => ({ workflow: { start: vi.fn() } }) },
+      } as never,
+      { getSubscription: async () => ({}) } as never
+    );
 
-    try {
-      await activity.postSocial({ id: 'integration' }, [{ id: 'post' }]);
-      await activity.postSocialPending({ id: 'integration' }, [{ id: 'post' }]);
-    } finally {
-      spy.mockRestore();
-    }
-
-    // V101/V102 call postSocial and expect a blocking PostResponse[]; the
-    // pending/finalize contract must stay behind a different activity name.
-    expect(seen).toEqual([false, true]);
+    await expect(
+      activity.postSocial(integration, posts)
+    ).resolves.toMatchObject([{ status: 'completed', postId: 'published' }]);
+    await expect(
+      activity.postSocialPending(integration, posts)
+    ).resolves.toMatchObject([
+      { status: 'pending', pendingData: { job: 'job-1' } },
+    ]);
   });
 });

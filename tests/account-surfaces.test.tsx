@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, renderHook, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 /**
  * Ticket 09 adds the billing feedback a plain member and an admin receive for
@@ -115,7 +115,7 @@ vi.mock('@gitroom/frontend/components/settings/delete-account.component', () => 
 }));
 
 import { GlobalSettings } from '@gitroom/frontend/components/settings/global.settings';
-import { useFaqList } from '@gitroom/frontend/components/billing/faq.component';
+import { FAQComponent } from '@gitroom/frontend/components/billing/faq.component';
 import { Impersonate } from '@gitroom/frontend/components/layout/impersonate';
 import LayoutContext from '@gitroom/frontend/components/layout/layout.context';
 import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
@@ -143,18 +143,12 @@ describe('settings page', () => {
 describe('billing FAQ', () => {
   it('no longer exposes an account deletion entry', () => {
     currentUser = { tier: { current: 'FREE' }, allowTrial: true };
-    const { result } = renderHook(() => useFaqList());
+    const { container } = render(<FAQComponent />);
 
-    const serialized = JSON.stringify(
-      result.current.map((item: any) => ({
-        title: item.title,
-        description: item.description,
-        hasContent: !!item.content,
-      }))
-    );
-
-    expect(serialized).not.toMatch(/delete.*account/i);
-    expect(result.current.some((item: any) => !!item.content)).toBe(false);
+    for (const title of screen.getAllByText(/\?$/)) {
+      fireEvent.click(title);
+    }
+    expect(container.textContent).not.toMatch(/delete (?:my |your )?account/i);
   });
 });
 

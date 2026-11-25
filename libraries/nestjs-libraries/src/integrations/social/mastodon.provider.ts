@@ -28,6 +28,7 @@ type MastodonPendingData = {
   url: string;
   message: string;
   mediaIds: string[];
+  inReplyToId?: string;
   idempotencyKey: string;
 };
 
@@ -171,14 +172,15 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
     instanceUrl: string,
     fileUrl: string,
     accessToken: string,
-    alt?: string
-  ) {
+    alt?: string,
+    version: 'v1' | 'v2' = 'v1'
+  ): Promise<string> {
     // The file is streamed straight from storage into the Mastodon upload
     // request instead of being buffered in memory. Both requests keep the
     // SSRF-safe dispatcher because the URLs are not fully under our control,
     // and the whole request is rebuilt per attempt by runStreamedUpload since
     // a consumed stream can't be replayed.
-    const media = await this.runStreamedUpload<{ id: string }>(async () => {
+    return this.runStreamedUpload(async () => {
       const fileResponse = await fetch(fileUrl, {
         // identity encoding so content-length matches the streamed bytes
         headers: { 'accept-encoding': 'identity' },
@@ -201,7 +203,7 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
         form.append('description', alt);
       }
 
-      const mediaResponse = await fetch(`${instanceUrl}/api/v1/media`, {
+      const mediaResponse = await fetch(`${instanceUrl}/api/${version}/media`, {
         method: 'POST',
         headers: {
           ...form.getHeaders(),
@@ -221,6 +223,10 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
         dispatcher: getSsrfSafeDispatcher(),
       } as any);
 
+      if (version === 'v2' && mediaResponse.status === 404) {
+        await mediaResponse.text();
+        return this.uploadFile(instanceUrl, fileUrl, accessToken, alt, 'v1');
+      }
       if (
         mediaResponse.status !== 200 &&
         mediaResponse.status !== 201 &&
@@ -234,10 +240,17 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
         };
       }
 
-      return (await mediaResponse.json()) as { id: string };
+      const media = (await mediaResponse.json()) as { id: string };
+      if (!media?.id) {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'Mastodon did not return a media ID for the uploaded attachment'
+        );
+      }
+      return media.id;
     }, this.identifier);
-
-    return media.id;
   }
 
   protected async dynamicPostPending(
@@ -254,7 +267,7 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
     // created by finalizePost, so nothing here is irreversible.
     const uploadFiles = await Promise.all(
       firstPost?.media?.map((media) =>
-        this.uploadFile(url, media.path, accessToken, media.alt)
+        this.uploadFile(url, media.path, accessToken, media.alt, 'v2')
       ) || []
     );
 
@@ -267,7 +280,7 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
         pendingData: {
           url,
           message: firstPost.message,
-          mediaIds: uploadFiles.filter(Boolean),
+          mediaIds: uploadFiles,
           // Statuses POSTs are deduplicated by Mastodon via Idempotency-Key.
           // Generated once per publish run: it rides pendingData through the
           // workflow history, so finalize retries within this run dedupe -
@@ -336,11 +349,14 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
       }
 
       if (response.status === 422) {
+        const details = await response.json().catch(() => ({}));
         throw new BadBody(
           this.identifier,
-          await response.text().catch(() => '{}'),
+          JSON.stringify(details),
           '{}',
-          'The uploaded media expired before the post was published, please post again'
+          typeof details?.error === 'string'
+            ? details.error
+            : 'Mastodon could not process the uploaded media'
         );
       }
 
@@ -363,6 +379,9 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
     const form = new FormData();
     form.append('status', pendingData.message);
     form.append('visibility', 'public');
+    if (pendingData.inReplyToId) {
+      form.append('in_reply_to_id', pendingData.inReplyToId);
+    }
     for (const file of pendingData.mediaIds || []) {
       form.append('media_ids[]', file);
     }
@@ -399,7 +418,8 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
     id: string,
     accessToken: string,
     url: string,
-    postDetails: PostDetails[]
+    postDetails: PostDetails[],
+    inReplyToId?: string
   ): Promise<PostResponse[]> {
     const [response] = await this.dynamicPostPending(
       id,
@@ -408,7 +428,7 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
       postDetails
     );
 
-    let pendingData = response.pendingData;
+    let pendingData = { ...response.pendingData, inReplyToId };
     const started = Date.now();
 
     // eslint-disable-next-line no-constant-condition
@@ -479,43 +499,13 @@ export class MastodonProvider extends SocialAbstract implements SocialProvider {
     url: string,
     postDetails: PostDetails[]
   ): Promise<PostResponse[]> {
-    const [commentPost] = postDetails;
-    const replyToId = lastCommentId || postId;
-
-    const uploadFiles = await Promise.all(
-      commentPost?.media?.map((media) =>
-        this.uploadFile(url, media.path, accessToken, media.alt)
-      ) || []
+    return this.dynamicPost(
+      id,
+      accessToken,
+      url,
+      postDetails,
+      lastCommentId || postId
     );
-
-    const form = new FormData();
-    form.append('status', commentPost.message);
-    form.append('visibility', 'public');
-    form.append('in_reply_to_id', replyToId);
-    if (uploadFiles.length) {
-      for (const file of uploadFiles) {
-        form.append('media_ids[]', file);
-      }
-    }
-
-    const post = await (
-      await this.fetch(`${url}/api/v1/statuses`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: form,
-      })
-    ).json();
-
-    return [
-      {
-        id: commentPost.id,
-        postId: post.id,
-        releaseURL: `${url}/statuses/${post.id}`,
-        status: 'completed',
-      },
-    ];
   }
 
   async post(

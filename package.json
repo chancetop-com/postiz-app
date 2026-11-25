@@ -55,6 +55,7 @@
     "@aws-sdk/client-sesv2": "^3.1003.0",
     "@aws-sdk/lib-storage": "^3.1003.0",
     "@aws-sdk/s3-request-presigner": "^3.787.0",
+    "@azure/storage-blob": "^12.34.0",
     "@casl/ability": "^6.5.0",
     "@copilotkit/react-core": "1.72.0",
     "@copilotkit/react-textarea": "1.72.0",

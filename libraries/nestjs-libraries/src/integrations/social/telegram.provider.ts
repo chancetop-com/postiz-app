@@ -1,3 +1,4 @@
+import { getMediaFilename } from '@gitroom/helpers/utils/media.upload';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -154,7 +155,8 @@ export class TelegramProvider extends SocialAbstract implements SocialProvider {
       }
       //get mime type to pass contentType to telegram api.
       //some photos and videos might not pass telegram api restrictions, so they are sent as documents instead of returning errors
-      const mimeType = mime.getType(mediaUrl); // Detect MIME type
+      const filename = getMediaFilename(mediaUrl);
+      const mimeType = mime.getType(filename);
       let mediaType: 'photo' | 'video' | 'document';
 
       if (mimeType?.startsWith('image/')) {
@@ -169,7 +171,7 @@ export class TelegramProvider extends SocialAbstract implements SocialProvider {
         type: mediaType,
         media: mediaUrl,
         fileOptions: {
-          filename: media.path.split('/').pop(),
+          filename,
           contentType: mimeType || 'application/octet-stream',
         },
       };

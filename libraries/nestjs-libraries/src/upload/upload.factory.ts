@@ -1,3 +1,4 @@
+import { AzureBlobStorage } from './azure.storage';
 import { CloudflareStorage } from './cloudflare.storage';
 import { IUploadProvider } from './upload.interface';
 import { LocalStorage } from './local.storage';
@@ -17,6 +18,8 @@ export class UploadFactory {
     switch (storageProvider) {
       case 'local':
         return new LocalStorage(process.env.UPLOAD_DIRECTORY!);
+      case 'azure':
+        return new AzureBlobStorage();
       case 'cloudflare':
         return new CloudflareStorage(
           process.env.CLOUDFLARE_ACCOUNT_ID!,

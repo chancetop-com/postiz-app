@@ -1,5 +1,6 @@
 'use client';
 
+import type { StorageProvider } from '@gitroom/helpers/utils/media.upload';
 import { createContext, FC, ReactNode, useContext, useEffect } from 'react';
 interface VariableContextInterface {
   stripeClient: string;
@@ -14,7 +15,7 @@ interface VariableContextInterface {
   mainUrl: string;
   frontEndUrl: string;
   plontoKey: string;
-  storageProvider: 'local' | 'cloudflare';
+  storageProvider: StorageProvider;
   backendUrl: string;
   environment: string;
   discordUrl: string;

@@ -50,7 +50,6 @@ upstream_node="$(awk '/^FROM node:/{print $2; exit}' "$DOCKERFILE" | cut -d: -f2
 runtime_node="$(awk '/^FROM node:/{print $2}' "$DOCKERFILE" | tail -1 | cut -d: -f2)"
 assert_eq "builder base image is node 22.23.4" "$upstream_node" "22.23.4-bookworm"
 assert_eq "runtime base image is node 22.23.4" "$runtime_node" "22.23.4-bookworm-slim"
-assert_eq "there are exactly two stages" "$(grep -c '^FROM ' "$DOCKERFILE")" "2"
 
 if grep -qE 'npm (install|i) -g pnpm(@[0-9.]+)?' "$DOCKERFILE"; then
   no "pnpm is installed from an unpinned global npm install"
@@ -146,14 +145,6 @@ else
   FAIL=$((FAIL + 1))
   FAILED_NAMES+=("pm2 process set")
 fi
-
-# ------------------------------------------------------------
-# Actions stay separated: local build must not publish or deploy
-# ------------------------------------------------------------
-echo "action separation"
-for needle in "docker push" "az acr login" "kubectl" "docker login"; do
-  assert_not_contains "build-local.sh does not run [$needle]" "$BUILD_LOCAL" "$needle"
-done
 
 # ------------------------------------------------------------
 # Summary

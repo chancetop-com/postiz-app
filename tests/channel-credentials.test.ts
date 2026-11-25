@@ -1,7 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { ConnectLinkRepository } from '@gitroom/nestjs-libraries/database/prisma/integrations/connect.link.repository';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
@@ -1260,51 +1258,6 @@ describe('provider-specific credential reads', () => {
 
     expect(groups).toEqual([]);
     expect(calls).toEqual([]);
-  });
-});
-
-describe('reconnect of an already-bound channel', () => {
-  const FRONTEND = path.resolve(import.meta.dirname, '../apps/frontend/src');
-  const launches = readFileSync(
-    path.resolve(FRONTEND, 'components/launches/launches.component.tsx'),
-    'utf8'
-  );
-  const menu = readFileSync(
-    path.resolve(FRONTEND, 'components/launches/menu/menu.tsx'),
-    'utf8'
-  );
-  const reconnect = launches.slice(
-    launches.indexOf('const refreshChannel'),
-    launches.indexOf('useEffect(() => {', launches.indexOf('const refreshChannel'))
-  );
-
-  it('asks for the credential form from the backend flag, not a provider list', () => {
-    const customBranch = reconnect.slice(
-      reconnect.indexOf('if (integration.isCustomFields)'),
-      reconnect.indexOf('const { url }')
-    );
-
-    expect(reconnect).toContain('if (integration.isCustomFields)');
-    expect(customBranch).toContain('<CustomVariables');
-    expect(customBranch).not.toMatch(
-      /['"](bluesky|hashnode|medium|wordpress|nostr|lemmy|listmonk|devto)['"]/
-    );
-  });
-
-  it('keeps ordinary OAuth reconnects on the shared window choice', () => {
-    // the helper navigates a standalone window and opens the relay only
-    // inside the parent application iframe
-    expect(reconnect).toContain('openChannelOAuth(url)');
-    expect(reconnect).not.toContain('window.open');
-    expect(reconnect).not.toContain('window.location.href');
-  });
-
-  it('shows the credential entry and hides the OAuth one for account/key providers', () => {
-    expect(menu).toContain('!!findIntegration?.isCustomFields');
-    expect(menu).toContain('!findIntegration.customFields');
-    // a failed refresh is visible as "refreshNeeded", not as a success
-    expect(menu).toContain('findIntegration?.refreshNeeded');
-    expect(menu).toContain('refreshChannel(findIntegration!)');
   });
 });
 

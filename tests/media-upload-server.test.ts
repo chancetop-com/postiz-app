@@ -3,7 +3,6 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, readdirSync } from 'node
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { Readable } from 'node:stream';
-import { BadRequestException } from '@nestjs/common';
 
 /**
  * Ticket 10: new uploads write to the same local layout as the old files.
@@ -16,10 +15,7 @@ import { BadRequestException } from '@nestjs/common';
  */
 
 import { LocalStorage } from '@gitroom/nestjs-libraries/upload/local.storage';
-import {
-  getMaxSize,
-  uploadStreamToStorage,
-} from '@gitroom/nestjs-libraries/upload/custom.upload.validation';
+import { uploadStreamToStorage } from '@gitroom/nestjs-libraries/upload/custom.upload.validation';
 import { MulterStreamEngine } from '@gitroom/nestjs-libraries/upload/multer.stream.engine';
 import { MediaService } from '@gitroom/nestjs-libraries/database/prisma/media/media.service';
 import { MediaRepository } from '@gitroom/nestjs-libraries/database/prisma/media/media.repository';
@@ -28,14 +24,6 @@ const ONE_PIXEL_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
   'base64'
 );
-const MP4 = Buffer.concat([
-  Buffer.from([0x00, 0x00, 0x00, 0x18]),
-  Buffer.from('ftypisom'),
-  Buffer.from([0x00, 0x00, 0x02, 0x00]),
-  Buffer.from('isomiso2avc1mp41'),
-  Buffer.from('legacy-video-body'),
-]);
-
 let root: string;
 const originalEnv = { ...process.env };
 
@@ -61,7 +49,7 @@ afterEach(() => {
 describe('local upload writes', () => {
   it('stores a new image under the existing /uploads/YYYY/MM/DD layout', async () => {
     const storage = new LocalStorage(root);
-    const uploaded = await uploadStreamToStorage(storage, bytes(ONE_PIXEL_PNG));
+    const uploaded = await uploadStreamToStorage(storage, bytes(ONE_PIXEL_PNG), 0, 'org-a');
 
     const now = new Date();
     const dir = `/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(
@@ -81,14 +69,23 @@ describe('local upload writes', () => {
     expect(readFileSync(onDisk)).toEqual(ONE_PIXEL_PNG);
   });
 
-  it('accepts a video at the unchanged 1 GB limit', async () => {
-    expect(getMaxSize('video/mp4')).toBe(1024 * 1024 * 1024);
-    expect(getMaxSize('image/png')).toBe(10 * 1024 * 1024);
+  it('stores an MP4 with its original bytes', async () => {
+    const video = readFileSync(
+      new URL('./fixtures/one-frame.mp4', import.meta.url)
+    );
+    const uploaded = await uploadStreamToStorage(
+      new LocalStorage(root),
+      bytes(video),
+      0,
+      'org-a'
+    );
 
-    const storage = new LocalStorage(root);
-    const uploaded = await uploadStreamToStorage(storage, bytes(MP4));
-    expect(uploaded.ext).toBe('mp4');
-    expect(uploaded.path).toMatch(/^http:\/\/localhost:4200\/uploads\/.*\.mp4$/);
+    expect(uploaded.mimetype).toBe('video/mp4');
+    const pathname = new URL(uploaded.path).pathname;
+    expect(pathname).toMatch(/^\/uploads\/.+\.mp4$/);
+    expect(
+      readFileSync(path.join(root, pathname.slice('/uploads/'.length)))
+    ).toEqual(video);
   });
 
   it('rejects an image over the 10 MB limit and leaves no file behind', async () => {
@@ -99,10 +96,7 @@ describe('local upload writes', () => {
     ]);
 
     await expect(
-      uploadStreamToStorage(storage, bytes(oversized))
-    ).rejects.toThrow(BadRequestException);
-    await expect(
-      uploadStreamToStorage(storage, bytes(oversized))
+      uploadStreamToStorage(storage, bytes(oversized), 0, 'org-a')
     ).rejects.toThrow('File is too large.');
 
     expect(filesUnder(root)).toEqual([]);
@@ -112,7 +106,7 @@ describe('local upload writes', () => {
     const storage = new LocalStorage(root);
     const html = Buffer.from('<html><script>alert(1)</script></html>');
 
-    await expect(uploadStreamToStorage(storage, bytes(html))).rejects.toThrow(
+    await expect(uploadStreamToStorage(storage, bytes(html), 0, 'org-a')).rejects.toThrow(
       'Unsupported file type.'
     );
     expect(filesUnder(root)).toEqual([]);
@@ -126,7 +120,7 @@ describe('multer engine used by the upload route', () => {
 
     const info = await new Promise<any>((resolve, reject) => {
       engine._handleFile(
-        {} as any,
+        { org: { id: 'org-a' } } as any,
         {
           stream: Readable.from(ONE_PIXEL_PNG),
           originalname: 'My Legacy Photo.PNG',
@@ -169,7 +163,8 @@ describe('media records stay organization scoped', () => {
     const { model, calls } = fakeModel();
     const repository = new MediaRepository({ model } as any);
 
-    await repository.saveFile(
+    const service = new MediaService(repository, undefined!, undefined!, undefined!, undefined!);
+    await service.saveFile(
       'org-a',
       '2026/11/11/fresh.png',
       'http://localhost:4200/uploads/2026/11/11/fresh.png',
@@ -217,27 +212,5 @@ describe('media records stay organization scoped', () => {
       organizationId: 'org-a',
       deletedAt: null,
     });
-  });
-
-  it('records the upload under the caller organization through the service', async () => {
-    const { model, calls } = fakeModel();
-    const repository = new MediaRepository({ model } as any);
-    const service = new MediaService(
-      repository,
-      {} as any,
-      {} as any,
-      {} as any,
-      {} as any
-    );
-
-    await service.saveFile(
-      'org-b',
-      '2026/11/11/fresh.png',
-      'http://localhost:4200/uploads/2026/11/11/fresh.png',
-      'fresh.png'
-    );
-
-    const create = calls.find((call) => call.method === 'create')!;
-    expect(create.args.data.organization.connect.id).toBe('org-b');
   });
 });

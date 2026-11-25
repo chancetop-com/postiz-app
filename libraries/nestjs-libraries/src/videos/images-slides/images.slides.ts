@@ -80,7 +80,8 @@ export class ImagesSlides extends VideoAbstract<ImagesSlidesParams> {
 
   async process(
     output: 'vertical' | 'horizontal',
-    customParams: ImagesSlidesParams
+    customParams: ImagesSlidesParams,
+    merchantId: string
   ): Promise<URL> {
     const list = await this._openaiService.generateSlidesFromText(
       customParams.prompt
@@ -128,18 +129,21 @@ export class ImagesSlides extends VideoAbstract<ImagesSlidesParams> {
 
             const buffer = Buffer.from(await response.arrayBuffer());
 
-            const { path } = await this.storage.uploadFile({
-              buffer,
-              mimetype: 'audio/mp3',
-              size: buffer.length,
-              path: '',
-              fieldname: '',
-              destination: '',
-              stream: new Readable(),
-              filename: '',
-              originalname: '',
-              encoding: '',
-            });
+            const { path } = await this.storage.uploadFile(
+              {
+                buffer,
+                mimetype: 'audio/mpeg',
+                size: buffer.length,
+                path: '',
+                fieldname: '',
+                destination: '',
+                stream: new Readable(),
+                filename: '',
+                originalname: '',
+                encoding: '',
+              },
+              merchantId
+            );
 
             return {
               len: await getAudioDuration(buffer),

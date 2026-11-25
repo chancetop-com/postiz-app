@@ -1,3 +1,4 @@
+import { getMediaFilename } from '@gitroom/helpers/utils/media.upload';
 import { createHash, randomBytes } from 'crypto';
 import {
   AuthTokenDetails,
@@ -252,7 +253,7 @@ export class WhopProvider extends SocialAbstract implements SocialProvider {
           'Could not determine the media size for upload'
         );
       }
-      const fileName = item.path.split('/').pop() || 'file';
+      const fileName = getMediaFilename(item.path) || 'file';
 
       const createFileResponse = await (
         await this.fetch(
@@ -271,65 +272,72 @@ export class WhopProvider extends SocialAbstract implements SocialProvider {
         )
       ).json();
 
-      if (createFileResponse.upload_url) {
-        const fileResponse = await fetch(item.path, {
-          headers: { 'accept-encoding': 'identity' },
-          // @ts-ignore - undici-only option; blocks SSRF to internal IPs
-          dispatcher: getSsrfSafeDispatcher(),
-        });
-        if (!fileResponse.ok || !fileResponse.body) {
-          throw new Error(`Failed to fetch media: ${fileResponse.statusText}`);
-        }
-        const uploadResponse = await fetch(createFileResponse.upload_url, {
-          method: 'PUT',
-          headers: {
-            // Whop's own upload_headers win if they ever include a length.
-            'Content-Length': String(contentLength),
-            ...(createFileResponse.upload_headers || {}),
-          },
-          body: fileResponse.body,
-          // Required by undici when streaming a request body.
-          duplex: 'half',
-        } as any);
-        // A rejected PUT leaves the file pending forever - fail fast instead
-        // of burning the ~9 minute status poll below.
-        if (!uploadResponse.ok) {
-          throw new BadBody(
-            this.identifier,
-            await uploadResponse.text().catch(() => '{}'),
-            '{}',
-            'Failed to upload the media file'
-          );
+      if (!createFileResponse.id || !createFileResponse.upload_url) {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'Whop did not return a file ID and upload destination'
+        );
+      }
+
+      const fileResponse = await fetch(item.path, {
+        headers: { 'accept-encoding': 'identity' },
+        // @ts-ignore - undici-only option; blocks SSRF to internal IPs
+        dispatcher: getSsrfSafeDispatcher(),
+      });
+      if (!fileResponse.ok || !fileResponse.body) {
+        throw new Error(`Failed to fetch media: ${fileResponse.statusText}`);
+      }
+      const uploadResponse = await fetch(createFileResponse.upload_url, {
+        method: 'PUT',
+        headers: {
+          // Whop's own upload_headers win if they ever include a length.
+          'Content-Length': String(contentLength),
+          ...(createFileResponse.upload_headers || {}),
+        },
+        body: fileResponse.body,
+        // Required by undici when streaming a request body.
+        duplex: 'half',
+      } as any);
+      // A rejected PUT leaves the file pending forever - fail fast instead
+      // of burning the ~9 minute status poll below.
+      if (!uploadResponse.ok) {
+        throw new BadBody(
+          this.identifier,
+          await uploadResponse.text().catch(() => '{}'),
+          '{}',
+          'Failed to upload the media file'
+        );
+      }
+
+      let uploadStatus = 'pending';
+      let attempts = 0;
+      const maxAttempts = 108; // ~9 minutes at 5s interval
+      while (uploadStatus !== 'ready') {
+        if (attempts++ >= maxAttempts) {
+          throw new Error('File upload timed out');
         }
 
-        let uploadStatus = 'pending';
-        let attempts = 0;
-        const maxAttempts = 108; // ~9 minutes at 5s interval
-        while (uploadStatus !== 'ready') {
-          if (attempts++ >= maxAttempts) {
-            throw new Error('File upload timed out');
-          }
-
-          const fileStatus = await (
-            await this.fetch(
-              `https://api.whop.com/api/v1/files/${createFileResponse.id}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                },
+        const fileStatus = await (
+          await this.fetch(
+            `https://api.whop.com/api/v1/files/${createFileResponse.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
               },
-              'check file status',
-              0,
-              true
-            )
-          ).json();
-          uploadStatus = fileStatus.upload_status;
-          if (uploadStatus === 'failed') {
-            throw new Error('File upload failed');
-          }
-          if (uploadStatus !== 'ready') {
-            await timer(5000);
-          }
+            },
+            'check file status',
+            0,
+            true
+          )
+        ).json();
+        uploadStatus = fileStatus.upload_status;
+        if (uploadStatus === 'failed') {
+          throw new Error('File upload failed');
+        }
+        if (uploadStatus !== 'ready') {
+          await timer(5000);
         }
       }
 

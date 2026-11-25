@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import type { StorageProvider } from '@gitroom/helpers/utils/media.upload';
 import '../global.scss';
 import 'react-tooltip/dist/react-tooltip.css';
 import '@copilotkit/react-ui/styles.css';
@@ -21,7 +22,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <VariableContextComponent
           language="en"
           storageProvider={
-            process.env.STORAGE_PROVIDER! as 'local' | 'cloudflare'
+            process.env.STORAGE_PROVIDER! as StorageProvider
           }
           stripeClient=""
           environment={process.env.NODE_ENV!}

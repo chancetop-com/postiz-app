@@ -17,10 +17,10 @@ import { SidePanel, DEFAULT_SECTIONS } from 'polotno/side-panel';
 import Toolbar from 'polotno/toolbar/toolbar';
 import ZoomButtons from 'polotno/toolbar/zoom-buttons';
 import { Button } from '@gitroom/react/form/button';
-import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { PictureGeneratorSection } from '@gitroom/frontend/components/launches/polonto/polonto.picture.generation';
 import { useUser } from '@gitroom/frontend/components/layout/user.context';
 import { loadVars } from '@gitroom/react/helpers/variable.context';
+import { useMediaUpload } from '@gitroom/react/helpers/use.media.upload';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useLaunchStore } from '@gitroom/frontend/components/new-launch/store';
 const store = createStore({
@@ -39,35 +39,40 @@ const ActionControls = ({ store }: any) => {
   const t = useT();
   const close = useContext(CloseContext);
   const [load, setLoad] = useState(false);
-  const fetch = useFetch();
+  const [error, setError] = useState('');
+  const upload = useMediaUpload();
   return (
     <div>
       <Button
         loading={load}
+        disabled={load}
         className="outline-none"
         innerClassName="invert outline-none text-black"
         onClick={async () => {
           setLoad(true);
-          const blob = await store.toBlob();
-          const formData = new FormData();
-          formData.append('file', blob, 'media.png');
-          const data = await (
-            await fetch('/media/upload-simple', {
-              method: 'POST',
-              body: formData,
-            })
-          ).json();
-          close.setMedia([
-            {
-              id: data.id,
-              path: data.path,
-            },
-          ]);
-          close.close();
+          setError('');
+          try {
+            const blob: Blob = await store.toBlob();
+            const data = await upload(blob, 'media.png', 'media');
+            if (!data.id || !data.path)
+              throw new Error('Missing saved design.');
+            close.setMedia([{ id: data.id, path: data.path }]);
+            close.close();
+          } catch {
+            setError(
+              t(
+                'could_not_save_design',
+                'Could not save the design. Please try again.'
+              )
+            );
+          } finally {
+            setLoad(false);
+          }
         }}
       >
         {t('use_this_media', 'Use this media')}
       </Button>
+      {error && <p role="alert">{error}</p>}
     </div>
   );
 };

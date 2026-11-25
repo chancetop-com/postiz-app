@@ -1,3 +1,4 @@
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -59,7 +60,7 @@ export class FarcasterProvider
   ): Promise<string | true> {
     if (
       list?.some((item) =>
-        item?.some((field) => (field?.path?.indexOf?.('mp4') ?? -1) > -1)
+        item?.some((field) => hasExtension(field?.path, 'mp4'))
       )
     ) {
       return 'Can only accept images';

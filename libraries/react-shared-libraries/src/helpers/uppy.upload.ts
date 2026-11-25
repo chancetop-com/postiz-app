@@ -2,6 +2,8 @@ import XHRUpload from '@uppy/xhr-upload';
 import AwsS3Multipart from '@uppy/aws-s3';
 import sha256 from 'sha256';
 import Transloadit from '@uppy/transloadit';
+import { AzureUppyUpload } from './azure.upload';
+import { recoverUploadCompletion, uploadJson } from './upload.completion';
 import { BasePlugin } from '@uppy/core';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -109,11 +111,13 @@ export class WaitForMediaProcessing extends BasePlugin<any, any, any> {
 const fetchUploadApiEndpoint = async (
   fetch: any,
   endpoint: string,
-  data: any
+  data: any,
+  signal?: AbortSignal
 ) => {
   const res = await fetch(`/media/${endpoint}`, {
     method: 'POST',
     body: JSON.stringify(data),
+    signal,
     headers: {
       accept: 'application/json',
       'Content-Type': 'application/json',
@@ -121,10 +125,7 @@ const fetchUploadApiEndpoint = async (
   });
   // customFetch does not throw on HTTP errors, and Uppy treats whatever this
   // returns as a successful step
-  if (!res.ok) {
-    throw new Error(await res.text().catch(() => ''));
-  }
-  return res.json();
+  return uploadJson(res);
 };
 
 // Define the factory to return appropriate Uppy configuration
@@ -135,6 +136,8 @@ export const getUppyUploadPlugin = (
   transloadit: string[] = []
 ) => {
   switch (provider) {
+    case 'azure':
+      return { plugin: AzureUppyUpload, options: { fetch } };
     case 'transloadit':
       return {
         plugin: Transloadit,
@@ -194,11 +197,21 @@ export const getUppyUploadPlugin = (
               file,
               ...props,
             }),
-          completeMultipartUpload: (file: any, props: any) =>
-            fetchUploadApiEndpoint(fetch, 'complete-multipart-upload', {
-              file,
-              ...props,
-            }),
+          completeMultipartUpload: (file: any, { signal, ...props }: any) => {
+            const complete = (retry: boolean) =>
+              fetchUploadApiEndpoint(
+                fetch,
+                'complete-multipart-upload',
+                { file, ...props, retry },
+                signal
+              );
+            return recoverUploadCompletion(
+              () => complete(false),
+              () => complete(true),
+              signal,
+              [0, 250, 750, 1500, 3000, 5000]
+            );
+          },
         },
       };
     case 'local':

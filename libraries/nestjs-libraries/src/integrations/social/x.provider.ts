@@ -11,6 +11,7 @@ import {
 } from '@gitroom/nestjs-libraries/integrations/social/social.integrations.interface';
 import { lookup } from 'mime-types';
 import sharp from 'sharp';
+import { isPublishImageProcessingEnabled } from '@gitroom/nestjs-libraries/integrations/publish-image-processing';
 import { setHeartbeatDetails } from '@gitroom/nestjs-libraries/temporal/temporal.heartbeat';
 import {
   BadBody,
@@ -197,7 +198,7 @@ export class XProvider extends SocialAbstract implements SocialProvider {
       return {
         type: 'bad-body',
         value: 'You are not allowed to create a post with duplicate content',
-      }
+      };
     }
 
     if (body.includes('usage-capped')) {
@@ -224,8 +225,7 @@ export class XProvider extends SocialAbstract implements SocialProvider {
     if (body.includes('Your account is not permitted to access this feature')) {
       return {
         type: 'bad-body',
-        value:
-          'X blocked your request',
+        value: 'X blocked your request',
       };
     }
     if (body.includes('The Tweet contains an invalid URL.')) {
@@ -293,7 +293,8 @@ export class XProvider extends SocialAbstract implements SocialProvider {
     if (body.includes('"title":"Unauthorized"')) {
       return {
         type: 'refresh-token',
-        value: 'X rejected the connected account, please reconnect your account',
+        value:
+          'X rejected the connected account, please reconnect your account',
       };
     }
     return undefined;
@@ -715,6 +716,86 @@ export class XProvider extends SocialAbstract implements SocialProvider {
     }
   }
 
+  private async uploadImage(
+    client: TwitterApi,
+    path: string,
+    article: boolean
+  ) {
+    const source = await this.readOrFetch(path);
+    const metadata = await sharp(source)
+      .metadata()
+      .catch(() => {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'Unable to read the image for X. Check that the file contains a supported image.'
+        );
+      });
+    const animatedGif =
+      !article && metadata.format === 'gif' && (metadata.pages || 1) > 1;
+    let format = metadata.format;
+    let bytes = source;
+    if (isPublishImageProcessingEnabled()) {
+      format = article ? 'jpeg' : 'gif';
+      bytes = await sharp(source, { animated: animatedGif })
+        .resize({ width: 1000 })
+        .toFormat(format)
+        .toBuffer();
+    }
+    if (article && format === 'gif') {
+      throw new BadBody(
+        this.identifier,
+        '{}',
+        '{}',
+        'X articles do not support GIF images. Select a still image for the article.'
+      );
+    }
+    if (
+      format !== 'png' &&
+      format !== 'jpeg' &&
+      format !== 'webp' &&
+      format !== 'gif'
+    ) {
+      throw new BadBody(
+        this.identifier,
+        '{}',
+        '{}',
+        `X does not support ${format} images`
+      );
+    }
+    const maxSizeMB = animatedGif ? 15 : 5;
+    if (bytes.length > maxSizeMB * 1024 * 1024) {
+      throw new BadBody(
+        this.identifier,
+        '{}',
+        '{}',
+        `The image exceeds X's ${maxSizeMB} MB upload limit.`
+      );
+    }
+    try {
+      return await client.v2.uploadMedia(bytes, {
+        media_type: `image/${format}`,
+        media_category: animatedGif ? 'tweet_gif' : 'tweet_image',
+      });
+    } catch (err: any) {
+      if (err?.code === 400 || err?.code === 422) {
+        const detail =
+          err.data?.errors?.[0]?.message ||
+          err.data?.errors?.[0]?.detail ||
+          err.data?.detail ||
+          err.message;
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          `X rejected the image: ${detail || 'invalid media'}`
+        );
+      }
+      throw err;
+    }
+  }
+
   private async uploadMediaEntries(
     client: TwitterApi,
     postDetails: PostDetails<any>[],
@@ -734,37 +815,8 @@ export class XProvider extends SocialAbstract implements SocialProvider {
                   this.uploadVideoInChunks(client, m.path)
                 )
               : {
-                  // Articles reject GIF media, so the tweet pipeline (which
-                  // converts every image to GIF) can't be reused for them -
-                  // article images are uploaded as JPEG with the tweet_image
-                  // category the article references them by.
-                  mediaId: await this.uploadWithRateLimitRetry(async () =>
-                    asArticleImage
-                      ? client.v2.uploadMedia(
-                          await sharp(await this.readOrFetch(m.path))
-                            .resize({
-                              width: 1000,
-                            })
-                            .jpeg()
-                            .toBuffer(),
-                          {
-                            media_type: 'image/jpeg' as any,
-                            media_category: 'tweet_image' as any,
-                          }
-                        )
-                      : client.v2.uploadMedia(
-                          await sharp(await this.readOrFetch(m.path), {
-                            animated: lookup(m.path) === 'image/gif',
-                          })
-                            .resize({
-                              width: 1000,
-                            })
-                            .gif()
-                            .toBuffer(),
-                          {
-                            media_type: (lookup(m.path) || '') as any,
-                          }
-                        )
+                  mediaId: await this.uploadWithRateLimitRetry(() =>
+                    this.uploadImage(client, m.path, asArticleImage)
                   ),
                   processing: false,
                 },
@@ -930,7 +982,11 @@ export class XProvider extends SocialAbstract implements SocialProvider {
     const stillProcessing: string[] = [];
     for (const mediaId of pendingData.processingIds || []) {
       let processing:
-        | { state: string; check_after_secs?: number; error?: { message?: string } }
+        | {
+            state: string;
+            check_after_secs?: number;
+            error?: { message?: string };
+          }
         | undefined;
       try {
         processing = await this.mediaProcessingStatus(client, mediaId);

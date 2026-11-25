@@ -25,50 +25,61 @@ import dayjs from 'dayjs';
 import { Integration } from '@prisma/client';
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
 import { isSafePublicHttpsUrl } from '@gitroom/nestjs-libraries/dtos/webhooks/webhook.url.validator';
-import {
-  getSsrfSafeAxios,
-  getSsrfSafeDispatcher,
-} from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
+import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 import sharp from 'sharp';
+import { isPublishImageProcessingEnabled } from '@gitroom/nestjs-libraries/integrations/publish-image-processing';
 import { Plug } from '@gitroom/helpers/decorators/plug.decorator';
 import { timer } from '@gitroom/helpers/utils/timer';
 import { stripHtmlValidation } from '@gitroom/helpers/utils/strip.html.validation';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
 import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 
-async function reduceImageBySize(url: string, maxSizeKB = 976) {
-  try {
-    // Fetch the image from the URL
-    const response = await getSsrfSafeAxios().get(url, {
-      responseType: 'arraybuffer',
+const { fileTypeFromBuffer } = require('file-type');
+
+const imageProcessingTarget = 976 * 1024;
+// app.bsky.embed.images has a separate 2 MB per-image limit.
+const maxImageBytes = 2_000_000;
+
+async function prepareImage(source: Buffer) {
+  let buffer = source;
+  let { width, height } = await sharp(buffer)
+    .metadata()
+    .catch(() => {
+      throw new BadBody(
+        'bluesky',
+        '{}',
+        '{}',
+        'Could not read the image format or dimensions for Bluesky.'
+      );
     });
-    let imageBuffer = Buffer.from(response.data);
 
-    // Use sharp to get the metadata of the image
-    const metadata = await sharp(imageBuffer).metadata();
-    let width = metadata.width!;
-    let height = metadata.height!;
-
-    // Resize iteratively until the size is below the threshold
-    while (imageBuffer.length / 1024 > maxSizeKB) {
-      width = Math.floor(width * 0.9); // Reduce dimensions by 10%
-      height = Math.floor(height * 0.9);
-
-      // Resize the image
-      const resizedBuffer = await sharp(imageBuffer)
-        .resize({ width, height })
-        .toBuffer();
-
-      imageBuffer = resizedBuffer;
-
-      if (width < 10 || height < 10) break; // Prevent overly small dimensions
+  if (isPublishImageProcessingEnabled()) {
+    while (buffer.length > imageProcessingTarget) {
+      width = Math.max(1, Math.floor(width * 0.9));
+      height = Math.max(1, Math.floor(height * 0.9));
+      buffer = await sharp(buffer).resize({ width, height }).toBuffer();
+      if (width < 10 || height < 10) break;
     }
-
-    return { width, height, buffer: imageBuffer };
-  } catch (error) {
-    console.error('Error processing image:', error);
-    throw error;
   }
+
+  if (buffer.length > maxImageBytes) {
+    throw new BadBody(
+      'bluesky',
+      '{}',
+      '{}',
+      'Bluesky images must be 2,000,000 bytes or smaller.'
+    );
+  }
+  const type = await fileTypeFromBuffer(buffer);
+  if (!type?.mime.startsWith('image/')) {
+    throw new BadBody(
+      'bluesky',
+      '{}',
+      '{}',
+      'Could not identify the image format for Bluesky.'
+    );
+  }
+  return { width, height, buffer, mime: type.mime };
 }
 
 // Streams the video bytes to the Bluesky video service and returns the job
@@ -115,8 +126,6 @@ async function startVideoUpload(
     throw new Error(`Failed to fetch video: ${videoResponse.statusText}`);
   }
 
-  console.log('Uploading video', videoPath, videoSize);
-
   const uploadUrl = new URL(
     'https://video.bsky.app/xrpc/app.bsky.video.uploadVideo'
   );
@@ -136,15 +145,27 @@ async function startVideoUpload(
     duplex: 'half',
   } as any);
 
-  const jobStatus = (await uploadResponse.json()) as AppBskyVideoDefs.JobStatus;
-  console.log('JobId:', jobStatus.jobId);
-
-  if (jobStatus.state === 'JOB_STATE_FAILED') {
+  if (uploadResponse.status >= 500 || uploadResponse.status === 429) {
+    throw new Error(
+      `Bluesky video service returned HTTP ${uploadResponse.status}`
+    );
+  }
+  const data = await uploadResponse.json();
+  // The service can return the job directly or inside the lexicon's envelope.
+  const jobStatus: AppBskyVideoDefs.JobStatus = data?.jobStatus ?? data;
+  const alreadyProcessed =
+    uploadResponse.status === 409 && jobStatus?.error === 'already_exists';
+  if (
+    (!uploadResponse.ok && !alreadyProcessed) ||
+    !jobStatus?.jobId ||
+    jobStatus.state === 'JOB_STATE_FAILED'
+  ) {
     throw new BadBody(
       'bluesky',
-      JSON.stringify({}),
-      {} as any,
-      'Could not upload video, job failed'
+      JSON.stringify(data),
+      '{}',
+      'Could not upload video to Bluesky: ' +
+        (jobStatus?.message || jobStatus?.error || 'no usable processing job')
     );
   }
 
@@ -251,7 +272,7 @@ export class BlueskyProvider extends SocialAbstract implements SocialProvider {
     if (
       posts?.some(
         (p) =>
-          p?.some((a) => (a?.path?.indexOf?.('mp4') ?? -1) > -1) &&
+          p?.some((a) => hasExtension(a?.path, 'mp4')) &&
           (p?.length ?? 0) > 1
       )
     ) {
@@ -418,14 +439,14 @@ export class BlueskyProvider extends SocialAbstract implements SocialProvider {
     // Upload images
     const images = await Promise.all(
       imageMedia.map(async (p) => {
-        const { buffer, width, height } = await reduceImageBySize(p.path);
+        const { buffer, width, height, mime } = await prepareImage(
+          await this.readOrFetch(p.path)
+        );
+        setHeartbeatDetails('bluesky: upload blob');
         return {
           width,
           height,
-          buffer: await (async () => {
-            setHeartbeatDetails('bluesky: upload blob');
-            return agent.uploadBlob(new Blob([buffer]));
-          })(),
+          buffer: await agent.uploadBlob(buffer, { encoding: mime }),
         };
       })
     );

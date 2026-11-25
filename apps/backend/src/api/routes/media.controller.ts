@@ -4,32 +4,34 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Post,
   Query,
   Req,
-  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
 import { Organization } from '@prisma/client';
 import { MediaService } from '@gitroom/nestjs-libraries/database/prisma/media/media.service';
 import { ApiTags } from '@nestjs/swagger';
-import handleR2Upload from '@gitroom/nestjs-libraries/upload/r2.uploader';
+import type {
+  MultipartCompletion,
+  MultipartOperation,
+} from '@gitroom/nestjs-libraries/upload/r2.uploader';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { streamUploadOptions } from '@gitroom/nestjs-libraries/upload/multer.stream.engine';
 import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service';
-import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 import { SaveMediaInformationDto } from '@gitroom/nestjs-libraries/dtos/media/save.media.information.dto';
 import { VideoDto } from '@gitroom/nestjs-libraries/dtos/videos/video.dto';
 import { VideoFunctionDto } from '@gitroom/nestjs-libraries/dtos/videos/video.function.dto';
+import type { AzureUploadRequest } from '@gitroom/helpers/utils/media.upload';
 
 @ApiTags('Media')
 @Controller('/media')
 export class MediaController {
-  private storage = UploadFactory.createStorage();
   constructor(
     private _mediaService: MediaService,
     private _subscriptionService: SubscriptionService
@@ -79,9 +81,24 @@ export class MediaController {
       return false;
     }
 
-    const file = await this.storage.uploadSimple(image.output);
+    return this._mediaService.storeMedia(org.id, image.output);
+  }
 
-    return this._mediaService.saveFile(org.id, file.split('/').pop(), file);
+  @Post('/azure/uploads')
+  createAzureUpload(
+    @GetOrgFromRequest() { id: merchantId }: Organization,
+    @Body() body: AzureUploadRequest
+  ) {
+    return this._mediaService.createAzureUpload(merchantId, body);
+  }
+
+  @Post('/azure/uploads/:id/confirm')
+  confirmAzureUpload(
+    @GetOrgFromRequest() { id: merchantId }: Organization,
+    @Param('id') id: string,
+    @Body() body: AzureUploadRequest
+  ) {
+    return this._mediaService.confirmAzureUpload(merchantId, id, body);
   }
 
   @Post('/upload-server')
@@ -163,32 +180,28 @@ export class MediaController {
     );
   }
 
-  @Post('/:endpoint')
-  async uploadFile(
+  @Post('/complete-multipart-upload')
+  @HttpCode(200)
+  completeR2Upload(
     @GetOrgFromRequest() org: Organization,
-    @Req() req: Request,
-    @Res() res: Response,
+    @Body() body: MultipartCompletion
+  ) {
+    return this._mediaService.completeR2Upload(org.id, body);
+  }
+
+  @Post('/:endpoint')
+  @HttpCode(200)
+  uploadFile(
+    @GetOrgFromRequest() org: Organization,
+    @Body() body: MultipartOperation,
     @Param('endpoint') endpoint: string
   ) {
-    const upload = await handleR2Upload(endpoint, req, res);
-    // a rejected or failed completion has already answered with its own status
-    if (endpoint !== 'complete-multipart-upload' || res.headersSent) {
-      return upload;
-    }
+    return this._mediaService.r2UploadOperation(org.id, endpoint, body);
+  }
 
-    // @ts-ignore
-    const name = upload.Location.split('/').pop();
-    const originalName = req.body?.file?.name;
-
-    const saveFile = await this._mediaService.saveUploadedFile(
-      org.id,
-      name,
-      // @ts-ignore
-      upload.Location,
-      originalName || undefined
-    );
-
-    res.status(200).json({ ...upload, saved: saveFile });
+  @Get('/:id/tiff-preview')
+  tiffPreview(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
+    return this._mediaService.tiffPreview(org.id, id);
   }
 
   @Get('/:id/status')

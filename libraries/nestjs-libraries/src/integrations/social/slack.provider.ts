@@ -1,3 +1,4 @@
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -40,7 +41,7 @@ export class SlackProvider extends SocialAbstract implements SocialProvider {
     posts: Array<ValidityMedia[]>
   ): Promise<string | true> {
     const hasVideo = posts?.some((post) =>
-      post?.some((item) => (item?.path?.indexOf?.('mp4') ?? -1) > -1)
+      post?.some((item) => hasExtension(item?.path, 'mp4'))
     );
     if (hasVideo) {
       return 'No video support for Slack, only images';

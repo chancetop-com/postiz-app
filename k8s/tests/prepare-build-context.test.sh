@@ -301,7 +301,7 @@ if grep -q '^docker build' "$CALLS"; then
 else
   no "build-local calls docker build"
 fi
-if grep -qE '^(az|kubectl) ' "$CALLS"; then
+if grep -qE '^(az|kubectl|docker (push|login)) ' "$CALLS"; then
   no "build-local performs no registry login, push or rollout"
 else
   ok "build-local performs no registry login, push or rollout"
@@ -315,7 +315,7 @@ fi
 : > "$CALLS"
 STUB_CALLS="$CALLS" STUB_DOCKER_FAIL=1 PATH="$STUB:$PATH" "$CTX/build-local.sh" --tag stub:fail >/dev/null 2>&1
 assert_eq "build-local propagates a docker failure" "$?" "1"
-if grep -qE '^(az|kubectl) ' "$CALLS"; then
+if grep -qE '^(az|kubectl|docker (push|login)) ' "$CALLS"; then
   no "a failed local build still never publishes"
 else
   ok "a failed local build still never publishes"

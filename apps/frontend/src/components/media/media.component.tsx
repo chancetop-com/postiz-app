@@ -22,6 +22,7 @@ import EventEmitter from 'events';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import clsx from 'clsx';
 import { VideoFrame } from '@gitroom/react/helpers/video.frame';
+import { MediaLibraryImage } from './media-library-image';
 import { useUppyUploader } from '@gitroom/frontend/components/media/new.uploader';
 import dynamic from 'next/dynamic';
 import { useUser } from '@gitroom/frontend/components/layout/user.context';
@@ -385,7 +386,8 @@ export const MediaBox: FC<{
                 url={mediaDirectory.set(media.path)}
               />
             ) : (
-              <img
+              <MediaLibraryImage
+                mediaId={media?.id}
                 width="100%"
                 height="100%"
                 className="w-full h-full max-h-[100%] max-w-[100%] object-cover"
@@ -682,7 +684,8 @@ export const MediaBox: FC<{
                       {hasExtension(media.path, 'mp4') ? (
                         <VideoFrame url={mediaDirectory.set(media.path)} />
                       ) : (
-                        <img
+                        <MediaLibraryImage
+                          mediaId={media?.id}
                           width="100%"
                           height="100%"
                           className="w-full h-full object-cover"
@@ -931,7 +934,8 @@ export const MultiMediaComponent: FC<{
                       {hasExtension(media?.path, 'mp4') ? (
                         <VideoFrame url={mediaDirectory.set(media?.path)} />
                       ) : (
-                        <img
+                        <MediaLibraryImage
+                          mediaId={media?.id}
                           className="w-full h-full object-cover rounded-[4px] mobile:rounded-[8px]"
                           src={mediaDirectory.set(media?.path)}
                         />
@@ -1128,9 +1132,10 @@ export const MediaComponent: FC<{
       <div className="text-[12px]">{description}</div>
       {!!currentMedia && (
         <div className="my-[20px] cursor-pointer w-[200px] h-[200px] border-2 border-tableBorder">
-          <img
+          <MediaLibraryImage
+            mediaId={currentMedia.id}
             className="w-full h-full object-cover"
-            src={currentMedia.path}
+            src={mediaDirectory.set(currentMedia.path)}
             onClick={() => window.open(mediaDirectory.set(currentMedia.path))}
           />
         </div>

@@ -1,10 +1,9 @@
+import { getMediaExtension } from './media.upload';
+
 export const hasExtension = (
   path: string | undefined | null,
   extension: string
 ): boolean => {
-  if (!path) {
-    return false;
-  }
-  const ext = extension.startsWith('.') ? extension : `.${extension}`;
-  return path.toLowerCase().indexOf(ext.toLowerCase()) > -1;
+  const suffix = getMediaExtension(path);
+  return !!suffix && suffix === extension.replace(/^\./, '').toLowerCase();
 };

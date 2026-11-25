@@ -1,3 +1,4 @@
+import { getMediaFilename } from '@gitroom/helpers/utils/media.upload';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -167,12 +168,13 @@ export class VkProvider extends SocialAbstract implements SocialProvider {
     userId: string,
     accessToken: string,
     post: PostDetails
-  ): Promise<{ id: string; type: string }[]> {
+  ): Promise<string[]> {
     return await Promise.all(
       (post?.media || []).map(async (media) => {
+        const isVideo = hasExtension(media.path, 'mp4');
         const all = await (
           await this.fetch(
-            hasExtension(media.path, 'mp4')
+            isVideo
               ? `https://api.vk.ru/method/video.save?access_token=${accessToken}&v=5.251`
               : `https://api.vk.ru/method/photos.getWallUploadServer?owner_id=${userId}&access_token=${accessToken}&v=5.251`
           )
@@ -183,12 +185,12 @@ export class VkProvider extends SocialAbstract implements SocialProvider {
           responseType: 'stream',
         });
 
-        const slash = media.path.split('/').at(-1);
+        const filename = getMediaFilename(media.path);
 
         const formData = new FormDataNew();
-        formData.append('photo', data, {
-          filename: slash,
-          contentType: mime.lookup(slash!) || '',
+        formData.append(isVideo ? 'video_file' : 'photo', data, {
+          filename,
+          contentType: mime.lookup(filename) || '',
         });
         const value = (
           await this.getSsrfSafeAxios().post(
@@ -201,12 +203,12 @@ export class VkProvider extends SocialAbstract implements SocialProvider {
             }
           )
         ).data;
+        this.checkApiError(value);
 
-        if (hasExtension(media.path, 'mp4')) {
-          return {
-            id: all.response.video_id,
-            type: 'video',
-          };
+        if (isVideo) {
+          return `video${all.response.owner_id ?? userId}_${
+            all.response.video_id
+          }`;
         }
 
         const formSend = new FormData();
@@ -224,12 +226,8 @@ export class VkProvider extends SocialAbstract implements SocialProvider {
           )
         ).json();
         this.checkApiError(saved);
-        const { id } = saved.response[0];
-
-        return {
-          id,
-          type: 'photo',
-        };
+        const { owner_id, id } = saved.response[0];
+        return `photo${owner_id ?? userId}_${id}`;
       })
     );
   }
@@ -265,10 +263,7 @@ export class VkProvider extends SocialAbstract implements SocialProvider {
     body.append('message', firstPost.message);
 
     if (mediaList.length) {
-      body.append(
-        'attachments',
-        mediaList.map((p) => `${p.type}${userId}_${p.id}`).join(',')
-      );
+      body.append('attachments', mediaList.join(','));
     }
 
     const all = await (
@@ -311,10 +306,7 @@ export class VkProvider extends SocialAbstract implements SocialProvider {
     body.append('post_id', postId);
 
     if (mediaList.length) {
-      body.append(
-        'attachments',
-        mediaList.map((p) => `${p.type}${userId}_${p.id}`).join(',')
-      );
+      body.append('attachments', mediaList.join(','));
     }
 
     const all = await (

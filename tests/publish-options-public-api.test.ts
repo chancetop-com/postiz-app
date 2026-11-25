@@ -78,7 +78,8 @@ afterAll(async () => {
 const create = (
   provider: string,
   fields: Record<string, unknown>,
-  date = '2026-12-01T12:00:00Z'
+  date = '2026-12-01T12:00:00Z',
+  mediaPath = 'https://media.test/video.mp4'
 ) =>
   fetch(url + '/public/v1/posts', {
     method: 'POST',
@@ -94,7 +95,7 @@ const create = (
           value: [
             {
               content: 'Caption',
-              image: [{ id: 'video', path: 'https://media.test/video.mp4' }],
+              image: [{ id: 'video', path: mediaPath }],
             },
           ],
           settings: {
@@ -107,6 +108,17 @@ const create = (
       ],
     }),
   });
+
+it.each(['avif', 'bmp', 'tif', 'tiff'])(
+  'accepts a scheduled image with the library extension .%s',
+  async (extension) => {
+    const path =
+      'https://fbrdevstorage.blob.core.windows.net/postiz/dev/org/photo.' + extension;
+    const response = await create('instagram', {}, undefined, path);
+    expect(response.status).toBe(201);
+    expect(persistPost.mock.calls[0][1].posts[0].value[0].image[0].path).toBe(path);
+  }
+);
 
 describe.each([
   'instagram',

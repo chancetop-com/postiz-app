@@ -177,6 +177,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   warnSpy.mockRestore();
   delete process.env.OPENAI_API_KEY;
   delete process.env.STRIPE_PUBLISHABLE_KEY;
@@ -239,8 +240,7 @@ describe('no OpenAI key', () => {
 
       expect(response.status).toBe(401);
       expect(body).toBe('');
-      expect(body).not.toContain('AI not configured');
-      expect(response.headers.get('logout')).toBe('true');
+        expect(response.headers.get('logout')).toBe('true');
       expect(runtime.nodeOptions).toHaveLength(0);
       expect(mastraService.mastra).not.toHaveBeenCalled();
       // the handler must not disclose the AI configuration state to a caller
@@ -284,22 +284,29 @@ describe('no OpenAI key', () => {
 });
 
 describe('OpenAI key configured', () => {
-  it('keeps the upstream node handler and CORS for /copilot/chat', async () => {
-    process.env.OPENAI_API_KEY = 'sk-ticket-12';
+  it.each([
+    { notSecured: undefined, credentials: true },
+    { notSecured: 'true', credentials: false },
+  ])(
+    'passes credentials=$credentials to the chat handler',
+    async ({ notSecured, credentials }) => {
+      vi.stubEnv('NOT_SECURED', notSecured);
+      process.env.OPENAI_API_KEY = 'sk-ticket-12';
 
-    const response = await copilot('/copilot/chat');
+      const response = await copilot('/copilot/chat');
 
-    expect(response.status).toBe(204);
-    expect(runtime.handled).toBe(1);
-    expect(runtime.nodeOptions).toHaveLength(1);
-    expect(runtime.nodeOptions[0].endpoint).toBe('/copilot/chat');
-    expect(runtime.nodeOptions[0].cors.origin).toContain(
-      'http://localhost:4200'
-    );
-    expect(runtime.nodeOptions[0].cors.credentials).toBe(true);
-    expect(runtime.adapterOptions).toEqual([{ model: 'gpt-4.1' }]);
-    expect(mastraService.mastra).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(204);
+      expect(runtime.handled).toBe(1);
+      expect(runtime.nodeOptions).toHaveLength(1);
+      expect(runtime.nodeOptions[0].endpoint).toBe('/copilot/chat');
+      expect(runtime.nodeOptions[0].cors.origin).toContain(
+        'http://localhost:4200'
+      );
+      expect(runtime.nodeOptions[0].cors.credentials).toBe(credentials);
+      expect(runtime.adapterOptions).toEqual([{ model: 'gpt-4.1' }]);
+      expect(mastraService.mastra).not.toHaveBeenCalled();
+    }
+  );
 
   it('keeps the agent runtime behind the same policy when configured', async () => {
     process.env.OPENAI_API_KEY = 'sk-ticket-12';

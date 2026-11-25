@@ -1,3 +1,4 @@
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import {
   Body,
   Controller,
@@ -157,7 +158,7 @@ export class PublicController {
     @Req() req: Request
   ) {
     const { url } = query;
-    if (!url.endsWith('mp4')) {
+    if (!hasExtension(url, 'mp4')) {
       return res.status(400).send('Invalid video URL');
     }
 

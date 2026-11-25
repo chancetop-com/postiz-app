@@ -8,7 +8,7 @@ import {
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id';
 import sharp from 'sharp';
-import { lookup } from 'mime-types';
+import { isPublishImageProcessingEnabled } from '@gitroom/nestjs-libraries/integrations/publish-image-processing';
 import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import { timer } from '@gitroom/helpers/utils/timer';
 import {
@@ -90,14 +90,14 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     if (
       this.assetBoolean(vals?.post_as_images_carousel) &&
       ((firstPost?.length ?? 0) < 2 ||
-        firstPost?.some((p) => (p?.path?.indexOf?.('mp4') ?? -1) > -1))
+        firstPost?.some((p) => hasExtension(p?.path, 'mp4')))
     ) {
       return 'Carousel can only be created with 2 or more images and no videos.';
     }
 
     if (
       (firstPost?.length ?? 0) > 1 &&
-      firstPost?.some((p) => (p?.path?.indexOf?.('mp4') ?? -1) > -1)
+      firstPost?.some((p) => hasExtension(p?.path, 'mp4'))
     ) {
       return 'Can have maximum 1 media when selecting a video.';
     }
@@ -325,7 +325,14 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     }
 
     const {
-      value: { uploadUrl, image, video, document, uploadInstructions, ...all },
+      value: {
+        uploadUrl,
+        image,
+        video,
+        document,
+        uploadInstructions,
+        uploadToken,
+      },
     } = await (
       await this.fetch(
         `https://api.linkedin.com/rest/${endpoint}?action=initializeUpload`,
@@ -356,28 +363,47 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       )
     ).json();
 
-    const sendUrlRequest = uploadInstructions?.[0]?.uploadUrl || uploadUrl;
     const finalOutput = video || image || document;
 
-    const etags = [];
+    const etags: string[] = [];
     if (isVideo) {
-      // Only the Videos API uses multipart chunked uploads. Each 2MB part is
-      // PUT separately and the returned etags are passed to finalizeUpload.
-      // Each part is read on demand (mediaChunk) so only one 2MB chunk is ever
-      // resident in memory instead of the whole video.
-      const chunkSize = 1024 * 1024 * 2;
-      for (let i = 0; i < fileSizeBytes; i += chunkSize) {
+      // Each instruction has its own upload URL and inclusive byte range.
+      let nextByte = 0;
+      for (const part of uploadInstructions || []) {
+        const { firstByte, uploadUrl: partUrl } = part;
+        const lastByte = Math.min(part.lastByte, fileSizeBytes - 1);
+        if (
+          firstByte !== nextByte ||
+          !Number.isSafeInteger(lastByte) ||
+          lastByte < firstByte ||
+          !partUrl
+        ) {
+          throw new BadBody(
+            this.identifier,
+            '{}',
+            '{}',
+            'LinkedIn returned an invalid video upload range.'
+          );
+        }
         const body = Buffer.isBuffer(picture)
-          ? picture.slice(i, i + chunkSize)
+          ? picture.subarray(firstByte, lastByte + 1)
           : await this.mediaChunk(
               picture.path,
-              i,
-              Math.min(i + chunkSize, fileSizeBytes) - 1,
+              firstByte,
+              lastByte,
               this.identifier
             );
+        if (body.length !== lastByte - firstByte + 1) {
+          throw new BadBody(
+            this.identifier,
+            '{}',
+            '{}',
+            'Could not read the complete video part for LinkedIn.'
+          );
+        }
 
         const upload = await this.fetch(
-          sendUrlRequest,
+          partUrl,
           {
             method: 'PUT',
             headers: {
@@ -393,7 +419,25 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           true
         );
 
-        etags.push(upload.headers.get('etag'));
+        const etag = upload.headers.get('etag');
+        if (!etag) {
+          throw new BadBody(
+            this.identifier,
+            '{}',
+            '{}',
+            'LinkedIn did not acknowledge the uploaded video part.'
+          );
+        }
+        etags.push(etag.replace(/^"|"$/g, ''));
+        nextByte = lastByte + 1;
+      }
+      if (nextByte !== fileSizeBytes) {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'LinkedIn did not allocate upload ranges for the entire video.'
+        );
       }
     } else {
       // Images and documents (PDF carousels) use a single-shot upload URL and
@@ -401,7 +445,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
       // multiple overwriting PUTs to the same URL, leaving LinkedIn with only
       // the final chunk and corrupting anything larger than 2MB.
       await this.fetch(
-        sendUrlRequest,
+        uploadUrl,
         {
           method: 'PUT',
           headers: {
@@ -428,7 +472,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           body: JSON.stringify({
             finalizeUploadRequest: {
               video,
-              uploadToken: '',
+              uploadToken: uploadToken || '',
               uploadedPartIds: etags,
             },
           }),
@@ -658,36 +702,56 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
   }
 
   private async prepareMediaBuffer(mediaUrl: string): Promise<Buffer> {
-    const isGif = lookup(mediaUrl) === 'image/gif';
+    const raw = Buffer.from(await this.readOrFetch(mediaUrl));
+    const image = sharp(raw, { animated: false });
+    const { format, width, height, pages } = await image
+      .metadata()
+      .catch(() => {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'LinkedIn could not read the image format or dimensions.'
+        );
+      });
 
-    // GIFs pass through untouched (sharp would break animation). Videos never
-    // reach this function - they are streamed by uploadPicture instead.
-    if (isGif) {
-      // Buffer.from keeps the return type a real Buffer regardless of what
-      // readOrFetch yields - uploadPicture branches on Buffer.isBuffer.
-      return Buffer.from(await this.readOrFetch(mediaUrl));
+    if (format === 'gif' || !isPublishImageProcessingEnabled()) {
+      if (!['jpeg', 'png', 'gif'].includes(format)) {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          `LinkedIn does not accept ${format} images. Use JPEG, PNG or GIF.`
+        );
+      }
+      if (width * height >= 36_152_320) {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'LinkedIn images must have fewer than 36,152,320 pixels.'
+        );
+      }
+      if (format === 'gif' && (pages || 1) > 250) {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'LinkedIn GIFs can contain at most 250 frames.'
+        );
+      }
+      return raw;
     }
 
-    const mime = lookup(mediaUrl);
-    // PNG and JPEG (covers both .jpg and .jpeg) keep their original format;
-    // anything else (webp, tiff, ...) is converted to jpeg for compatibility.
-    const keepFormat = mime === 'image/png' || mime === 'image/jpeg';
-
-    // Always downscale to stay under LinkedIn's 36,152,320-pixel cap: fit within
-    // a 6000x6000 box (max 36,000,000 px for any aspect ratio) while preserving
-    // the aspect ratio and never enlarging smaller images (downscale-only).
-    // NOTE: this guard is required for self-hosted instances running with
-    // DISABLE_IMAGE_COMPRESSION=true, where the frontend no longer shrinks
-    // uploads and full-size images reach LinkedIn directly. Do not remove it on
-    // the assumption that the frontend compression already caps dimensions.
-    const pipeline = sharp(await this.readOrFetch(mediaUrl), { animated: false }).resize({
+    image.resize({
       width: 6000,
       height: 6000,
       fit: 'inside',
       withoutEnlargement: true,
     });
-
-    return await (keepFormat ? pipeline : pipeline.toFormat('jpeg')).toBuffer();
+    return (
+      format === 'png' || format === 'jpeg' ? image : image.jpeg()
+    ).toBuffer();
   }
 
   private buildPostContent(isPdf: boolean, mediaIds: string[], pdfTitle?: string) {

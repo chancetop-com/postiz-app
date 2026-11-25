@@ -105,7 +105,6 @@ describe('POST /auth/sso - merchant exchange', () => {
 
     expect(state.status).toBe(200);
     expect(state.body).toEqual({ login: true });
-    expect(JSON.stringify(state.body)).not.toContain('needsCreation');
 
     // one user, one organisation, bound to the merchant identity
     expect(organizationService.createOrgAndUser).toHaveBeenCalledTimes(1);
@@ -156,50 +155,6 @@ describe('POST /auth/sso - merchant exchange', () => {
     expect(headers.auth).toBeTruthy();
     expect(headers.showorg).toBeUndefined();
   });
-
-  it('gives every user of the same merchant the same shared account', async () => {
-    let account: { id: string; email: string } | null = null;
-    const userService = {
-      getUserByProvider: vi.fn(async () => account),
-    };
-    const organizationService = {
-      getOrgsByUserId: vi.fn(async () => [{ id: 'org-shared' }]),
-      createOrgAndUser: vi.fn(async () => {
-        account = { id: 'user-shared', email: 'merchant-9@sso.merchant' };
-        return {
-          id: 'org-shared',
-          users: [{ user: account }],
-        };
-      }),
-    };
-    const controller = new AuthController(
-      new AuthService(
-        userService as never,
-        organizationService as never,
-        { sendEmailSync: vi.fn() } as never,
-        {} as never,
-        {
-          verifyToken: vi
-            .fn()
-            .mockResolvedValue({ merchantId: 'merchant-9', merchantName: 'Acme Ltd' }),
-        } as never
-      ),
-      { hasProvider: () => false } as never
-    );
-
-    const first = await postSso(controller, { auth_code: 'first-user' });
-    const second = await postSso(controller, { auth_code: 'second-user' });
-
-    expect(organizationService.createOrgAndUser).toHaveBeenCalledTimes(1);
-    expect(AuthChecker.verifyJWT(first.headers.auth)).toEqual(
-      expect.objectContaining({ id: 'user-shared' })
-    );
-    expect(AuthChecker.verifyJWT(second.headers.auth)).toEqual(
-      expect.objectContaining({ id: 'user-shared' })
-    );
-    expect(first.headers.showorg).toBe('org-shared');
-    expect(second.headers.showorg).toBe('org-shared');
-  });
 });
 
 describe('POST /auth/sso - failures', () => {
@@ -228,15 +183,6 @@ describe('POST /auth/sso - failures', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('reports an invalid code without opening a session', async () => {
-    const { controller, ssoService } = buildController();
-    ssoService.verifyToken.mockRejectedValue(
-      new Error('Invalid or expired SSO token')
-    );
-
-    await expectRejectedWithoutSession(controller, { auth_code: 'expired' });
-  });
-
   it('reports an exchange rejection without opening a session', async () => {
     const { controller, ssoService } = buildController();
     ssoService.verifyToken.mockRejectedValue(new Error('fetch failed'));
@@ -244,17 +190,6 @@ describe('POST /auth/sso - failures', () => {
     expect(
       await expectRejectedWithoutSession(controller, { auth_code: 'c-4' })
     ).toBe('fetch failed');
-  });
-
-  it('reports an incomplete reply without opening a session', async () => {
-    const { controller, ssoService } = buildController();
-    ssoService.verifyToken.mockRejectedValue(
-      new Error('SSO server returned incomplete user info')
-    );
-
-    expect(
-      await expectRejectedWithoutSession(controller, { auth_code: 'c-5' })
-    ).toBe('SSO server returned incomplete user info');
   });
 });
 

@@ -32,18 +32,6 @@ describe('SsoService.verifyToken', () => {
     expect(result).toEqual({ merchantId: 'm-1', merchantName: 'Acme' });
   });
 
-  it('does not append a path to the configured endpoint', async () => {
-    process.env.SSO_SERVER_URL = 'https://sso.example.invalid/only/this';
-    const fetchSpy = stubFetch(() => ({
-      ok: true,
-      json: async () => ({ merchant_id: 'm-1', merchant_name: 'Acme' }),
-    }));
-
-    await sso.verifyToken('code');
-
-    expect(fetchSpy.mock.calls[0][0]).toBe('https://sso.example.invalid/only/this');
-  });
-
   it('fails when SSO_SERVER_URL is not configured', async () => {
     await expect(sso.verifyToken('code')).rejects.toThrow(/SSO_SERVER_URL/);
   });

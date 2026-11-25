@@ -1,3 +1,4 @@
+import { getMediaFilename } from '@gitroom/helpers/utils/media.upload';
 import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id';
 import { BadBody, SocialAbstract } from '../social.abstract';
 import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
@@ -230,7 +231,7 @@ export class SkoolProvider extends SocialAbstract implements SocialProvider {
           'Could not determine the media size for upload'
         );
       }
-      const fileName = item.path.split('/').pop() || 'file';
+      const fileName = getMediaFilename(item.path) || 'file';
 
       const createFileResponse = await (
         await this.fetch('https://api2.skool.com/files', {
@@ -250,6 +251,15 @@ export class SkoolProvider extends SocialAbstract implements SocialProvider {
           }),
         }, 'create file record')
       ).json();
+
+      if (!createFileResponse.file?.id || !createFileResponse.write_url) {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'Skool did not return a file ID and upload destination'
+        );
+      }
 
       const fileResponse = await fetch(item.path, {
         headers: { 'accept-encoding': 'identity' },

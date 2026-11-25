@@ -1,3 +1,4 @@
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import {
   AnalyticsData,
   AuthTokenDetails,
@@ -22,7 +23,7 @@ import {
 } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import * as process from 'node:process';
 import dayjs from 'dayjs';
-import { createReadStream, statSync } from 'fs';
+import { createReadStream } from 'fs';
 import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 import { setHeartbeatDetails } from '@gitroom/nestjs-libraries/temporal/temporal.heartbeat';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
@@ -86,7 +87,7 @@ export class YoutubeProvider extends SocialAbstract implements SocialProvider {
     if (items?.[0]?.length !== 1) {
       return 'You need one media';
     }
-    if ((firstItems?.[0]?.path?.indexOf?.('mp4') ?? -1) === -1) {
+    if (!hasExtension(firstItems?.[0]?.path, 'mp4')) {
       return 'Item must be a video';
     }
     return true;
@@ -458,39 +459,15 @@ export class YoutubeProvider extends SocialAbstract implements SocialProvider {
   // workflow calls finalizePost again for the remaining bytes.
   private static readonly YOUTUBE_UPLOAD_BATCH_MS = 4 * 60 * 1000;
 
-  // Resolves the total byte size of the media without loading it into memory:
-  // a HEAD request for remote URLs, statSync for local files.
-  private async youtubeMediaSize(path: string): Promise<number> {
-    if (path.indexOf('http') === 0) {
-      // the media path is user-influenced, keep the SSRF-safe dispatcher that
-      // this.fetch applies to every other outbound request. identity encoding
-      // so content-length matches the bytes a later GET actually streams
-      // (fetch transparently decompresses encoded bodies).
-      setHeartbeatDetails(`youtube: media size ${stripQuery(path)}`);
-      const head = await fetch(path, {
-        method: 'HEAD',
-        headers: { 'accept-encoding': 'identity' },
-        dispatcher: getSsrfSafeDispatcher(),
-      } as any);
-      const length = head.headers.get('content-length');
-      if (!length) {
-        throw new BadBody(
-          this.identifier,
-          '{}',
-          '{}',
-          'Could not determine the video size for the YouTube upload'
-        );
-      }
-      return Number(length);
-    }
-
-    return statSync(this.localMediaPath(path, this.identifier)).size;
-  }
-
   // Returns a streaming body for the [start, end] byte range of the media so we
   // never hold the whole file in memory: a ranged GET for remote URLs, a ranged
   // read stream for local files.
-  private async youtubeChunkStream(path: string, start: number, end: number) {
+  private async youtubeChunkStream(
+    path: string,
+    start: number,
+    end: number,
+    size: number
+  ) {
     if (path.indexOf('http') === 0) {
       // identity encoding so the store keeps content-length and can answer
       // with the requested range: a transformed (compressed) response loses
@@ -508,7 +485,12 @@ export class YoutubeProvider extends SocialAbstract implements SocialProvider {
 
       // A store that ignores Range (200 with the full file) or answers with an
       // error page would corrupt the upload at this offset.
-      if (response.status !== 206) {
+      const range = response.headers.get('content-range')?.toLowerCase();
+      const expected = `bytes ${start}-${end}/`;
+      if (
+        response.status !== 206 ||
+        (range !== expected + size && range !== expected + '*')
+      ) {
         await response.body?.cancel().catch(() => {});
         throw new BadBody(
           this.identifier,
@@ -596,7 +578,7 @@ export class YoutubeProvider extends SocialAbstract implements SocialProvider {
 
     const { settings }: { settings: YoutubeSettingsDto } = firstPost;
     const path = firstPost?.media?.[0]?.path!;
-    const videoSize = await this.youtubeMediaSize(path);
+    const videoSize = await this.mediaSize(path, this.identifier);
 
     // Start a resumable upload session: nothing exists on the channel until
     // the final byte is received, so nothing here is irreversible yet - the
@@ -756,7 +738,8 @@ export class YoutubeProvider extends SocialAbstract implements SocialProvider {
           const body = await this.youtubeChunkStream(
             pendingData.path,
             uploaded,
-            end
+            end,
+            pendingData.videoSize
           );
 
           setHeartbeatDetails('youtube: upload chunk to google');

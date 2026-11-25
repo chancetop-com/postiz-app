@@ -1,3 +1,4 @@
+import { getMediaFilename } from '@gitroom/helpers/utils/media.upload';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -422,7 +423,7 @@ export class TumblrProvider extends SocialAbstract implements SocialProvider {
   }
 
   private getMimeType(path: string) {
-    return lookup(path.split('?')[0]) || 'application/octet-stream';
+    return lookup(getMediaFilename(path)) || 'application/octet-stream';
   }
 
   private isVideoPath(path?: string | null) {
@@ -520,7 +521,7 @@ export class TumblrProvider extends SocialAbstract implements SocialProvider {
         const fileSize = await this.mediaSize(mediaUrl, this.identifier);
         const stream = await this.mediaStream(mediaUrl, this.identifier);
         formData.append(`media-${index}`, stream, {
-          filename: item.path.split('/').pop() || `media-${index}`,
+          filename: getMediaFilename(item.path) || `media-${index}`,
           contentType: mimeType,
           knownLength: fileSize,
         });

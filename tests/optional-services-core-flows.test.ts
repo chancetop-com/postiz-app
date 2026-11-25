@@ -12,7 +12,7 @@ import cookieParser from 'cookie-parser';
 /**
  * Ticket 12: the core merchant flow does not need an optional service.
  *
- * SSO entry, the calendar range query, media upload, scheduling, editing,
+ * SSO entry, the calendar range query, media upload, scheduling,
  * analytics and the anonymous public preview all run through the shipped
  * controllers, the shipped auth middleware and the shipped policy guard on a
  * real HTTP server. Persistence and platform analytics are the only stubs.
@@ -65,6 +65,7 @@ import { TrackService } from '@gitroom/nestjs-libraries/track/track.service';
 import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 import { AuthService as AuthChecker } from '@gitroom/helpers/auth/auth.service';
 import { Provider } from '@prisma/client';
+import { expandPosts } from '@gitroom/helpers/utils/posts.list.minify';
 
 const ONE_PIXEL_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
@@ -129,9 +130,14 @@ const calendarPosts = [
 const createOrUpdatePost = vi.fn(async () => ({
   posts: [{ id: 'post-1', state: 'QUEUE' }],
 }));
+const getPosts = vi.fn(async () => calendarPosts);
+const getPostById = vi.fn(async (_id: string, _org: string) => ({
+  id: 'published-post',
+  state: 'PUBLISHED',
+  publishDate: new Date('2026-11-01T12:00:00Z'),
+  integration: { providerIdentifier: 'x' },
+}));
 const postsService = {
-  getPostsMinified: vi.fn(async () => calendarPosts),
-  changeDate: vi.fn(async () => ({ id: 'post-1', state: 'QUEUE' })),
   getPostsRecursively: vi.fn(async () => [
     {
       id: 'post-1',
@@ -195,7 +201,7 @@ const ssoService = {
     { provide: SubscriptionService, useValue: subscriptionService },
     PostsService,
     IntegrationManager,
-    { provide: PostsRepository, useValue: { createOrUpdatePost } },
+    { provide: PostsRepository, useValue: { createOrUpdatePost, getPosts, getPostById } },
     { provide: IntegrationService, useValue: integrationService },
     { provide: WebhooksService, useValue: {} },
     { provide: MediaService, useValue: mediaService },
@@ -277,14 +283,6 @@ const jsonPost = (path: string, body: unknown, withAuth = true) =>
     signal: AbortSignal.timeout(3000),
   });
 
-const jsonPut = (path: string, body: unknown) =>
-  fetch(`${baseUrl}${path}`, {
-    method: 'PUT',
-    headers: { 'content-type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(3000),
-  });
-
 describe('core flows without optional services', () => {
   it('enters through the merchant SSO entry and starts a session', async () => {
     const response = await jsonPost(
@@ -317,8 +315,8 @@ describe('core flows without optional services', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(calendarPosts);
-    expect(postsService.getPostsMinified).toHaveBeenCalledWith(
+    expect(expandPosts(await response.json()).posts).toEqual(calendarPosts);
+    expect(getPosts).toHaveBeenCalledWith(
       ORGANIZATION_ID,
       expect.objectContaining({
         startDate: '2026-11-01T00:00:00.000Z',
@@ -327,7 +325,7 @@ describe('core flows without optional services', () => {
     );
   });
 
-  it('uploads media with the original upload path and no processing step', async () => {
+  it('uploads local media for the authenticated organization', async () => {
     const form = new FormData();
     form.append(
       'file',
@@ -344,11 +342,10 @@ describe('core flows without optional services', () => {
 
     expect(response.status).toBe(201);
     const body = await response.json();
-    expect(body).toMatchObject({ id: 'media-1', status: 'ready' });
+    expect(body.path).toContain('/uploads/');
     expect(savedMedia.at(-1)).toMatchObject({
       organizationId: ORGANIZATION_ID,
       originalName: 'legacy.png',
-      status: 'ready',
     });
     // the upload was stored for real by the local storage provider
     expect(readdirSync(root, { recursive: true }).length).toBeGreaterThan(0);
@@ -384,21 +381,16 @@ describe('core flows without optional services', () => {
     );
   });
 
-  it('edits a scheduled post date', async () => {
-    const response = await jsonPut('/posts/post-1/date', {
-      date: '2026-11-25T12:00:00.000Z',
-      action: 'schedule',
+  it('refuses to reschedule an already published post without an explicit republish', async () => {
+    const response = await fetch(baseUrl + '/posts/published-post/date', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ date: '2026-11-25T12:00:00Z', action: 'schedule' }),
     });
 
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ id: 'post-1', state: 'QUEUE' });
-    expect(postsService.changeDate).toHaveBeenCalledWith(
-      ORGANIZATION_ID,
-      'post-1',
-      '2026-11-25T12:00:00.000Z',
-      'schedule',
-      false
-    );
+    expect(response.status).toBe(400);
+    expect((await response.json()).message).toMatch(/already published/i);
+    expect(getPostById).toHaveBeenCalledWith('published-post', ORGANIZATION_ID);
   });
 
   it('serves analytics for a connected channel', async () => {

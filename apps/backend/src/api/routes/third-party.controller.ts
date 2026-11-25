@@ -12,15 +12,12 @@ import { ThirdPartyManager } from '@gitroom/nestjs-libraries/3rdparties/thirdpar
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
 import { Organization } from '@prisma/client';
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
-import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 import { MediaService } from '@gitroom/nestjs-libraries/database/prisma/media/media.service';
 import { ImportMediaDto } from '@gitroom/nestjs-libraries/dtos/third-party/import-media.dto';
 
 @ApiTags('Third Party')
 @Controller('/third-party')
 export class ThirdPartyController {
-  private storage = UploadFactory.createStorage();
-
   constructor(
     private _thirdPartyManager: ThirdPartyManager,
     private _mediaService: MediaService,
@@ -88,8 +85,7 @@ export class ThirdPartyController {
       data
     );
 
-    const file = await this.storage.uploadSimple(loadedData);
-    return this._mediaService.saveFile(organization.id, file.split('/').pop(), file);
+    return this._mediaService.storeMedia(organization.id, loadedData);
   }
 
   @Post('/function/:id/:functionName')
@@ -156,11 +152,11 @@ export class ThirdPartyController {
 
     const results = [];
     for (const item of downloadUrls) {
-      const file = await this.storage.uploadSimple(item.url);
-      const saved = await this._mediaService.saveFile(
+      const saved = await this._mediaService.uploadFromUrl(
         organization.id,
-        item.name || file.split('/').pop(),
-        file
+        item.url,
+        false,
+        item.name
       );
       results.push(saved);
     }

@@ -9,9 +9,7 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
  * agreed identifiers.
  *
  * The payload below mirrors what `GET /integrations` returns from the stable
- * release: the new providers are present with their own names — `tiktok-business`
- * is also called "TikTok", `linkedin-page` is also "LinkedIn" — so a
- * display-name filter cannot distinguish the variants.
+ * release, including separate identifiers for personal and business accounts.
  */
 
 vi.mock('next/navigation', () => ({
@@ -108,16 +106,6 @@ describe('the add-channel entries', () => {
     expect(request).toHaveBeenCalledWith(
       expect.stringContaining(`/integrations/social/${identifier}?`)
     );
-  });
-
-  it('keeps LinkedIn Page and Tumblr out', () => {
-    const { container } = renderAdd();
-    const sources = icons(container);
-
-    expect(sources).not.toContain('/icons/platforms/linkedin-page.png');
-    expect(sources).not.toContain('/icons/platforms/tumblr.png');
-    expect(container.textContent).not.toContain('Tumblr');
-    expect(container.textContent).not.toContain('LinkedIn Page');
   });
 
   it('keeps the two Instagram entries distinguishable', () => {

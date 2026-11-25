@@ -1,6 +1,9 @@
+import { getMediaFilename } from '@gitroom/helpers/utils/media.upload';
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import {
   AnalyticsData,
   AuthTokenDetails,
+  PendingCheckResponse,
   PostDetails,
   PostResponse,
   SocialProvider,
@@ -9,12 +12,12 @@ import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id'
 import FormData from 'form-data';
 import {
   BadBody,
+  RefreshToken,
   SocialAbstract,
   ValidityMedia,
 } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import { DribbbleDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/dribbble.dto';
 import mime from 'mime-types';
-import { DiscordDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/discord.dto';
 import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
 
 export class DribbbleProvider extends SocialAbstract implements SocialProvider {
@@ -33,7 +36,7 @@ export class DribbbleProvider extends SocialAbstract implements SocialProvider {
     string | true
   > {
     const isMp4 = firstItem?.find(
-      (item) => (item?.path?.indexOf?.('mp4') ?? -1) > -1
+      (item) => hasExtension(item?.path, 'mp4')
     );
     if (firstItem?.length !== 1) {
       return 'Requires one item';
@@ -163,19 +166,35 @@ export class DribbbleProvider extends SocialAbstract implements SocialProvider {
     accessToken: string,
     postDetails: PostDetails<DribbbleDto>[]
   ): Promise<PostResponse[]> {
-    const { data, status } = await this.getSsrfSafeAxios().get(
+    return this.createShot(accessToken, postDetails, false);
+  }
+
+  async postPending(
+    id: string,
+    accessToken: string,
+    postDetails: PostDetails<DribbbleDto>[]
+  ): Promise<PostResponse[]> {
+    return this.createShot(accessToken, postDetails, true);
+  }
+
+  private async createShot(
+    accessToken: string,
+    postDetails: PostDetails<DribbbleDto>[],
+    allowPending: boolean
+  ): Promise<PostResponse[]> {
+    const { data } = await this.getSsrfSafeAxios().get(
       postDetails?.[0]?.media?.[0]?.path!,
       {
         responseType: 'stream',
       }
     );
 
-    const slash = postDetails?.[0]?.media?.[0]?.path.split('/').at(-1);
+    const filename = getMediaFilename(postDetails?.[0]?.media?.[0]?.path);
 
     const formData = new FormData();
     formData.append('image', data, {
-      filename: slash,
-      contentType: mime.lookup(slash!) || '',
+      filename,
+      contentType: mime.lookup(filename) || '',
     });
 
     formData.append('title', postDetails[0].settings.title);
@@ -195,6 +214,17 @@ export class DribbbleProvider extends SocialAbstract implements SocialProvider {
       );
     } catch (err: any) {
       const status = err?.response?.status;
+      if (
+        ['ECONNRESET', 'ECONNABORTED', 'ETIMEDOUT', 'EPIPE'].includes(err?.code)
+      ) {
+        throw new BadBody(
+          this.identifier,
+          '{}',
+          '{}',
+          'The connection closed before Dribbble confirmed the shot. Check your shots before publishing again.',
+          'unconfirmed'
+        );
+      }
       if (status >= 400 && status < 500 && status !== 429) {
         throw new BadBody(
           this.identifier,
@@ -207,17 +237,67 @@ export class DribbbleProvider extends SocialAbstract implements SocialProvider {
       throw err;
     }
 
-    const location = data2.headers['location'];
-    const newId = location.split('/').at(-1);
+    const newId = data2.headers.location?.match(
+      /\/shots\/(\d+)\/?(?:[?#].*)?$/
+    )?.[1];
+    if (!newId) {
+      throw new BadBody(
+        this.identifier,
+        '{}',
+        '{}',
+        'Dribbble accepted the shot without a tracking ID. Check your shots before publishing again.',
+        'unconfirmed'
+      );
+    }
+    const pending = allowPending && data2.status === 202;
 
     return [
       {
         id: postDetails?.[0]?.id,
-        status: 'completed',
+        status: pending ? 'pending' : 'completed',
+        ...(pending && { pendingData: { shotId: newId } }),
         postId: newId,
         releaseURL: `https://dribbble.com/shots/${newId}`,
       },
     ];
+  }
+
+  override async checkPostStatus(
+    accessToken: string,
+    pendingData: { shotId: string }
+  ): Promise<PendingCheckResponse> {
+    const { data, status } = await this.getSsrfSafeAxios().get(
+      `https://api.dribbble.com/v2/shots/${encodeURIComponent(
+        pendingData.shotId
+      )}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        validateStatus: () => true,
+      }
+    );
+    // A new shot returns 404 until the image has finished processing.
+    if (status === 404 || status === 429 || status >= 500) {
+      return { status: 'pending', pendingData };
+    }
+    if (status === 401) {
+      throw new RefreshToken(this.identifier, JSON.stringify(data), '{}');
+    }
+    if (status !== 200) {
+      throw new BadBody(
+        this.identifier,
+        JSON.stringify(data),
+        '{}',
+        data?.message ||
+          `Dribbble rejected the shot lookup with status ${status}`,
+        'unconfirmed'
+      );
+    }
+    return {
+      status: 'completed',
+      postId: pendingData.shotId,
+      releaseURL:
+        data.html_url || `https://dribbble.com/shots/${pendingData.shotId}`,
+    };
   }
 
   analytics(

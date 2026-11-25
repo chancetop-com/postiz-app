@@ -1,3 +1,4 @@
+import { UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { StorageEngine } from 'multer';
 import { Readable } from 'stream';
@@ -13,13 +14,16 @@ export class MulterStreamEngine implements StorageEngine {
   constructor(private storage: IUploadProvider) {}
 
   _handleFile(
-    req: Request,
+    req: Request & { org?: { id: string } },
     file: Express.Multer.File,
     cb: (error?: any, info?: Partial<Express.Multer.File>) => void
   ) {
+    if (!req.org?.id) return cb(new UnauthorizedException());
     uploadStreamToStorage(
       this.storage,
-      Readable.toWeb(file.stream) as any
+      Readable.toWeb(file.stream) as any,
+      0,
+      req.org.id
     ).then(
       (uploaded) => {
         const safeBase =

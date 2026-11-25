@@ -9,8 +9,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
  * The fork hides Agent and Settings in both the desktop sidebar and the mobile
  * drawer. Upstream moved Plugs/Integrations into Settings, so the top-level
  * entries must not come back. Everything is asserted on rendered output: the
- * same `TopMenu` feeds the desktop rail and the mobile drawer, and the main
- * layout test proves the logo survives in both containers.
+ * same `TopMenu` feeds the desktop rail and the mobile drawer.
  */
 
 const currentUser: any = {
@@ -185,40 +184,16 @@ describe('main layout', () => {
       </LayoutComponent>
     );
 
-  it('renders the 32x32 PNG mark in the desktop rail', () => {
-    renderLayout();
-
-    const logo = screen.getByAltText('Logo') as HTMLImageElement;
-    expect(logo.getAttribute('src')).toBe('/logo-postiz.png');
-    expect(logo.style.width).toBe('32px');
-    expect(logo.style.height).toBe('32px');
-    // The mark must keep its box when the flex container is squeezed.
-    expect(logo.style.minWidth).toBe('32px');
-    expect(logo.style.minHeight).toBe('32px');
-    expect(logo.closest('.w-\\[80px\\]')).toBeTruthy();
-  });
-
-  it('keeps the mark inside the mobile drawer container', () => {
-    renderLayout();
-
-    const logo = screen.getByAltText('Logo');
-    const drawer = logo.closest('[class*="mobile:fixed"]') as HTMLElement;
-    expect(drawer).toBeTruthy();
-    expect(drawer.className).toContain('mobile:bottom-0');
-    expect(drawer.className).toContain('mobile:hidden');
-  });
-
   it('opens the mobile drawer with the same hidden menu', () => {
     renderLayout();
 
-    const toggle = screen.getByLabelText('Open menu');
-    fireEvent.click(toggle);
+    const drawer = screen.getByText('Calendar').closest('[class~="mobile:hidden"]');
+    expect(drawer).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
 
-    const logo = screen.getByAltText('Logo');
-    const drawer = logo.closest('[class*="mobile:fixed"]') as HTMLElement;
-    expect(drawer.className).not.toContain('mobile:hidden');
-    expect(drawer.textContent).toContain('Calendar');
-    expect(drawer.textContent).not.toContain('Agent');
-    expect(drawer.textContent).not.toContain('Settings');
+    expect(drawer!.className).not.toContain('mobile:hidden');
+    expect(drawer!.textContent).toContain('Calendar');
+    expect(drawer!.textContent).not.toContain('Agent');
+    expect(drawer!.textContent).not.toContain('Settings');
   });
 });

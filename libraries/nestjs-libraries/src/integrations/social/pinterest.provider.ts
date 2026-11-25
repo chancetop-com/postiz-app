@@ -11,6 +11,7 @@ import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id'
 import { PinterestSettingsDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/pinterest.dto';
 import FormData from 'form-data';
 import { timer } from '@gitroom/helpers/utils/timer';
+import { getMediaExtension } from '@gitroom/helpers/utils/media.upload';
 import {
   BadBody,
   RefreshToken,
@@ -20,7 +21,7 @@ import {
 import dayjs from 'dayjs';
 import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
-import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+
 
 // Travels through the workflow history between postPending, checkPostStatus
 // and finalizePost - keep it small JSON (the media id and the pin content).
@@ -43,6 +44,10 @@ type PinterestPendingData = {
   attempting?: boolean;
   confirmed?: boolean;
 };
+
+function isPinterestVideo(item: { path?: string }) {
+  return getMediaExtension(item.path) === 'mp4';
+}
 
 @Rules(
   'Pinterest requires at least one media, if posting a video, you must have two attachment, one for video, one for the cover picture, When posting a video, there can be only one, if posting images, there can be maximum 5'
@@ -71,29 +76,22 @@ export class PinterestProvider
   override async checkValidity([firstItem]: Array<ValidityMedia[]>): Promise<
     string | true
   > {
-    const isMp4 = firstItem?.find(
-      (item) => (item?.path?.indexOf?.('mp4') ?? -1) > -1
-    );
-    const isPicture = firstItem?.find(
-      (item) => (item?.path?.indexOf?.('mp4') ?? -1) === -1
-    );
+    const isMp4 = firstItem?.some(isPinterestVideo);
+    const isPicture = firstItem?.some((item) => !isPinterestVideo(item));
     if ((firstItem?.length ?? 0) === 0) {
       return 'Requires at least one media';
     }
     if ((firstItem?.length ?? 0) > 5) {
       return 'You can only have up to 5 media items';
     }
-    if (isMp4 && firstItem?.length !== 2 && !isPicture) {
+    if (isMp4 && !isPicture) {
       return 'If posting a video you have to also include a cover image as second media';
     }
     if (isMp4 && (firstItem?.length ?? 0) > 2) {
       return 'If posting a video you can only have two media items';
     }
 
-    if (
-      (firstItem?.length ?? 0) > 1 &&
-      firstItem?.every((p) => (p?.path?.indexOf?.('mp4') ?? -1) === -1)
-    ) {
+    if ((firstItem?.length ?? 0) > 1 && !isMp4) {
       const loadAll = await Promise.all(
         firstItem?.map((p) => this.getImageDimensions(p?.path)) ?? []
       );
@@ -299,11 +297,9 @@ export class PinterestProvider
     postDetails: PostDetails<PinterestSettingsDto>[]
   ): Promise<PostResponse[]> {
     let mediaId = '';
-    const findMp4 = postDetails?.[0]?.media?.find((p) =>
-      hasExtension(p.path, 'mp4')
-    );
+    const findMp4 = postDetails?.[0]?.media?.find(isPinterestVideo);
     const picture = postDetails?.[0]?.media?.find(
-      (p) => !hasExtension(p.path, 'mp4')
+      (p) => !isPinterestVideo(p)
     );
 
     // Upload the video now; the processing wait moves to checkPostStatus and

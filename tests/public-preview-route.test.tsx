@@ -6,15 +6,8 @@ import { cleanup, render, waitFor } from '@testing-library/react';
 // The Next route calls the backend over the internal HTTP client, which needs
 // a request scope for cookies(). Everything below that boundary is the real
 // route: the URLs it asks for, the payload it accepts, the tree it renders.
-const backend = {
-  ok: true,
-  status: 200,
-  body: [] as unknown,
-  json: async () => backend.body,
-};
-
 vi.mock('@gitroom/helpers/utils/internal.fetch', () => ({
-  internalFetch: vi.fn(async () => backend),
+  internalFetch: vi.fn(),
 }));
 
 vi.mock('next/font/local', () => ({
@@ -51,10 +44,7 @@ const renderRoute = async (searchParams: Record<string, string> = {}) => {
 };
 
 beforeEach(() => {
-  backend.ok = true;
-  backend.status = 200;
-  backend.body = [];
-  vi.mocked(internalFetch).mockClear();
+  vi.mocked(internalFetch).mockReset();
 });
 
 afterEach(() => {
@@ -63,31 +53,27 @@ afterEach(() => {
 });
 
 describe('public preview route', () => {
-  it('asks the backend for the public posts of the preview', async () => {
-    backend.body = [post()];
+  it('renders the posts returned for the requested preview in order', async () => {
+    vi.mocked(internalFetch).mockResolvedValue(
+      Response.json([
+        post(),
+        post({ id: 'post-2', content: '<p>Second post</p>' }),
+      ])
+    );
 
     await renderRoute();
 
     expect(internalFetch).toHaveBeenCalledWith('/public/posts/preview-1');
-  });
-
-  it('renders the post of a valid preview with the retained preview chrome', async () => {
-    backend.body = [post()];
-
-    const { container } = await renderRoute();
 
     await waitFor(() =>
-      expect(document.body.textContent).toContain('Hello world')
+      expect(document.body.textContent).toMatch(/Hello world[\s\S]*Second post/)
     );
     expect(document.body.textContent).toContain('Acme Studio');
     expect(document.body.textContent).toContain('@acme');
-    // the preview keeps its own brand, width and share affordances
-    expect(container.querySelector('img[src="/postiz.svg"]')).toBeTruthy();
-    expect(container.querySelector('.max-w-\\[1346px\\]')).toBeTruthy();
   });
 
   it('renders the inline comment panel of a valid preview', async () => {
-    backend.body = [post()];
+    vi.mocked(internalFetch).mockResolvedValue(Response.json([post()]));
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({
@@ -105,14 +91,16 @@ describe('public preview route', () => {
   });
 
   it('renders the media of a valid preview', async () => {
-    backend.body = [
-      post({
-        image: JSON.stringify([
-          { name: 'one', path: 'https://cdn.example.invalid/one.png' },
-          { name: 'two', path: 'https://cdn.example.invalid/two.jpg' },
-        ]),
-      }),
-    ];
+    vi.mocked(internalFetch).mockResolvedValue(
+      Response.json([
+        post({
+          image: JSON.stringify([
+            { name: 'one', path: 'https://cdn.example.invalid/one.png' },
+            { name: 'two', path: 'https://cdn.example.invalid/two.jpg' },
+          ]),
+        }),
+      ])
+    );
 
     const { container } = await renderRoute();
 
@@ -125,15 +113,17 @@ describe('public preview route', () => {
   });
 
   it('sanitises the post content the backend returned', async () => {
-    backend.body = [
-      post({
-        content:
-          '<div>First line</div>' +
-          '<script>alert("xss")</script>' +
-          '<img src="javascript:alert(1)" onerror="alert(2)" />' +
-          '<p>Safe <a href="https://example.invalid/post">link</a></p>',
-      }),
-    ];
+    vi.mocked(internalFetch).mockResolvedValue(
+      Response.json([
+        post({
+          content:
+            '<div>First line</div>' +
+            '<script>alert("xss")</script>' +
+            '<img src="javascript:alert(1)" onerror="alert(2)" />' +
+            '<p>Safe <a href="https://example.invalid/post">link</a></p>',
+        }),
+      ])
+    );
 
     const { container } = await renderRoute();
 
@@ -148,39 +138,26 @@ describe('public preview route', () => {
   });
 
   it.each([
-    ['a rejected request', () => {
-      backend.ok = false;
-      backend.status = 404;
-      backend.body = { message: 'This preview does not exist' };
-    }],
-    ['a network failure', () => {
-      vi.mocked(internalFetch).mockImplementationOnce(async () => {
+    [
+      'a rejected request with a valid-looking post',
+      () => Response.json([post()], { status: 404 }),
+    ],
+    [
+      'a network failure',
+      () => {
         throw new TypeError('fetch failed');
-      });
-    }],
-    ['an invalid JSON body', () => {
-      vi.mocked(internalFetch).mockImplementationOnce(async () => ({
-        ok: true,
-        status: 200,
-        json: async () => {
-          throw new SyntaxError('Unexpected token < in JSON');
-        },
-      }));
-    }],
-    ['a non-array body', () => {
-      backend.body = { data: [] };
-    }],
-    ['an empty array', () => {
-      backend.body = [];
-    }],
-  ])('shows the Post not found fallback for %s', async (_label, arrange) => {
-    arrange();
+      },
+    ],
+    ['an invalid JSON body', () => new Response('<html>gateway</html>')],
+    ['a non-array body', () => Response.json({ data: [] })],
+    ['an empty array', () => Response.json([])],
+  ])('shows the Post not found fallback for %s', async (_label, reply) => {
+    vi.mocked(internalFetch).mockImplementationOnce(async () => reply());
 
-    const { container } = await renderRoute();
+    await renderRoute();
 
     await waitFor(() =>
       expect(document.body.textContent).toContain('Post not found')
     );
-    expect(container.querySelector('.max-w-\\[1346px\\]')).toBeNull();
   });
 });

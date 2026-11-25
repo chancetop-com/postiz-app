@@ -1,3 +1,4 @@
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import {
   AnalyticsData,
   AuthTokenDetails,
@@ -57,20 +58,21 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
   }
 
   override async checkValidity(
-    items: Array<ValidityMedia[]>,
+    [media]: Array<Array<ValidityMedia & { type?: string }>>,
     settings: any
   ): Promise<string | true> {
     // GMB posts can have text only, or text with one image
-    if ((items?.length ?? 0) > 0 && (items?.[0]?.length ?? 0) > 1) {
+    if ((media?.length ?? 0) > 1) {
       return 'Google My Business posts can only have one image';
     }
 
     // Check for video - GMB doesn't support video in local posts
-    if ((items?.length ?? 0) > 0 && (items?.[0]?.length ?? 0) > 0) {
-      const media = items?.[0]?.[0];
-      if ((media?.path?.indexOf?.('mp4') ?? -1) > -1) {
-        return 'Google My Business posts do not support video attachments';
-      }
+    const attachment = media?.[0];
+    if (
+      attachment?.type === 'video' ||
+      hasExtension(attachment?.path, 'mp4')
+    ) {
+      return 'Google My Business posts do not support video attachments';
     }
 
     // Event posts require a title
@@ -424,6 +426,10 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
   ): Promise<PostResponse[]> {
     const [firstPost] = postDetails;
     const { settings } = firstPost;
+    const valid = await this.checkValidity([firstPost.media ?? []], settings);
+    if (valid !== true) {
+      throw new BadBody(this.identifier, '{}', '{}', valid);
+    }
 
     // Build the local post request body
     const postBody: any = {
@@ -449,7 +455,7 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
       const mediaItem = firstPost.media[0];
       postBody.media = [
         {
-          mediaFormat: mediaItem.type === 'video' ? 'VIDEO' : 'PHOTO',
+          mediaFormat: 'PHOTO',
           sourceUrl: mediaItem.path,
         },
       ];

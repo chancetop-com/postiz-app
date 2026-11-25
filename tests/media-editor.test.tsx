@@ -241,6 +241,34 @@ describe('composer media tools', () => {
 });
 
 describe('single media field', () => {
+  it.each([200, 400])(
+    'displays an existing TIFF cover when the preview returns %i',
+    async (status) => {
+      const media = { id: 'tiff-cover', path: 'https://media.example/cover.tif' };
+      const preview = 'data:image/webp;base64,d2VicA==';
+      route('GET', '/media/tiff-cover/tiff-preview', () =>
+        json({ src: preview }, status)
+      );
+      const { container } = renderInProviders(
+        <MediaComponent
+          label="Cover"
+          description=""
+          name="cover"
+          value={media}
+          onChange={vi.fn()}
+        />
+      );
+      if (status === 200) {
+        await waitFor(() =>
+          expect(container.querySelector('img')?.getAttribute('src')).toBe(preview)
+        );
+      } else {
+        const original = await screen.findByRole('link', { name: 'Open original TIFF' });
+        expect(original.getAttribute('href')).toBe(media.path);
+      }
+    }
+  );
+
   it('selects from the library and keeps the value shape', async () => {
     const onChange = vi.fn();
     const { container } = renderInProviders(

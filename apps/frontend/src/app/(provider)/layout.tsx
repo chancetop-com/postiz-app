@@ -1,3 +1,4 @@
+import type { StorageProvider } from '@gitroom/helpers/utils/media.upload';
 import { MantineWrapper } from '@gitroom/react/helpers/mantine.wrapper';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <VariableContextComponent
           language="en"
           storageProvider={
-            process.env.STORAGE_PROVIDER! as 'local' | 'cloudflare'
+            process.env.STORAGE_PROVIDER! as StorageProvider
           }
           stripeClient=""
           environment={process.env.NODE_ENV!}

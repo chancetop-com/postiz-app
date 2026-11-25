@@ -163,6 +163,8 @@ export type PollDetails = {
 export type MediaContent = {
   type: 'image' | 'video'; // Type of the media content
   path: string;
+  // Scheduled local attachments also carry the public URL for pull-based APIs.
+  url?: string;
   alt?: string;
   thumbnail?: string;
   thumbnailTimestamp?: number;
@@ -189,7 +191,7 @@ export interface SocialProvider
   // Never set it when finalizePost can throw RefreshToken after a mutation
   // that cannot be repeated.
   refreshRepeat?: boolean;
-  convertToJPEG?: boolean;
+  prepareTikTokPhotos?: boolean;
   stripLinks?: () => boolean;
   refreshCron?: boolean;
   refreshErrorMessage?(err: any): string | undefined;

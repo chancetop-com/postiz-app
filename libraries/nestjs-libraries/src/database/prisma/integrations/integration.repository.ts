@@ -5,7 +5,6 @@ import dayjs from 'dayjs';
 import { Integration, Prisma } from '@prisma/client';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import { IntegrationTimeDto } from '@gitroom/nestjs-libraries/dtos/integrations/integration.time.dto';
-import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 import { PlugDto } from '@gitroom/nestjs-libraries/dtos/plugs/plug.dto';
 import {
   ENCRYPTED_PREFIX,
@@ -21,7 +20,6 @@ export interface ConnectLinkBinding {
 
 @Injectable()
 export class IntegrationRepository {
-  private storage = UploadFactory.createStorage();
   constructor(
     private _integration: PrismaRepository<'integration' | '$transaction'>,
     private _posts: PrismaRepository<'post'>,
@@ -194,14 +192,6 @@ export class IntegrationRepository {
   }
 
   async updateIntegration(id: string, params: Partial<Integration>) {
-    if (
-      params.picture &&
-      (params.picture.indexOf(process.env.CLOUDFLARE_BUCKET_URL!) === -1 ||
-        params.picture.indexOf(process.env.FRONTEND_URL!) === -1)
-    ) {
-      params.picture = await this.storage.uploadSimple(params.picture);
-    }
-
     const existing = await this._integration.model.integration.findUnique({
       where: {
         organizationId_internalId: {

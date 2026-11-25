@@ -1,3 +1,4 @@
+import { getMediaFilename } from '@gitroom/helpers/utils/media.upload';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -156,7 +157,7 @@ export class DiscordProvider extends SocialAbstract implements SocialProvider {
           attachments: media?.map((p, index) => ({
             id: index,
             description: `Picture ${index}`,
-            filename: p.path.split('/').pop(),
+            filename: getMediaFilename(p.path),
           })),
         })
       );
@@ -166,7 +167,7 @@ export class DiscordProvider extends SocialAbstract implements SocialProvider {
         const fileSize = await this.mediaSize(item.path, this.identifier);
         const stream = await this.mediaStream(item.path, this.identifier);
         form.append(`files[${index}]`, stream, {
-          filename: item.path.split('/').pop(),
+          filename: getMediaFilename(item.path),
           knownLength: fileSize,
         });
         index++;
@@ -224,7 +225,8 @@ export class DiscordProvider extends SocialAbstract implements SocialProvider {
 
     // For Discord, we create a thread from the original message for comments
     // If we don't have a thread yet, create one
-    let threadChannel = channel;
+    // A thread started from a message shares the starter message's ID.
+    let threadChannel = postId;
 
     // Create thread if this is the first comment
     if (!lastCommentId) {

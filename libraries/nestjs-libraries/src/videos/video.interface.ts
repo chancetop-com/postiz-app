@@ -22,7 +22,8 @@ export abstract class VideoAbstract<T> {
 
   abstract process(
     output: 'vertical' | 'horizontal',
-    customParams?: T
+    customParams: T,
+    merchantId: string
   ): Promise<URL>;
 }
 

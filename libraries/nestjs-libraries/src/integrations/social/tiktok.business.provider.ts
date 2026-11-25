@@ -17,6 +17,7 @@ import {
 } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import { TikTokDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/tiktok.dto';
 import { timer } from '@gitroom/helpers/utils/timer';
+import { validateTikTokPhotos } from './tiktok.photo';
 import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import { Integration } from '@prisma/client';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
@@ -40,7 +41,7 @@ export class TiktokBusinessProvider
   identifier = 'tiktok-business';
   name = 'TikTok';
   isBetweenSteps = false;
-  convertToJPEG = true;
+  prepareTikTokPhotos = true;
   scopes = [
     'user.info.basic',
     'user.info.username',
@@ -85,22 +86,7 @@ export class TiktokBusinessProvider
       return 'You can select up to 35 pictures';
     }
 
-    // TikTok fails the whole photo post when a single image is oversized, and
-    // the status only says `picture_size_check_failed` without naming it.
-    if (!hasVideo) {
-      const dimensions = await Promise.all(
-        firstItems?.map((p) => this.getImageDimensions(p?.path)) ?? []
-      );
-      const tooBig = dimensions.findIndex(
-        (p) => Math.min(p?.width ?? 0, p?.height ?? 0) > 1080
-      );
-      if (tooBig > -1) {
-        return `Image ${tooBig + 1} is ${dimensions[tooBig]?.width}x${
-          dimensions[tooBig]?.height
-        }, TikTok allows a maximum of 1080px on the shorter side`;
-      }
-    }
-    return true;
+    return hasVideo ? true : validateTikTokPhotos(firstItems);
   }
 
   override handleErrors(body: string):
@@ -218,7 +204,7 @@ export class TiktokBusinessProvider
       return {
         type: 'bad-body' as const,
         value:
-          'The media domain is not a verified URL property of the TikTok app',
+          'url_ownership_unverified. Verify the public media URL prefix in the publishing TikTok app’s URL properties.',
       };
     }
 
@@ -556,7 +542,7 @@ export class TiktokBusinessProvider
 
     return {
       business_id: businessId,
-      video_url: firstPost?.media?.[0]?.path!,
+      video_url: firstPost.media![0].url || firstPost.media![0].path,
       ...(firstPost?.media?.[0]?.thumbnail
         ? { custom_thumbnail_url: firstPost?.media?.[0]?.thumbnail }
         : firstPost?.media?.[0]?.thumbnailTimestamp
@@ -644,7 +630,7 @@ export class TiktokBusinessProvider
 
     return {
       business_id: businessId,
-      photo_images: firstPost.media?.map((p) => p.path),
+      photo_images: firstPost.media?.map((p) => p.url || p.path),
       photo_cover_index: 0,
       // Photos carry the AI label at the top level; it is sent for both
       // DIRECT_POST and draft (UPLOAD) photo posts.

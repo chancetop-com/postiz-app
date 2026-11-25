@@ -1,3 +1,4 @@
+import { getMediaFilename } from '@gitroom/helpers/utils/media.upload';
 import {
   AuthTokenDetails,
   PendingCheckResponse,
@@ -80,7 +81,7 @@ export class RedditProvider extends SocialAbstract implements SocialProvider {
 
     if (
       posts?.some((p) =>
-        p?.some((a) => !a?.thumbnail && (a?.path?.indexOf?.('mp4') ?? -1) > -1)
+        p?.some((a) => !a?.thumbnail && hasExtension(a?.path, 'mp4'))
       )
     ) {
       return 'You must attach a thumbnail to your video post.';
@@ -185,9 +186,10 @@ export class RedditProvider extends SocialAbstract implements SocialProvider {
   }
 
   private async uploadFileToReddit(accessToken: string, path: string) {
-    const mimeType = lookup(path);
+    const filename = getMediaFilename(path);
+    const mimeType = lookup(filename);
     const formData = new FormData();
-    formData.append('filepath', path.split('/').pop());
+    formData.append('filepath', filename);
     formData.append('mimetype', mimeType || 'application/octet-stream');
 
     const {
@@ -222,7 +224,7 @@ export class RedditProvider extends SocialAbstract implements SocialProvider {
     );
 
     upload.append('file', stream, {
-      filename: path.split('/').pop(),
+      filename,
       contentType: (mimeType as string) || 'application/octet-stream',
       knownLength: fileSize,
     });

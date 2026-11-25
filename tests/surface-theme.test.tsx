@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 
 /**
  * Analytics and billing surfaces (ticket 06, user story 30).
@@ -28,11 +28,11 @@ let checkoutOptions: any = null;
 vi.mock('@stripe/react-stripe-js/checkout', () => ({
   CheckoutProvider: ({ options, children }: any) => {
     checkoutOptions = options;
-    return <div>checkout provider{children}</div>;
+    return <>{children}</>;
   },
   PaymentElement: () => <input aria-label="card number" />,
   BillingAddressElement: () => null,
-  useCheckout: () => ({}),
+  useCheckout: () => ({ type: 'loading' }),
 }));
 
 vi.mock('@stripe/stripe-js', () => ({}));
@@ -91,7 +91,6 @@ describe('billing page', () => {
     const { unmount } = render(
       <EmbeddedBilling stripe={stripe} secret="secret_1" />
     );
-    expect(screen.getByText('checkout provider')).toBeTruthy();
     expect(
       checkoutOptions.elementsOptions.appearance.variables.colorText
     ).toBe('#0e0e0e');

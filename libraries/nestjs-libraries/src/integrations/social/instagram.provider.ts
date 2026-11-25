@@ -92,7 +92,7 @@ export class InstagramProvider
         return 'Trial Reels can only have one video';
       }
       const hasVideo = firstPost?.some(
-        (f) => (f?.path?.indexOf?.('mp4') ?? -1) > -1
+        (f) => hasExtension(f?.path, 'mp4')
       );
       if (!hasVideo) {
         return 'Trial Reels must be a video';
@@ -109,7 +109,7 @@ export class InstagramProvider
         return 'Audio can only be added to a single video Reel';
       }
       const hasVideo = firstPost?.some(
-        (f) => (f?.path?.indexOf?.('mp4') ?? -1) > -1
+        (f) => hasExtension(f?.path, 'mp4')
       );
       if (!hasVideo) {
         return 'Audio can only be added to a video Reel';
@@ -823,25 +823,26 @@ export class InstagramProvider
           (firstPost?.media?.length || 0) > 1 && !isStory
             ? `&is_carousel_item=true`
             : ``;
+        const mediaUrl = encodeURIComponent(m.path);
         const mediaType = hasExtension(m.path, 'mp4')
           ? firstPost?.media?.length === 1
             ? isStory
-              ? `video_url=${m.path}&media_type=STORIES`
+              ? `video_url=${mediaUrl}&media_type=STORIES`
               : m?.thumbnail
-              ? `video_url=${m.path}&media_type=REELS&cover_url=${encodeURIComponent(
+              ? `video_url=${mediaUrl}&media_type=REELS&cover_url=${encodeURIComponent(
                   m.thumbnail
                 )}`
-              : `video_url=${m.path}&media_type=REELS&thumb_offset=${
+              : `video_url=${mediaUrl}&media_type=REELS&thumb_offset=${
                   m?.thumbnailTimestamp || 0
                 }`
             : isStory
-            ? `video_url=${m.path}&media_type=STORIES`
-            : `video_url=${m.path}&media_type=VIDEO&thumb_offset=${
+            ? `video_url=${mediaUrl}&media_type=STORIES`
+            : `video_url=${mediaUrl}&media_type=VIDEO&thumb_offset=${
                 m?.thumbnailTimestamp || 0
               }`
           : isStory
-          ? `image_url=${m.path}&media_type=STORIES`
-          : `image_url=${m.path}`;
+          ? `image_url=${mediaUrl}&media_type=STORIES`
+          : `image_url=${mediaUrl}`;
 
         // alt_text is only supported on images (single or carousel item),
         // not on videos or stories

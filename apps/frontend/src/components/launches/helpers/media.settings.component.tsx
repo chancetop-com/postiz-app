@@ -4,6 +4,7 @@ import { EventEmitter } from 'events';
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { TopTitle } from '@gitroom/frontend/components/launches/helpers/top.title.component';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
+import { useMediaUpload } from '@gitroom/react/helpers/use.media.upload';
 import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import { useLaunchStore } from '@gitroom/frontend/components/new-launch/store';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
@@ -102,7 +103,7 @@ export const CreateThumbnail: FC<{
   onAltTextChange?: (altText: string) => void;
 }> = (props) => {
   const { onSelect, media } = props;
-  const { backendUrl } = useVariables();
+  const { backendUrl, storageProvider } = useVariables();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -217,7 +218,11 @@ export const CreateThumbnail: FC<{
         <video
           ref={videoRef}
           src={
-            backendUrl + '/public/stream?url=' + encodeURIComponent(media.path)
+            storageProvider === 'azure'
+              ? media.path
+              : backendUrl +
+                '/public/stream?url=' +
+                encodeURIComponent(media.path)
           }
           className="w-full h-[200px] object-contain"
           onLoadedMetadata={handleLoadedMetadata}
@@ -313,8 +318,13 @@ export const MediaComponentInner: FC<{
   const { onClose, onSelect, media } = props;
   const setActivateExitButton = useLaunchStore((e) => e.setActivateExitButton);
   const newFetch = useFetch();
+  const upload = useMediaUpload();
   const modals = useModals();
-  const [newThumbnail, setNewThumbnail] = useState<string | null>(null);
+  const [newThumbnail, setNewThumbnail] = useState<{
+    file: File;
+    preview: string;
+  } | null>(null);
+  const [error, setError] = useState('');
   const [isEditingThumbnail, setIsEditingThumbnail] = useState(false);
   const [altText, setAltText] = useState<string>(media?.alt || '');
   const [loading, setLoading] = useState(false);
@@ -322,8 +332,22 @@ export const MediaComponentInner: FC<{
     props.media?.thumbnail || null
   );
   const [thumbnailTimestamp, setThumbnailTimestamp] = useState<number | null>(
-    props.media?.thumbnailTimestamp || null
+    props.media?.thumbnailTimestamp ?? null
   );
+
+  useEffect(
+    () => () => {
+      if (newThumbnail) URL.revokeObjectURL(newThumbnail.preview);
+    },
+    [newThumbnail]
+  );
+
+  const selectThumbnail = (file: File, timestamp: number | null) => {
+    setNewThumbnail({ file, preview: URL.createObjectURL(file) });
+    setThumbnailTimestamp(timestamp);
+    setIsEditingThumbnail(false);
+    setError('');
+  };
 
   useEffect(() => {
     setActivateExitButton(false);
@@ -333,37 +357,47 @@ export const MediaComponentInner: FC<{
   }, []);
 
   const save = useCallback(async () => {
+    if (!media) return;
     setLoading(true);
-    let path = thumbnail || '';
-    if (newThumbnail) {
-      const blob = await (await fetch(newThumbnail)).blob();
-      const formData = new FormData();
-      formData.append('file', blob, 'media.jpg');
-      formData.append('preventSave', 'true');
-      const data = await (
-        await newFetch('/media/upload-simple', {
-          method: 'POST',
-          body: formData,
-        })
-      ).json();
-      path = data.path;
-    }
-
-    const media = await (
-      await newFetch('/media/information', {
+    setError('');
+    try {
+      let path = thumbnail || '';
+      if (newThumbnail) {
+        const { file } = newThumbnail;
+        const confirmed = await upload(file, file.name, 'thumbnail');
+        path = confirmed.path;
+        if (!path) throw new Error('The uploaded cover has no address.');
+        setThumbnail(path);
+        setNewThumbnail(null);
+      }
+      const response = await newFetch('/media/information', {
         method: 'POST',
         body: JSON.stringify({
-          id: props.media.id,
+          id: media.id,
           alt: altText,
           thumbnail: path,
-          thumbnailTimestamp: thumbnailTimestamp,
+          thumbnailTimestamp,
         }),
-      })
-    ).json();
-
-    onSelect(media);
-    onClose();
-  }, [altText, newThumbnail, thumbnail, thumbnailTimestamp]);
+      });
+      if (!response.ok) throw new Error('Could not save the video settings.');
+      onSelect(await response.json());
+      onClose();
+    } catch {
+      setError('Could not save media settings. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    media,
+    newFetch,
+    upload,
+    onSelect,
+    onClose,
+    altText,
+    newThumbnail,
+    thumbnail,
+    thumbnailTimestamp,
+  ]);
 
   return (
     <div className="mt-[10px] flex flex-col gap-[20px]">
@@ -389,7 +423,7 @@ export const MediaComponentInner: FC<{
                   <span className="text-sm text-textColor">Thumbnail:</span>
                   {(newThumbnail || thumbnail) && (
                     <img
-                      src={newThumbnail || thumbnail}
+                      src={newThumbnail?.preview || thumbnail}
                       alt="Current thumbnail"
                       className="max-w-full max-h-[500px] object-contain rounded-lg border border-tableBorder"
                     />
@@ -397,7 +431,7 @@ export const MediaComponentInner: FC<{
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex space-x-2 mt-[12px]">
+                <div className="flex flex-wrap gap-2 mt-[12px]">
                   <button
                     disabled={loading}
                     onClick={() => setIsEditingThumbnail(true)}
@@ -405,6 +439,20 @@ export const MediaComponentInner: FC<{
                   >
                     Select Frame
                   </button>
+                  <label className="bg-third text-textColor px-6 py-2 rounded-lg text-center cursor-pointer flex-1 border border-tableBorder whitespace-nowrap focus-within:ring-2">
+                    Upload cover
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={loading}
+                      onChange={(event) => {
+                        const file = event.currentTarget.files?.[0];
+                        if (file) selectThumbnail(file, null);
+                        event.currentTarget.value = '';
+                      }}
+                    />
+                  </label>
                   <button
                     disabled={loading}
                     onClick={() =>
@@ -441,6 +489,7 @@ export const MediaComponentInner: FC<{
                       onClick={() => {
                         setNewThumbnail(null);
                         setThumbnail(null);
+                        setThumbnailTimestamp(null);
                       }}
                       className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-opacity-80 transition-all flex-1 border border-red-700 whitespace-nowrap"
                     >
@@ -479,16 +528,10 @@ export const MediaComponentInner: FC<{
                 {/* Thumbnail Editor */}
                 <CreateThumbnail
                   onSelect={(blob: Blob, timestampMs: number) => {
-                    // Convert blob to base64 or handle as needed
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      // You can handle the result here - for now just call onSelect with the blob URL
-                      const url = URL.createObjectURL(blob);
-                      setNewThumbnail(url);
-                      setThumbnailTimestamp(timestampMs);
-                      setIsEditingThumbnail(false);
-                    };
-                    reader.readAsDataURL(blob);
+                    selectThumbnail(
+                      new File([blob], 'media.jpg', { type: blob.type }),
+                      timestampMs
+                    );
                   }}
                   media={media}
                   altText={altText}
@@ -500,6 +543,7 @@ export const MediaComponentInner: FC<{
         </>
       )}
 
+      {error && <p role="alert">{error}</p>}
       {!isEditingThumbnail && (
         <div className="flex space-x-2 !mt-[20px]">
           <button
@@ -510,6 +554,7 @@ export const MediaComponentInner: FC<{
             Cancel
           </button>
           <button
+            disabled={loading}
             onClick={save}
             className="flex-1 bg-forth text-white px-6 py-2 rounded-lg hover:bg-opacity-80 transition-all"
           >

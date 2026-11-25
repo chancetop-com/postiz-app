@@ -19,6 +19,7 @@ import {
 import { TikTokDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/tiktok.dto';
 import { timer } from '@gitroom/helpers/utils/timer';
 import { setHeartbeatDetails } from '@gitroom/nestjs-libraries/temporal/temporal.heartbeat';
+import { validateTikTokPhotos } from './tiktok.photo';
 import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import { createReadStream } from 'fs';
 import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
@@ -38,7 +39,7 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
   identifier = 'tiktok';
   name = 'Tiktok';
   isBetweenSteps = false;
-  convertToJPEG = true;
+  prepareTikTokPhotos = true;
   scopes = [
     'video.list',
     'user.info.basic',
@@ -66,22 +67,7 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
       return 'Only pictures are supported when selecting multiple items';
     }
 
-    // TikTok fails the whole photo post when a single image is oversized, and
-    // the status only says `picture_size_check_failed` without naming it.
-    if (!hasVideo) {
-      const dimensions = await Promise.all(
-        firstItems?.map((p) => this.getImageDimensions(p?.path)) ?? []
-      );
-      const tooBig = dimensions.findIndex(
-        (p) => Math.min(p?.width ?? 0, p?.height ?? 0) > 1080
-      );
-      if (tooBig > -1) {
-        return `Image ${tooBig + 1} is ${dimensions[tooBig]?.width}x${
-          dimensions[tooBig]?.height
-        }, TikTok allows a maximum of 1080px on the shorter side`;
-      }
-    }
-    return true;
+    return hasVideo ? true : validateTikTokPhotos(firstItems);
   }
 
   override handleErrors(body: string):
@@ -235,7 +221,7 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
       return {
         type: 'bad-body' as const,
         value:
-          'You have to upload the picture/video to Postiz when sending a URL',
+          'url_ownership_unverified. Verify the public media URL prefix in the publishing TikTok app’s URL properties.',
       };
     }
 
@@ -613,95 +599,6 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // OLD PULL_FROM_URL IMPLEMENTATION (kept for when the TikTok PULL bug is fixed)
-  // ---------------------------------------------------------------------------
-  // private buildTikokSourceInfoBody(firstPost: PostDetails<TikTokDto>) {
-  //   const isPhoto = !hasExtension(firstPost?.media?.[0]?.path, 'mp4');
-  //
-  //   if (isPhoto) {
-  //     return {
-  //       post_mode:
-  //         firstPost?.settings?.content_posting_method === 'DIRECT_POST'
-  //           ? 'DIRECT_POST'
-  //           : 'MEDIA_UPLOAD',
-  //       media_type: 'PHOTO',
-  //       source_info: {
-  //         source: 'PULL_FROM_URL',
-  //         photo_cover_index: 0,
-  //         photo_images: firstPost.media?.map((p) => p.path),
-  //       },
-  //     };
-  //   }
-  //
-  //   return {
-  //     source_info: {
-  //       source: 'PULL_FROM_URL',
-  //       video_url: firstPost?.media?.[0]?.path!,
-  //       ...(firstPost?.media?.[0]?.thumbnailTimestamp!
-  //         ? {
-  //             video_cover_timestamp_ms:
-  //               firstPost?.media?.[0]?.thumbnailTimestamp!,
-  //           }
-  //         : {}),
-  //     },
-  //   };
-  // }
-  //
-  // async post(
-  //   id: string,
-  //   accessToken: string,
-  //   postDetails: PostDetails<TikTokDto>[],
-  //   integration: Integration
-  // ): Promise<PostResponse[]> {
-  //   const [firstPost] = postDetails;
-  //   const isPhoto = !hasExtension(firstPost?.media?.[0]?.path, 'mp4');
-  //
-  //   console.log({
-  //     ...this.buildTikokPostInfoBody(firstPost),
-  //     ...this.buildTikokSourceInfoBody(firstPost),
-  //   });
-  //   const {
-  //     data: { publish_id },
-  //   } = await (
-  //     await this.fetch(
-  //       `https://open.tiktokapis.com/v2/post/publish${this.postingMethod(
-  //         firstPost.settings.content_posting_method,
-  //         !hasExtension(firstPost?.media?.[0]?.path, 'mp4')
-  //       )}`,
-  //       {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json; charset=UTF-8',
-  //           Authorization: `Bearer ${accessToken}`,
-  //         },
-  //         body: JSON.stringify({
-  //           ...this.buildTikokPostInfoBody(firstPost),
-  //           ...this.buildTikokSourceInfoBody(firstPost),
-  //         }),
-  //       }
-  //     )
-  //   ).json();
-  //
-  //   const { url, id: videoId } = await this.uploadedVideoSuccess(
-  //     integration.profile!,
-  //     publish_id,
-  //     accessToken
-  //   );
-  //
-  //   return [
-  //     {
-  //       id: firstPost.id,
-  //       releaseURL: url,
-  //       postId: String(videoId),
-  //       status: 'success',
-  //     },
-  //   ];
-  // }
-
-  // ---------------------------------------------------------------------------
-  // NEW FILE_UPLOAD IMPLEMENTATION (no PULL_FROM_URL for videos)
-  // ---------------------------------------------------------------------------
   // TikTok video chunk constraints: a chunk must be between 5MB and 64MB.
   // When the whole file fits in a single chunk (<= 64MB) we upload it in one
   // request; otherwise we split it into 10MB chunks (the final chunk carries
@@ -879,12 +776,21 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
         source_info: {
           source: 'PULL_FROM_URL',
           photo_cover_index: 0,
-          photo_images: firstPost.media?.map((p) => p.path),
+          photo_images: firstPost.media?.map((p) => p.url || p.path),
         },
       };
     }
 
-    const { chunkSize, totalChunkCount } = this.tiktokChunkPlan(videoSize || 0);
+    if (videoSize === undefined) {
+      return {
+        source_info: {
+          source: 'PULL_FROM_URL',
+          video_url: firstPost.media![0].url || firstPost.media![0].path,
+        },
+      };
+    }
+
+    const { chunkSize, totalChunkCount } = this.tiktokChunkPlan(videoSize);
 
     return {
       source_info: {
@@ -906,16 +812,14 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
     const isPhoto = !hasExtension(firstPost?.media?.[0]?.path, 'mp4');
     const videoPath = firstPost?.media?.[0]?.path!;
 
-    // For videos we only need the total size up front (HEAD / statSync) so we
-    // can init the upload; the bytes themselves are streamed later, never fully
-    // loaded into memory.
-    const videoSize = isPhoto
-      ? undefined
-      : await this.mediaSize(videoPath, 'tiktok-error-upload');
+    // Only file uploads need a size and a chunk plan. Azure videos are pulled
+    // directly by TikTok from their permanent media URL.
+    const videoSize =
+      !isPhoto && process.env.STORAGE_PROVIDER !== 'azure'
+        ? await this.mediaSize(videoPath, 'tiktok-error-upload')
+        : undefined;
 
-    const {
-      data: { publish_id, upload_url },
-    } = await (
+    const publish = await (
       await this.fetch(
         `https://open.tiktokapis.com/v2/post/publish${this.postingMethod(
           this.contentPostingMethod(firstPost),
@@ -934,6 +838,29 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
         }
       )
     ).json();
+
+    const { publish_id, upload_url } = publish?.data || {};
+    if (!publish_id) {
+      const raw = JSON.stringify(publish);
+      const mapped = this.handleErrors(raw);
+      if (mapped?.type === 'refresh-token') {
+        throw new RefreshToken(this.identifier, raw, '{}', mapped.value);
+      }
+      if (mapped?.type === 'disconnect') {
+        throw new Disconnect(this.identifier, raw, '{}', mapped.value);
+      }
+      throw new BadBody(
+        this.identifier,
+        raw,
+        '{}',
+        mapped?.value ||
+          publish?.error?.message ||
+          'TikTok did not return a publish ID',
+        publish?.error?.code && publish.error.code !== 'ok'
+          ? undefined
+          : 'unconfirmed'
+      );
+    }
 
     // Videos: stream the bytes to the upload_url returned by the init call.
     if (!isPhoto && upload_url && videoSize) {

@@ -7,7 +7,7 @@ import {
 import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id';
 import dayjs from 'dayjs';
 import { SocialAbstract } from '@gitroom/nestjs-libraries/integrations/social.abstract';
-import { getPublicKey, Relay, finalizeEvent, SimplePool } from 'nostr-tools';
+import { getPublicKey, Relay, finalizeEvent, SimplePool, type Event } from 'nostr-tools';
 
 import WebSocket from 'ws';
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
@@ -102,37 +102,24 @@ export class NostrProvider extends SocialAbstract implements SocialProvider {
     return {};
   }
 
-  private async publish(pubkey: string, event: any) {
-    let id = '';
+  private async publish(event: Event) {
+    let lastError: unknown;
+    let accepted = false;
     for (const relay of list) {
+      let relayInstance: Relay | undefined;
       try {
-        const relayInstance = await Relay.connect(relay);
-        const value = new Promise<any>((resolve) => {
-          relayInstance.subscribe([{ kinds: [1], authors: [pubkey] }], {
-            eoseTimeout: 6000,
-            onevent: (event) => {
-              resolve(event);
-            },
-            oneose: () => {
-              resolve({});
-            },
-            onclose: () => {
-              resolve({});
-            },
-          });
-        });
-
+        relayInstance = await Relay.connect(relay);
         await relayInstance.publish(event);
-        const all = await value;
-        relayInstance.close();
-        // relayInstance.close();
-        id = id || all?.id;
+        accepted = true;
       } catch (err) {
-        /**empty**/
+        lastError = err;
+      } finally {
+        relayInstance?.close();
       }
     }
 
-    return id;
+    if (!accepted) throw lastError;
+    return event.id;
   }
 
   async authenticate(params: {
@@ -187,7 +174,7 @@ export class NostrProvider extends SocialAbstract implements SocialProvider {
       this.secretKey(password)
     );
 
-    const eventId = await this.publish(id, textEvent);
+    const eventId = await this.publish(textEvent);
 
     return [
       {
@@ -224,7 +211,7 @@ export class NostrProvider extends SocialAbstract implements SocialProvider {
       this.secretKey(password)
     );
 
-    const eventId = await this.publish(id, textEvent);
+    const eventId = await this.publish(textEvent);
 
     return [
       {

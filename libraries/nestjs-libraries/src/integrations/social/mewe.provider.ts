@@ -6,11 +6,16 @@ import {
 } from '@gitroom/nestjs-libraries/integrations/social/social.integrations.interface';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id';
-import { SocialAbstract } from '@gitroom/nestjs-libraries/integrations/social.abstract';
+import {
+  BadBody,
+  SocialAbstract,
+  ValidityMedia,
+} from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import dayjs from 'dayjs';
 import { Integration } from '@prisma/client';
 import { MeweDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/mewe.dto';
 import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
+import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 
 export class MeweProvider extends SocialAbstract implements SocialProvider {
@@ -36,6 +41,13 @@ export class MeweProvider extends SocialAbstract implements SocialProvider {
 
   maxLength() {
     return 63206;
+  }
+
+  override async checkValidity(posts: Array<ValidityMedia[]>): Promise<string | true> {
+    if (posts.flat().some((item) => hasExtension(item.path, 'mp4'))) {
+      return 'MeWe does not support MP4 video attachments.';
+    }
+    return true;
   }
 
   override handleErrors(
@@ -205,7 +217,13 @@ export class MeweProvider extends SocialAbstract implements SocialProvider {
     accessToken: string,
     mediaPath: string
   ): Promise<string> {
-    const mediaResponse = await fetch(mediaPath);
+    const mediaResponse = await fetch(mediaPath, {
+      dispatcher: getSsrfSafeDispatcher(),
+    } as RequestInit);
+    if (!mediaResponse.ok) {
+      await mediaResponse.body?.cancel();
+      throw new Error(`Could not read the MeWe photo (HTTP ${mediaResponse.status})`);
+    }
     const blob = await mediaResponse.blob();
     const fileName = mediaPath.split('/').pop() || 'photo.jpg';
 
@@ -231,6 +249,9 @@ export class MeweProvider extends SocialAbstract implements SocialProvider {
     }
 
     const uploadData = await uploadResponse.json();
+    if (!uploadData?.id) {
+      throw new Error('MeWe did not return a photo ID for the uploaded attachment');
+    }
     return uploadData.id;
   }
 
@@ -244,13 +265,14 @@ export class MeweProvider extends SocialAbstract implements SocialProvider {
     const postType = firstPost.settings.postType || 'group';
     const groupId = firstPost.settings.group;
 
-    // Upload photos if present (exclude videos)
-    const imageMedia =
-      firstPost.media?.filter((m) => !m.path || !hasExtension(m.path, 'mp4')) ||
-      [];
+    const mediaItems = firstPost.media || [];
+    const valid = await this.checkValidity([mediaItems]);
+    if (valid !== true) {
+      throw new BadBody(this.identifier, '{}', '{}', valid);
+    }
 
     const uploadedPhotoIds: string[] = [];
-    for (const media of imageMedia) {
+    for (const media of mediaItems) {
       const photoId = await this.uploadPhoto(accessToken, media.path);
       uploadedPhotoIds.push(photoId);
     }

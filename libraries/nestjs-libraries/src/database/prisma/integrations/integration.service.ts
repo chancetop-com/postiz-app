@@ -121,6 +121,41 @@ export class IntegrationService {
     return this._integrationRepository.checkPreviousConnections(org, id);
   }
 
+  private async storeProfilePicture(
+    merchantId: string,
+    picture?: string,
+    currentPicture?: string
+  ) {
+    if (!picture) return picture;
+
+    if (process.env.STORAGE_PROVIDER === 'azure') {
+      // Reuse a path already saved for this organization's channel.
+      if (
+        picture === currentPicture &&
+        !/[?#]/.test(picture) &&
+        this.storage.publicUrl &&
+        picture.startsWith(this.storage.publicUrl(''))
+      ) {
+        return picture;
+      }
+    } else {
+      const hosted = [
+        process.env.FRONTEND_URL,
+        process.env.CLOUDFLARE_BUCKET_URL,
+        'https://imagedelivery.net',
+      ];
+      if (
+        hosted.some(
+          (base) => base && picture.startsWith(base.replace(/\/$/, '') + '/')
+        )
+      ) {
+        return picture;
+      }
+    }
+
+    return this.storage.uploadSimple(picture, merchantId);
+  }
+
   async createOrUpdateIntegration(
     additionalSettings:
       | {
@@ -148,14 +183,12 @@ export class IntegrationService {
     customInstanceDetails?: string,
     binding?: ConnectLinkBinding
   ) {
-    const uploadedPicture = picture
-      ? picture?.indexOf('imagedelivery.net') > -1
-        ? picture
-        : await this.storage.uploadSimple(picture).catch((err) => {
-            console.log('Failed to upload profile picture:', picture, err);
-            return undefined;
-          })
-      : undefined;
+    const uploadedPicture = await this.storeProfilePicture(org, picture).catch(
+      (err) => {
+        console.log('Failed to upload profile picture:', err);
+        return undefined;
+      }
+    );
 
     const migration =
       binding && !binding.rootInternalId
@@ -541,7 +574,11 @@ export class IntegrationService {
       String(getIntegrationInformation.id)
     );
     await this._integrationRepository.updateIntegration(id, {
-      picture: getIntegrationInformation.picture,
+      picture: await this.storeProfilePicture(
+        org,
+        getIntegrationInformation.picture,
+        getIntegration.picture
+      ),
       internalId: String(getIntegrationInformation.id),
       organizationId: org,
       name: getIntegrationInformation.name,
