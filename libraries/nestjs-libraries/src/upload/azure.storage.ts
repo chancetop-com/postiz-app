@@ -195,6 +195,10 @@ export class AzureBlobStorage implements IUploadProvider {
     }
   }
 
+  organizationUploadRoot(organizationId: string) {
+    return this.publicUrl(this.keyPrefix + organizationId + '/');
+  }
+
   publicUrl(key: string) {
     const client = key ? this.blobClient(key) : this.container;
     const { origin, pathname } = new URL(client.url);

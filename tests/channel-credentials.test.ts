@@ -1,3 +1,4 @@
+import { matchesIntegrationWhere } from './fixtures/integration-where';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
@@ -80,26 +81,6 @@ const row = (overrides: Partial<Row> = {}): Row => {
   };
 };
 
-const matches = (candidate: Row, where: Record<string, any> = {}): boolean =>
-  Object.entries(where).every(([key, condition]) => {
-    if (key === 'tokenExpiration' && condition && typeof condition === 'object') {
-      return (
-        candidate.tokenExpiration !== null &&
-        candidate.tokenExpiration.getTime() <=
-          new Date(condition.lte).getTime()
-      );
-    }
-    if (condition && typeof condition === 'object') {
-      if ('in' in condition) {
-        return condition.in.includes(candidate[key]);
-      }
-      if ('not' in condition) {
-        return candidate[key] !== condition.not;
-      }
-    }
-    return (candidate[key] ?? null) === (condition ?? null);
-  });
-
 const apply = (target: Row, data: Record<string, any>) => {
   for (const [key, value] of Object.entries(data)) {
     // Prisma treats an undefined value as "leave this field alone".
@@ -121,9 +102,9 @@ const createStore = () => {
 
   const integration = {
     findMany: async ({ where }: { where?: Record<string, any> } = {}) =>
-      structuredClone(rows.filter((candidate) => matches(candidate, where))),
+      structuredClone(rows.filter((candidate) => matchesIntegrationWhere(candidate, where))),
     findFirst: async ({ where }: { where?: Record<string, any> } = {}) =>
-      structuredClone(rows.find((candidate) => matches(candidate, where)) ?? null),
+      structuredClone(rows.find((candidate) => matchesIntegrationWhere(candidate, where)) ?? null),
     findUnique: async ({ where }: { where: Record<string, any> }) => {
       if (where.id) {
         return rows.find((candidate) => candidate.id === where.id) ?? null;
@@ -158,7 +139,7 @@ const createStore = () => {
       where: Record<string, any>;
       data: Record<string, any>;
     }) => {
-      const affected = rows.filter((candidate) => matches(candidate, where));
+      const affected = rows.filter((candidate) => matchesIntegrationWhere(candidate, where));
       affected.forEach((candidate) => apply(candidate, data));
       return { count: affected.length };
     },

@@ -1,10 +1,28 @@
+import {
+  browserPublishContent,
+  SelectedBrowserMedia,
+} from '../browser-publishing/browser-publish-content';
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
+import {
+  browserClaimDeadline,
+  browserReasonMessage,
+} from '../browser-publishing/occurrence';
+import { postableChannel } from '../browser-publishing/channel-access';
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
-import { Post as PostBody } from '@gitroom/nestjs-libraries/dtos/posts/create.post.dto';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
+import {
+  CreatePostDto,
+  Post as PostBody,
+} from '@gitroom/nestjs-libraries/dtos/posts/create.post.dto';
 import {
   APPROVED_SUBMIT_FOR_ORDER,
   CreationMethod,
   Integration,
+  Prisma,
   Post,
   State,
 } from '@prisma/client';
@@ -30,7 +48,9 @@ dayjs.extend(utc);
 @Injectable()
 export class PostsRepository {
   constructor(
-    private _post: PrismaRepository<'post'>,
+    private _post: PrismaRepository<
+      'post' | 'browserPostOccurrence' | 'media' | '$transaction'
+    >,
     private _popularPosts: PrismaRepository<'popularPosts'>,
     private _comments: PrismaRepository<'comments'>,
     private _tags: PrismaRepository<'tags'>,
@@ -39,12 +59,29 @@ export class PostsRepository {
     private _encryptionService: EncryptionService
   ) {}
 
+  browserPublishContent(
+    org: string,
+    identifier: string,
+    content: string,
+    settings: Record<string, unknown>,
+    media: SelectedBrowserMedia[]
+  ) {
+    return browserPublishContent(
+      this._post.model,
+      org,
+      identifier,
+      content,
+      settings,
+      media
+    );
+  }
+
   // A post that was loaded with its whole channel carries the tokens of the
   // channel the way they are stored, so they are decrypted like in the
   // integration repository
-  private async decryptIntegration<T extends { integration?: Integration | null }>(
-    post: T | null
-  ) {
+  private async decryptIntegration<
+    T extends { integration?: Integration | null }
+  >(post: T | null) {
     return post?.integration
       ? {
           ...post,
@@ -57,18 +94,26 @@ export class PostsRepository {
   }
 
   searchForMissingThreeHoursPosts() {
+    const window = {
+      gte: dayjs.utc().subtract(2, 'day').toDate(),
+      lt: dayjs.utc().toDate(),
+    };
     return this._post.model.post.findMany({
       where: {
-        integration: {
-          refreshNeeded: false,
-          inBetweenSteps: false,
-          disabled: false,
-          deletedAt: null,
-        },
-        publishDate: {
-          gte: dayjs.utc().subtract(2, 'day').toDate(),
-          lt: dayjs.utc().toDate(),
-        },
+        OR: [
+          // Recurring browser posts retain the first publishDate as their calendar anchor.
+          { browserWorkflowId: { not: null }, browserDueAt: window },
+          {
+            browserWorkflowId: null,
+            publishDate: window,
+            integration: {
+              refreshNeeded: false,
+              inBetweenSteps: false,
+              disabled: false,
+              deletedAt: null,
+            },
+          },
+        ],
         state: 'QUEUE',
         deletedAt: null,
         parentPostId: null,
@@ -82,6 +127,7 @@ export class PostsRepository {
           },
         },
         publishDate: true,
+        browserWorkflowId: true,
       },
     });
   }
@@ -94,6 +140,7 @@ export class PostsRepository {
       },
       select: {
         state: true,
+        browserWorkflowId: true,
       },
     });
   }
@@ -211,6 +258,14 @@ export class PostsRepository {
                 },
               },
               {
+                browserOccurrences: {
+                  some: {
+                    settledAt: { not: null },
+                    dueAt: { gte: startDate, lte: endDate },
+                  },
+                },
+              },
+              {
                 intervalInDays: {
                   not: null,
                 },
@@ -219,7 +274,7 @@ export class PostsRepository {
           },
         ],
         integration: {
-          deletedAt: null,
+          OR: [{ deletedAt: null }, { browserBindingId: { not: null } }],
           organizationId: orgId,
           ...(query.customer ? { customerId: query.customer } : {}),
         },
@@ -234,6 +289,19 @@ export class PostsRepository {
         releaseId: true,
         state: true,
         error: true,
+        browserWorkflowId: true,
+        browserDueAt: true,
+        browserOccurrences: {
+          where: { dueAt: { gte: startDate, lte: endDate } },
+          select: {
+            workflowId: true,
+            dueAt: true,
+            status: true,
+            settledAt: true,
+            reason: true,
+          },
+          orderBy: { settledAt: { sort: 'desc', nulls: 'last' } },
+        },
         intervalInDays: true,
         group: true,
         creationMethod: true,
@@ -268,13 +336,61 @@ export class PostsRepository {
     const result: any[] = [];
 
     for (const row of list) {
-      const post = { ...row, error: this.curatedError(row.error) };
-      if (!post.intervalInDays || post.intervalInDays < 1) {
-        result.push(post);
+      const { browserOccurrences, browserWorkflowId, browserDueAt, ...item } =
+        row;
+      const post = { ...item, error: this.curatedError(row.error) };
+      // Several saves can have the same scheduled instant. Only the current run
+      // or an actually settled historical run may supply that card's state.
+      const byInstant = new Map<number, (typeof browserOccurrences)[number]>();
+      const active = browserOccurrences.find(
+        (run) => run.workflowId === browserWorkflowId
+      );
+      for (const run of browserOccurrences) {
+        const instant = run.dueAt.getTime();
+        if (run === active || (run.settledAt && !byInstant.has(instant)))
+          byInstant.set(instant, run);
+      }
+      const card = (date: Date, run?: (typeof browserOccurrences)[number]) => ({
+        ...post,
+        publishDate: date,
+        ...(post.intervalInDays && { actualDate: post.publishDate }),
+        ...(run && {
+          browserStatus: run.status === 'unknown' ? 'needs_review' : run.status,
+          browserWorkflowId: run.workflowId,
+          error: browserReasonMessage(run.reason),
+          state:
+            run.status === 'published'
+              ? 'PUBLISHED'
+              : run.status === 'prepared'
+              ? 'DRAFT'
+              : ['failed', 'unknown', 'needs_review', 'timed_out'].includes(
+                  run.status
+                )
+              ? 'ERROR'
+              : 'QUEUE',
+        }),
+      });
+      // A reschedule can change both the anchor and the interval. Settled runs
+      // have their own durable dates, including when the author turns repetition off.
+      for (const run of byInstant.values()) {
+        if (run.settledAt) result.push(card(run.dueAt, run));
+      }
+      const browser = isBrowserChannel(row.integration.providerIdentifier);
+      if (
+        !post.intervalInDays ||
+        post.intervalInDays < 1 ||
+        (browser && row.state !== 'QUEUE')
+      ) {
+        const due = browserDueAt ?? row.publishDate;
+        const run = byInstant.get(+due);
+        if (due >= startDate && due <= endDate && !run?.settledAt)
+          result.push(card(due, run));
         continue;
       }
 
-      const firstDate = dayjs.utc(post.publishDate);
+      const firstDate = dayjs.utc(
+        browser ? browserDueAt ?? post.publishDate : post.publishDate
+      );
       let occurrence = firstDate;
       if (rangeStart.isAfter(firstDate)) {
         const skip = Math.ceil(
@@ -284,11 +400,8 @@ export class PostsRepository {
       }
 
       while (!occurrence.isAfter(rangeEnd)) {
-        result.push({
-          ...post,
-          publishDate: occurrence.toDate(),
-          actualDate: post.publishDate,
-        });
+        const run = byInstant.get(occurrence.valueOf());
+        if (!run?.settledAt) result.push(card(occurrence.toDate(), run));
         occurrence = occurrence.add(post.intervalInDays, 'day');
       }
     }
@@ -341,7 +454,7 @@ export class PostsRepository {
       intervalInDays: null as number | null,
 
       integration: {
-        deletedAt: null as any,
+        OR: [{ deletedAt: null }, { browserBindingId: { not: null } }],
         organizationId: orgId,
         ...(query.customer
           ? {
@@ -374,6 +487,7 @@ export class PostsRepository {
           intervalInDays: true,
           group: true,
           creationMethod: true,
+          browserWorkflowId: true,
           tags: {
             where: {
               tag: {
@@ -397,8 +511,29 @@ export class PostsRepository {
       this._post.model.post.count({ where }),
     ]);
 
+    const workflowIds = posts
+      .map((post) => post.browserWorkflowId)
+      .filter(Boolean);
+    const runs = workflowIds.length
+      ? await this._post.model.browserPostOccurrence.findMany({
+          where: { workflowId: { in: workflowIds } },
+          select: { workflowId: true, status: true, reason: true },
+        })
+      : [];
+    const statuses = new Map(runs.map((run) => [run.workflowId, run]));
     return {
-      posts,
+      posts: posts.map(({ browserWorkflowId, ...post }) => {
+        const run = statuses.get(browserWorkflowId);
+        return run
+          ? {
+              ...post,
+              browserWorkflowId,
+              browserStatus:
+                run.status === 'unknown' ? 'needs_review' : run.status,
+              error: browserReasonMessage(run.reason),
+            }
+          : post;
+      }),
       total,
       page,
       limit,
@@ -406,26 +541,83 @@ export class PostsRepository {
     };
   }
 
-  async deletePost(orgId: string, group: string) {
-    await this._post.model.post.updateMany({
-      where: {
-        organizationId: orgId,
-        group,
-      },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
+  // Content changes and the worker's upload grant take the same post row lock.
+  // Lock all editor rows before writing, including the old group on a channel switch.
+  private async lockEditable(
+    tx: Prisma.TransactionClient,
+    org: string,
+    ids: string[],
+    groups: string[] = []
+  ) {
+    await tx.$queryRaw`SELECT id FROM "Organization" WHERE id = ${org} FOR KEY SHARE`;
+    const rows = await tx.$queryRaw<
+      { id: string; group: string; name: string; browserLocked: boolean }[]
+    >`
+      SELECT p.id, p."group", p."browserLocked", i.name FROM "Post" p
+      JOIN "Integration" i ON i.id = p."integrationId" WHERE p."organizationId" = ${org}
+      AND (p."group" IN (${
+        groups.length ? Prisma.join(groups) : Prisma.sql`NULL`
+      })
+           OR p.id IN (${ids.length ? Prisma.join(ids) : Prisma.sql`NULL`}))
+      AND p."deletedAt" IS NULL ORDER BY p.id FOR UPDATE OF p`;
+    const locked = rows.find((row) => row.browserLocked);
+    if (locked)
+      throw new ConflictException(locked.name + ': Publishing has started');
+    return rows;
+  }
 
-    return this._post.model.post.findFirst({
-      where: {
-        organizationId: orgId,
-        group,
-        parentPostId: null,
-      },
-      select: {
-        id: true,
-      },
+  async updateBrowserSettings(
+    orgId: string,
+    post: Post,
+    settings: Record<string, unknown>
+  ) {
+    await this._post.model.$transaction(async (tx) => {
+      await this.lockEditable(tx, orgId, [post.id]);
+      // Validation used this version of the content, settings and channel. A
+      // concurrent edit, authorization or revocation must win before this write.
+      const updated = await tx.post.updateMany({
+        where: {
+          id: post.id,
+          organizationId: orgId,
+          deletedAt: null,
+          state: post.state,
+          updatedAt: post.updatedAt,
+          integrationId: post.integrationId,
+          integration: postableChannel,
+          browserWorkflowId: post.browserWorkflowId,
+        },
+        data: { settings: JSON.stringify(settings) },
+      });
+      if (!updated.count)
+        throw new ConflictException(
+          'Post or channel changed while updating settings'
+        );
+    });
+  }
+
+  async deletePost(orgId: string, group: string) {
+    return this._post.model.$transaction(async (tx) => {
+      await this.lockEditable(tx, orgId, [], [group]);
+      await tx.post.updateMany({
+        where: {
+          organizationId: orgId,
+          group,
+        },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+
+      return tx.post.findFirst({
+        where: {
+          organizationId: orgId,
+          group,
+          parentPostId: null,
+        },
+        select: {
+          id: true,
+        },
+      });
     });
   }
 
@@ -559,6 +751,40 @@ export class PostsRepository {
     });
   }
 
+  changeScheduledState(
+    id: string,
+    org: string,
+    state: 'QUEUE' | 'DRAFT',
+    browser: boolean
+  ) {
+    return this._post.model.$transaction(async (tx) => {
+      await this.lockEditable(tx, org, [id]);
+      const post = await tx.post.findUniqueOrThrow({
+        where: { id, organizationId: org, deletedAt: null },
+      });
+      if (browser && state === 'QUEUE' && post.state === 'PUBLISHED')
+        throw new ConflictException('This post has already been published');
+      return tx.post.update({
+        where: { id },
+        data: {
+          state,
+          ...(browser
+            ? {
+                browserWorkflowId:
+                  state === 'DRAFT' ? null : 'post_' + uuidv4(),
+                browserDueAt: state === 'DRAFT' ? null : post.publishDate,
+                browserClaimDeadlineAt:
+                  state === 'DRAFT'
+                    ? null
+                    : browserClaimDeadline(post.publishDate),
+                browserImmediate: false,
+              }
+            : {}),
+        },
+      });
+    });
+  }
+
   async changeState(id: string, state: State, err?: any, body?: any) {
     const update = await this._post.model.post.update({
       where: {
@@ -610,25 +836,59 @@ export class PostsRepository {
     id: string,
     date: string,
     isDraft: boolean,
-    action: 'schedule' | 'update' = 'schedule'
+    action: 'schedule' | 'update' = 'schedule',
+    republish = false,
+    assertScheduleAllowed?: () => Promise<void>
   ) {
-    return this._post.model.post.update({
-      where: {
-        organizationId: orgId,
-        id,
-      },
-      data: {
-        publishDate: dayjs(date).toDate(),
-        // schedule: set state to QUEUE (or DRAFT if it was a draft)
-        // update: don't change the state
-        ...(action === 'schedule'
-          ? {
-              state: isDraft ? 'DRAFT' : 'QUEUE',
-              releaseId: null,
-              releaseURL: null,
-            }
-          : {}),
-      },
+    return this._post.model.$transaction(async (tx) => {
+      await this.lockEditable(tx, orgId, [id]);
+      const current = await tx.post.findUnique({
+        where: { id, organizationId: orgId },
+        include: { integration: { select: { providerIdentifier: true } } },
+      });
+      const browser = isBrowserChannel(current?.integration.providerIdentifier);
+      if (browser) {
+        isDraft = current.state === 'DRAFT';
+        if (!isDraft && (action === 'schedule' || current.state === 'QUEUE')) await assertScheduleAllowed?.();
+      }
+      if (
+        browser &&
+        action === 'schedule' &&
+        current.state === 'PUBLISHED' &&
+        !republish
+      ) {
+        throw new ConflictException('This post has already been published');
+      }
+      return tx.post.update({
+        where: {
+          organizationId: orgId,
+          id,
+        },
+        data: {
+          publishDate: dayjs(date).toDate(),
+          ...(browser &&
+          !isDraft &&
+          (action === 'schedule' || current?.state === 'QUEUE')
+            ? {
+                browserWorkflowId: 'post_' + uuidv4(),
+                browserDueAt: dayjs(date).toDate(),
+                browserClaimDeadlineAt: browserClaimDeadline(
+                  dayjs(date).toDate()
+                ),
+                browserImmediate: false,
+              }
+            : {}),
+          // schedule: set state to QUEUE (or DRAFT if it was a draft)
+          // update: don't change the state
+          ...(action === 'schedule'
+            ? {
+                state: isDraft ? 'DRAFT' : 'QUEUE',
+                releaseId: null,
+                releaseURL: null,
+              }
+            : {}),
+        },
+      });
     });
   }
 
@@ -667,22 +927,83 @@ export class PostsRepository {
     });
   }
 
-  async createOrUpdatePost(
-    state: 'draft' | 'schedule' | 'now' | 'update',
+  async createOrUpdatePosts(
     orgId: string,
-    date: string,
-    body: PostBody,
-    tags: { value: string; label: string }[],
+    submission: CreatePostDto,
     creationMethod: CreationMethod,
-    inter?: number,
-    // Keep the existing group instead of rotating it, so open clients
-    // (calendar) holding the group stay valid. Used by out-of-band updates
-    // (agent / MCP / public API); the dashboard keeps the rotate-and-sweep.
-    keepGroup = false,
-    // Shared by the posts saved together for several channels, so opening one
-    // of them in the editor brings the others.
-    batchId?: string
+    keepGroup: boolean
   ) {
+    const batchId = uuidv4();
+    const { posts: bodies } = submission;
+    return this._post.model.$transaction(async (tx) => {
+      const groups = bodies.map((body) => body.group).filter(Boolean);
+      const ids = bodies.flatMap((body) =>
+        body.value.map((v) => v.id).filter(Boolean)
+      );
+      const rows = await this.lockEditable(tx, orgId, ids, groups);
+      if (bodies.some((body) => isBrowserChannel(body.settings.__type))) {
+        const channels = await tx.integration.findMany({
+          where: {
+            organizationId: orgId,
+            id: { in: bodies.map((body) => body.integration.id) },
+            ...postableChannel,
+          },
+          select: { id: true, browserBindingId: true },
+        });
+        const claimed = new Set<string>();
+        for (const body of bodies) {
+          const channel = channels.find((c) => c.id === body.integration.id);
+          if (
+            !channel ||
+            (body.integration.bindingId !== undefined &&
+              channel.browserBindingId !== body.integration.bindingId)
+          ) {
+            throw new BadRequestException(
+              body.integration.id + ': Channel is no longer available'
+            );
+          }
+          const ids = new Set(body.value.map((value) => value.id));
+          for (const row of rows.filter(
+            (row) => row.group === body.group || ids.has(row.id)
+          )) {
+            if (claimed.has(row.id)) {
+              throw new BadRequestException(
+                row.name +
+                  ': A saved post belongs to one account per submission'
+              );
+            }
+            claimed.add(row.id);
+          }
+        }
+      }
+      const results: Post[][] = [];
+      for (const channel of bodies) {
+        results.push(
+          await this.saveChannelPosts(
+            tx,
+            orgId,
+            submission,
+            channel,
+            creationMethod,
+            keepGroup,
+            batchId
+          )
+        );
+      }
+      return results;
+    });
+  }
+
+  private async saveChannelPosts(
+    tx: Prisma.TransactionClient,
+    orgId: string,
+    submission: CreatePostDto,
+    body: PostBody,
+    creationMethod: CreationMethod,
+    keepGroup: boolean,
+    batchId: string
+  ) {
+    const { type: state, tags, inter, republish } = submission;
     const posts: Post[] = [];
     const uuid = uuidv4();
     const group = keepGroup && body.group ? body.group : uuid;
@@ -690,10 +1011,58 @@ export class PostsRepository {
     // an edited post stays in the batch it was created in, even when it is
     // saved on its own or with a group that was rotated since
     const ids = body.value.map((value) => value.id).filter(Boolean);
+    const isBrowser = isBrowserChannel(body.settings?.__type);
+    const date = state !== 'now' ? body.date || submission.date :
+      isBrowser ? submission.date : dayjs(submission.date).format('YYYY-MM-DDTHH:mm:00');
+    const saveDate = dayjs(date).toDate();
+    const prior = ids[0]
+      ? await tx.post.findUnique({
+          where: { id: ids[0], organizationId: orgId },
+        })
+      : null;
+    if (
+      isBrowser &&
+      prior?.state === 'PUBLISHED' &&
+      ['now', 'schedule'].includes(state) &&
+      !republish
+    ) {
+      throw new ConflictException('This post has already been published');
+    }
+    const sameDueAndChannel =
+      prior?.publishDate.getTime() === saveDate.getTime() &&
+      prior.integrationId === body.integration.id;
+    // Re-saving the scheduled editor with revised copy/media keeps its cache,
+    // claim deadline and pending workflow. A new schedule gets its own identity.
+    const scheduleChanged =
+      state === 'update'
+        ? prior?.state === 'QUEUE' && !sameDueAndChannel
+        : !(
+            state === 'schedule' &&
+            prior?.state === 'QUEUE' &&
+            prior.browserWorkflowId &&
+            !prior.browserImmediate &&
+            sameDueAndChannel
+          );
+    const browserSchedule =
+      !isBrowser || state === 'draft'
+        ? {
+            browserWorkflowId: null,
+            browserDueAt: null,
+            browserClaimDeadlineAt: null,
+            browserImmediate: false,
+          }
+        : scheduleChanged
+        ? {
+            browserWorkflowId: 'post_' + uuidv4(),
+            browserDueAt: saveDate,
+            browserClaimDeadlineAt: browserClaimDeadline(saveDate),
+            browserImmediate: state === 'now',
+          }
+        : {};
     const existingBatchId =
       body.group || ids.length
         ? (
-            await this._post.model.post.findFirst({
+            await tx.post.findFirst({
               where: {
                 organizationId: orgId,
                 deletedAt: null,
@@ -714,9 +1083,19 @@ export class PostsRepository {
 
     for (const value of body.value) {
       const updateData = (type: 'create' | 'update') => ({
-        publishDate: dayjs(date).toDate(),
+        publishDate: saveDate,
+        ...(!posts.length ? browserSchedule : {}),
+        browserDraftEditor:
+          (state === 'draft' ||
+            (state === 'update' && prior?.state === 'DRAFT')) &&
+          isBrowser &&
+          !posts.length &&
+          body.draftEditor
+            ? JSON.stringify(body.draftEditor)
+            : null,
         integration: {
           connect: {
+            ...postableChannel,
             id: body.integration.id,
             organizationId: orgId,
           },
@@ -759,9 +1138,10 @@ export class PostsRepository {
       });
 
       posts.push(
-        await this._post.model.post.upsert({
+        await tx.post.upsert({
           where: {
             id: value.id || uuidv4(),
+            organizationId: orgId,
           },
           create: { ...updateData('create') },
           update: {
@@ -777,7 +1157,7 @@ export class PostsRepository {
       );
 
       if (posts.length === 1) {
-        await this._tagsPosts.model.tagsPosts.deleteMany({
+        await tx.tagsPosts.deleteMany({
           where: {
             post: {
               id: posts[0].id,
@@ -786,7 +1166,7 @@ export class PostsRepository {
         });
 
         if (tags.length) {
-          const tagsList = await this._tags.model.tags.findMany({
+          const tagsList = await tx.tags.findMany({
             where: {
               orgId: orgId,
               deletedAt: null,
@@ -797,7 +1177,7 @@ export class PostsRepository {
           });
 
           if (tagsList.length) {
-            await this._post.model.post.update({
+            await tx.post.update({
               where: {
                 id: posts[posts.length - 1].id,
               },
@@ -816,24 +1196,8 @@ export class PostsRepository {
       }
     }
 
-    const previousPost = body.group
-      ? (
-          await this._post.model.post.findFirst({
-            where: {
-              organizationId: orgId,
-              group: body.group,
-              deletedAt: null,
-              parentPostId: null,
-            },
-            select: {
-              id: true,
-            },
-          })
-        )?.id!
-      : undefined;
-
     if (body.group && !keepGroup) {
-      await this._post.model.post.updateMany({
+      await tx.post.updateMany({
         where: {
           organizationId: orgId,
           group: body.group,
@@ -849,7 +1213,7 @@ export class PostsRepository {
     // keepGroup: the updated rows still carry the old group, so sweep only the
     // rows dropped from it (removed comments) by id instead of by group.
     if (body.group && keepGroup) {
-      await this._post.model.post.updateMany({
+      await tx.post.updateMany({
         where: {
           organizationId: orgId,
           group: body.group,
@@ -865,7 +1229,7 @@ export class PostsRepository {
       });
     }
 
-    return { previousPost, posts };
+    return posts;
   }
 
   async submit(id: string, order: string, buyerOrganizationId: string) {

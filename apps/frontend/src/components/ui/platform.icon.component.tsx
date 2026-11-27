@@ -1,3 +1,5 @@
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
+import { FiGlobe } from '@meronex/icons/fi';
 import { FC } from 'react';
 import clsx from 'clsx';
 
@@ -77,6 +79,16 @@ export const PlatformIcon: FC<{
 }) => {
   const mark = brandMarks[identifier || ''];
 
+  if (isBrowserChannel(identifier)) {
+    return (
+      <FiGlobe
+        aria-label={identifier}
+        width={size}
+        height={size}
+        className={clsx('bg-newBgColorInner', iconClassName, className)}
+      />
+    );
+  }
   if (!mark) {
     return (
       <img

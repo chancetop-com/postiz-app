@@ -18,6 +18,7 @@ import { IntegrationContext } from '@gitroom/frontend/components/launches/helper
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import useSWR from 'swr';
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
 import { InternalChannels } from '@gitroom/frontend/components/launches/internal.channels';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
@@ -232,6 +233,14 @@ export const withProvider = function <T extends object>(params: {
             identifier: selectedIntegration.integration.identifier,
             values: value,
             settings: form.getValues(),
+            ...(isBrowserChannel(
+              selectedIntegration.integration.identifier
+            ) && {
+              draftEditor: {
+                overridesShared: !!internal,
+                shared: global,
+              },
+            }),
           };
         },
         trigger: () => {
@@ -249,7 +258,7 @@ export const withProvider = function <T extends object>(params: {
           setHide(true);
         },
       }),
-      [value]
+      [value, internal, global, selectedIntegration]
     );
 
     return (

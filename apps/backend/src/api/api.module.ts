@@ -1,3 +1,6 @@
+import { BrowserReviewController } from './routes/browser-review.controller';
+import { BrowserUploadController } from './routes/browser-upload.controller';
+import { BrowserPublishingController } from './routes/browser-publishing.controller';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AuthController } from '@gitroom/backend/api/routes/auth.controller';
 import { AuthService } from '@gitroom/backend/services/auth/auth.service';
@@ -79,6 +82,8 @@ const authenticatedController = [
   OAuthAuthorizedController,
   AnnouncementsController,
   AdminController,
+  BrowserPublishingController,
+  BrowserReviewController,
 ];
 @Module({
   imports: [UploadModule],
@@ -101,6 +106,7 @@ const authenticatedController = [
         OAuthController,
         MediaWidgetController,
         ClippingWidgetController,
+        BrowserUploadController,
         ...authenticatedController,
       ],
   providers: [

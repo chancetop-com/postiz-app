@@ -235,8 +235,11 @@ export class IntegrationService {
     return this._integrationRepository.updateOnCustomerName(org, id, name);
   }
 
-  getIntegrationsList(org: string) {
-    return this._integrationRepository.getIntegrationsList(org);
+  getIntegrationsList(org: string, discoverBrowser = false) {
+    return this._integrationRepository.getIntegrationsList(
+      org,
+      discoverBrowser
+    );
   }
 
   getChannelHealth(org: string, includeDeleted = false) {

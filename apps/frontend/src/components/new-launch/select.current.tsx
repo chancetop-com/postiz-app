@@ -56,6 +56,7 @@ export function useHasScroll(ref: RefObject<HTMLElement | null>): boolean {
 }
 
 export const SelectCurrent: FC = () => {
+  const t = useT();
   const modals = useDecisionModal();
   const existingData = useExistingData();
   const {
@@ -108,9 +109,14 @@ export const SelectCurrent: FC = () => {
             locked && 'pointer-events-none'
           )}
         >
-          {/* an existing post opens on its channels, without the global mode */}
-          {!existingData.integration && (
-            <div
+          {(!existingData.integration ||
+            [existingData, ...(existingData.siblings || [])].some(
+              (row) => row.draftEditor
+            )) && (
+            <button
+              type="button"
+              aria-label={t('shared_content', 'Shared content')}
+              aria-pressed={current === 'global'}
               onClick={() => {
                 setHide(true);
                 setCurrent('global');
@@ -126,13 +132,16 @@ export const SelectCurrent: FC = () => {
               <div>
                 <GlobalIcon className="mobile:w-[24px] mobile:h-[24px]" />
               </div>
-            </div>
+            </button>
           )}
           {/* a locked tab is dimmed, a brand mark can't be: only its avatar is
               (see isBrandMark). It is also bigger than the avatar of a tab, so
               it sits next to it, in a wider tab */}
           {selectedIntegrations.map(({ integration }) => (
-            <div
+            <button
+              type="button"
+              aria-label={integration.name}
+              aria-pressed={current === integration.id}
               onClick={() => {
                 setHide(true);
                 setCurrent(integration.id);
@@ -199,7 +208,7 @@ export const SelectCurrent: FC = () => {
                   markClassName="bg-newBgLineColor mobile:bg-newSettings"
                 />
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>

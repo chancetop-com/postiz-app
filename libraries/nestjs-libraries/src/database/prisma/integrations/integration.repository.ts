@@ -1,3 +1,7 @@
+import {
+  availableBrowserChannel,
+  postableChannel,
+} from '../browser-publishing/channel-access';
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
 import { HttpException, Injectable } from '@nestjs/common';
 import { createHash } from 'crypto';
@@ -558,8 +562,12 @@ export class IntegrationRepository {
           // IDs on other platforms. A same-platform, single-step reconnect can reuse its row.
           await tx.integration.updateMany({
             where: {
-              organizationId: org, internalId, deletedAt: { not: null },
-              ...(!binding.rootInternalId && { providerIdentifier: { not: provider } }),
+              organizationId: org,
+              internalId,
+              deletedAt: { not: null },
+              ...(!binding.rootInternalId && {
+                providerIdentifier: { not: provider },
+              }),
             },
             data: { internalId: makeId(10) },
           });
@@ -631,7 +639,9 @@ export class IntegrationRepository {
   async getIntegrationById(org: string, id: string) {
     return this.decryptTokens(
       await this._integration.model.integration.findFirst({
+        include: { browserBinding: { select: { provider: true } } },
         where: {
+          ...postableChannel,
           organizationId: org,
           id,
         },
@@ -770,9 +780,13 @@ export class IntegrationRepository {
   // Without the tokens: nothing that lists the channels uses them, and a list
   // that never decrypts can never fail on a token (it is also read while a
   // payment webhook changes a subscription)
-  getIntegrationsList(org: string) {
+  getIntegrationsList(org: string, discoverBrowser = false) {
     return this._integration.model.integration.findMany({
       where: {
+        OR: [
+          { browserBindingId: null },
+          ...(discoverBrowser ? [availableBrowserChannel] : []),
+        ],
         organizationId: org,
         deletedAt: null,
       },
@@ -782,6 +796,7 @@ export class IntegrationRepository {
       },
       include: {
         customer: true,
+        browserBinding: { select: { provider: true } },
       },
     });
   }

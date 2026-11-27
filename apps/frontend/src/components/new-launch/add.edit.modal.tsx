@@ -15,7 +15,6 @@ import {
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
-import { Post } from '@prisma/client';
 
 export interface AddEditModalProps {
   dummy?: boolean;
@@ -147,7 +146,9 @@ export const AddEditModalInner: FC<AddEditModalProps> = (props) => {
 };
 
 // an existing post, as the values of the editor
-const postValues = (posts: Post[]) =>
+const postValues = (
+  posts: { id?: string; content: string; delay: number; image?: unknown }[]
+) =>
   posts.map((post) => ({
     delay: post.delay,
     content: /<p[\s>]/i.test(post.content)
@@ -156,9 +157,8 @@ const postValues = (posts: Post[]) =>
           .split('\n')
           .map((line: string) => `<p>${line}</p>`)
           .join(''),
-    id: post.id,
-    // @ts-ignore
-    media: post.image as any[],
+    id: post.id || makeId(10),
+    media: post.image as { id: string; path: string }[],
   }));
 
 export const AddEditModalInnerInner: FC<AddEditModalProps> = (props) => {
@@ -192,6 +192,9 @@ export const AddEditModalInnerInner: FC<AddEditModalProps> = (props) => {
   );
 
   useEffect(() => {
+    const channels = [existingData, ...(existingData.siblings || [])];
+    const defaults = channels.find((channel) => channel.draftEditor)
+      ?.draftEditor?.shared;
     if (existingData.integration) {
       if (existingData?.posts?.[0]?.intervalInDays) {
         setRepeater(existingData.posts[0].intervalInDays);
@@ -204,24 +207,27 @@ export const AddEditModalInnerInner: FC<AddEditModalProps> = (props) => {
         })) || []
       );
 
-      addInternalValue(
-        0,
-        existingData.integration,
-        postValues(existingData.posts)
-      );
-
-      // the other channels the post was created with, each with its own
-      // content and date
-      for (const sibling of existingData.siblings || []) {
+      for (const channel of channels) {
         if (
-          selectedIntegrations.some(
-            (p) => p.integration.id === sibling.integration
+          !selectedIntegrations.some(
+            (p) => p.integration.id === channel.integration
           )
+        )
+          continue;
+        // A partially saved batch can have an older shared version on an unchecked
+        // channel. Keep its effective content until the author elects to replace it.
+        if (
+          !channel.draftEditor ||
+          channel.draftEditor.overridesShared ||
+          JSON.stringify(channel.draftEditor.shared) !==
+            JSON.stringify(defaults)
         ) {
-          addInternalValue(0, sibling.integration, postValues(sibling.posts));
+          addInternalValue(0, channel.integration, postValues(channel.posts));
+        }
+        if (channel.integration !== existingData.integration) {
           setChannelDate(
-            sibling.integration,
-            fromUtc(sibling.posts[0].publishDate)
+            channel.integration,
+            fromUtc(channel.posts[0].publishDate)
           );
         }
       }
@@ -236,28 +242,28 @@ export const AddEditModalInnerInner: FC<AddEditModalProps> = (props) => {
 
     addGlobalValue(
       0,
-      props.onlyValues?.length
+      defaults
+        ? postValues(defaults.map((row) => ({ ...row, id: undefined })))
+        : props.onlyValues?.length
         ? props.onlyValues.map((p) => ({
-            content:
-              /<p[\s>]/i.test(p.content)
-                ? p.content
-                : p.content
-                    .split('\n')
-                    .map((line: string) => `<p>${line}</p>`)
-                    .join(''),
+            content: /<p[\s>]/i.test(p.content)
+              ? p.content
+              : p.content
+                  .split('\n')
+                  .map((line: string) => `<p>${line}</p>`)
+                  .join(''),
             id: makeId(10),
             media: p.image || [],
           }))
         : props.set?.posts?.length
         ? props.set.posts[0].value.map((p: any) => ({
             id: makeId(10),
-            content:
-              /<p[\s>]/i.test(p.content)
-                ? p.content
-                : p.content
-                    .split('\n')
-                    .map((line: string) => `<p>${line}</p>`)
-                    .join(''),
+            content: /<p[\s>]/i.test(p.content)
+              ? p.content
+              : p.content
+                  .split('\n')
+                  .map((line: string) => `<p>${line}</p>`)
+                  .join(''),
             // @ts-ignore
             media: p.media,
           }))

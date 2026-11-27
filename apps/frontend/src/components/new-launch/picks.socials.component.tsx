@@ -1,5 +1,6 @@
 'use client';
 
+import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { FC } from 'react';
 import clsx from 'clsx';
 import { useLaunchStore } from '@gitroom/frontend/components/new-launch/store';
@@ -37,6 +38,7 @@ export const IntegrationListRow: FC<{
   onClick: () => void;
   dimmed?: boolean;
 }> = ({ integration, selected, onClick, dimmed }) => {
+  const t = useT();
   // a brand mark can't be dimmed with its row (see isBrandMark)
   const dimParts =
     isBrandMark(integration.identifier) && dimmed && 'opacity-50';
@@ -65,7 +67,12 @@ export const IntegrationListRow: FC<{
           dimParts
         )}
       >
-        {integration.name}
+        <span>{integration.name}</span>
+        {integration.browserPublishing && (
+          <span className="block text-xs font-normal">
+            {t('browser_publishing', 'Browser publishing')}
+          </span>
+        )}
       </div>
       <div className={clsx(dimParts)}>
         <Check onChange={() => {}} value={selected} />
@@ -78,6 +85,7 @@ export const PicksSocialsComponent: FC<{
   toolTip?: boolean;
   list?: boolean;
 }> = ({ toolTip, list }) => {
+  const t = useT();
   const exising = useExistingData();
 
   const {
@@ -155,10 +163,21 @@ export const PicksSocialsComponent: FC<{
                 className="flex gap-[8px] items-center"
                 {...(toolTip && {
                   'data-tooltip-id': 'tooltip',
-                  'data-tooltip-content': integration.name,
+                  'data-tooltip-content': integration.browserPublishing
+                    ? integration.name +
+                      ' · ' +
+                      t('browser_publishing', 'Browser publishing')
+                    : integration.name,
                 })}
               >
                 <div
+                  title={
+                    integration.browserPublishing
+                      ? integration.name +
+                        ' · ' +
+                        t('browser_publishing', 'Browser publishing')
+                      : integration.name
+                  }
                   onClick={toggleIntegration(integration)}
                   className={clsx(
                     'cursor-pointer border-[2px] relative rounded-full flex justify-center items-center bg-fifth filter transition-all duration-500',

@@ -694,13 +694,14 @@ export class OrganizationRepository {
     });
   }
 
-  getAllUsersOrgs(orgId: string) {
+  getAllUsersOrgs(orgId: string, activeOnly = false) {
     return this._organization.model.organization.findUnique({
       where: {
         id: orgId,
       },
       select: {
         users: {
+          ...(activeOnly && {where:{disabled:false}}),
           select: {
             user: {
               select: {

@@ -1,3 +1,4 @@
+import { matchesIntegrationWhere } from './fixtures/integration-where';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HttpException } from '@nestjs/common';
 
@@ -51,23 +52,6 @@ interface Row {
   [key: string]: unknown;
 }
 
-const matches = (row: Row, where: any): boolean =>
-  Object.entries(where || {}).every(([key, expected]: [string, any]) => {
-    const actual = row[key];
-    if (expected && typeof expected === 'object' && !(expected instanceof Date)) {
-      if ('not' in expected) {
-        return expected.not === null ? actual !== null : actual !== expected.not;
-      }
-      if ('in' in expected) {
-        return expected.in.includes(actual);
-      }
-      if ('equals' in expected) {
-        return actual === expected.equals;
-      }
-    }
-    return actual === expected;
-  });
-
 /**
  * The ORM boundary: an in-memory `integration` table exposing only the calls
  * this write path uses, plus the post soft-delete it performs alongside.
@@ -88,7 +72,7 @@ const memoryDb = (seed: Partial<Row>[] = []) => {
 
   const integration = {
     findFirst: async ({ where }: any) =>
-      rows.find((row) => matches(row, where)) || null,
+      rows.find((row) => matchesIntegrationWhere(row, where)) || null,
     findUnique: async ({ where }: any) => {
       if (where.id) {
         return rows.find((row) => row.id === where.id) || null;
@@ -102,7 +86,7 @@ const memoryDb = (seed: Partial<Row>[] = []) => {
         ) || null
       );
     },
-    findMany: async ({ where }: any) => rows.filter((row) => matches(row, where)),
+    findMany: async ({ where }: any) => rows.filter((row) => matchesIntegrationWhere(row, where)),
     update: async ({ where, data }: any) => {
       const row = rows.find((current) => current.id === where.id);
       if (!row) {
@@ -112,7 +96,7 @@ const memoryDb = (seed: Partial<Row>[] = []) => {
       return row;
     },
     updateMany: async ({ where, data }: any) => {
-      const found = rows.filter((row) => matches(row, where));
+      const found = rows.filter((row) => matchesIntegrationWhere(row, where));
       found.forEach((row) => Object.assign(row, data));
       return { count: found.length };
     },

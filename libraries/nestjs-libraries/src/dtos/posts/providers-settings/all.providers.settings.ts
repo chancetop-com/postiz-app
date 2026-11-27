@@ -1,3 +1,7 @@
+import {
+  browserPlatforms,
+  type BrowserPlatform,
+} from '@gitroom/helpers/utils/browser-publishing';
 import { RedditSettingsDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/reddit.dto';
 import { PinterestSettingsDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/pinterest.dto';
 import { YoutubeSettingsDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/youtube.settings.dto';
@@ -62,12 +66,17 @@ export type AllProvidersSettings =
   | ProviderExtension<'skool', SkoolDto>
   | ProviderExtension<'mewe', MeweDto>
   | ProviderExtension<'tumblr', TumblrDto>
+  | ProviderExtension<`browser-${BrowserPlatform}`, None>
   | ProviderExtension<'whop', WhopDto>;
 
 type None = NonNullable<unknown>;
 
 export const allProviders = (setEmpty?: any) => {
   return [
+    ...Object.keys(browserPlatforms).map((platform) => ({
+      value: setEmpty,
+      name: 'browser-' + platform,
+    })),
     { value: RedditSettingsDto, name: 'reddit' },
     { value: LemmySettingsDto, name: 'lemmy' },
     { value: YoutubeSettingsDto, name: 'youtube' },

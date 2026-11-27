@@ -1,3 +1,4 @@
+import { browserPostWorkflow } from '../browser-post.workflow';
 import { PostActivity } from '@gitroom/orchestrator/activities/post.activity';
 import {
   ActivityFailure,
@@ -129,6 +130,9 @@ export async function postWorkflowV112({
   organizationId: string;
   postNow?: boolean;
 }) {
+  if (taskQueue === 'browser' && patched('browser-channel-publish-v1')) {
+    return browserPostWorkflow({ postId, organizationId });
+  }
   // Dynamic task queue, for concurrency
   const {
     getIntegrationById,

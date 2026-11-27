@@ -98,6 +98,9 @@ export const CalendarContext = createContext({
 });
 
 export interface Integrations {
+  browserPublishing?: boolean;
+  browserTestTarget?: boolean;
+  bindingId?: string;
   name: string;
   originalName?: string;
   id: string;

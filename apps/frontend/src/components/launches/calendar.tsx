@@ -1,5 +1,7 @@
 'use client';
 
+import { BrowserReviewForm } from './browser-review';
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
 import React, {
   FC,
   Fragment,
@@ -286,10 +288,18 @@ const usePostActions = (onMutate?: () => void) => {
         return;
       }
 
-      await fetch(`/posts/${post.group}`, {
+      const removed = await fetch(`/posts/${post.group}`, {
         method: 'DELETE',
       });
 
+      if (!removed.ok) {
+        toaster.show(
+          t('post_could_not_be_deleted', 'The post could not be deleted'),
+          'warning'
+        );
+        mutate();
+        return;
+      }
       toaster.show(
         t('post_deleted_successfully', 'Post deleted successfully'),
         'success'
@@ -1217,6 +1227,7 @@ const CalendarItem: FC<{
   display: 'day' | 'week' | 'month';
   showTime?: boolean;
   post: Post & {
+    browserStatus?: string;
     integration: Integration;
     tags: {
       tag: Tags;
@@ -1241,6 +1252,19 @@ const CalendarItem: FC<{
   } = props;
   const { disableXAnalytics } = useVariables();
   const user = useUser();
+  const publishing = post.browserStatus === 'publishing';
+  const needsReview = post.browserStatus === 'needs_review';
+  const locked = publishing || needsReview;
+  const modal = useModals();
+  const {reloadCalendarView} = useCalendar();
+  function openReview() {
+    if (!post.browserWorkflowId) return;
+    modal.openModal({
+      title:t('browser_review','Review browser publication'),
+      closeOnClickOutside:true, closeOnEscape:true, withCloseButton:true,
+      children:<BrowserReviewForm workflowId={post.browserWorkflowId} onSettled={reloadCalendarView}/>,
+    });
+  }
   const brandMark = isBrandMark(post.integration?.providerIdentifier);
   const showCreationMethodBadge =
     user?.impersonate &&
@@ -1252,6 +1276,7 @@ const CalendarItem: FC<{
   const [{ opacity }, dragRef] = useDrag(
     () => ({
       type: 'post',
+      canDrag: !locked,
       item: {
         id: post.id,
         interval: !!post.intervalInDays,
@@ -1261,7 +1286,7 @@ const CalendarItem: FC<{
         opacity: monitor.isDragging() ? 0 : 1,
       }),
     }),
-    []
+    [locked, post.id, post.intervalInDays, date]
   );
   return (
     <div
@@ -1285,7 +1310,9 @@ const CalendarItem: FC<{
           )}
           data-tooltip-id="tooltip"
           data-tooltip-class-name="!max-w-[400px] break-words"
-          data-tooltip-content={post.error || 'An error occurred while publishing this post'}
+          data-tooltip-content={
+            post.error || 'An error occurred while publishing this post'
+          }
         >
           !
         </div>
@@ -1299,6 +1326,13 @@ const CalendarItem: FC<{
         >
           ✓
         </div>
+      )}
+      {publishing && (
+        <span>{t('publishing', 'Publishing')}</span>
+      )}
+      {needsReview && <button type="button" onClick={openReview} className="underline text-start">{t('browser_needs_review','Needs review')}</button>}
+      {post.browserStatus === 'prepared' && (
+        <span>{t('browser_prepared', 'Prepared without publishing')}</span>
       )}
       {showCreationMethodBadge && (
         <div className="absolute -bottom-[4px] -right-[4px] z-10">
@@ -1338,6 +1372,7 @@ const CalendarItem: FC<{
         )}
         {(state === 'PUBLISHED' || state === 'ERROR') &&
           !post.intervalInDays &&
+          !isBrowserChannel(post.integration?.providerIdentifier) &&
           post.releaseURL?.startsWith('http') && (
             <div
               className={clsx(
@@ -1349,7 +1384,8 @@ const CalendarItem: FC<{
               <OpenPost />
             </div>
           )}{' '}
-        {((post.integration.providerIdentifier === 'x' && disableXAnalytics) || !post.releaseId) ? (
+        {(post.integration.providerIdentifier === 'x' && disableXAnalytics) ||
+        !post.releaseId ? (
           <></>
         ) : post.releaseId === 'missing' && missingRelease ? (
           <div
@@ -1392,18 +1428,20 @@ const CalendarItem: FC<{
         >
           <Duplicate />
         </div>
-        <div
-          className={clsx(
-            'hidden group-hover:block hover:underline cursor-pointer text-red-500',
-            post?.tags?.[0]?.tag?.color && 'text-shadow-tags'
-          )}
-          onClick={deletePost}
-        >
-          <DeletePost />
-        </div>
+        {!locked && (
+          <div
+            className={clsx(
+              'hidden group-hover:block hover:underline cursor-pointer text-red-500',
+              post?.tags?.[0]?.tag?.color && 'text-shadow-tags'
+            )}
+            onClick={deletePost}
+          >
+            <DeletePost />
+          </div>
+        )}
       </div>
       <div
-        onClick={editPost}
+        onClick={needsReview ? openReview : publishing ? undefined : editPost}
         className={clsx(
           'gap-[5px] w-full flex h-full flex-1 rounded-br-[10px] rounded-bl-[10px] p-[8px] text-[14px] bg-newColColor',
           'relative',
@@ -1454,12 +1492,12 @@ const CalendarItem: FC<{
           <div className="text-start">
             {state === 'DRAFT' ? t('draft', 'Draft') + ': ' : ''}
           </div>
-            <div className="w-full relative">
-              <div className="absolute top-0 start-0 w-full text-ellipsis break-words line-clamp-1 text-start">
-                {stripHtmlValidation('none', post.content, false, true, false) ||
-                  t('no_content', 'no content')}
-              </div>
+          <div className="w-full relative">
+            <div className="absolute top-0 start-0 w-full text-ellipsis break-words line-clamp-1 text-start">
+              {stripHtmlValidation('none', post.content, false, true, false) ||
+                t('no_content', 'no content')}
             </div>
+          </div>
         </div>
         {showTime && (
           <div
@@ -1468,7 +1506,9 @@ const CalendarItem: FC<{
               isBeforeNow && brandMark && '!grayscale'
             )}
           >
-            {fromUtc(post.publishDate).format(isUSCitizen() ? 'hh:mm A' : 'HH:mm')}
+            {fromUtc(post.publishDate).format(
+              isUSCitizen() ? 'hh:mm A' : 'HH:mm'
+            )}
           </div>
         )}
       </div>

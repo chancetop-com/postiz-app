@@ -1,7 +1,9 @@
 import { createContext, FC, ReactNode, useContext } from 'react';
 import { Post } from '@prisma/client';
+import type { BrowserDraftEditor } from '@gitroom/nestjs-libraries/dtos/posts/create.post.dto';
 const ExistingDataContext = createContext({
   integration: '',
+  draftEditor: undefined as BrowserDraftEditor | undefined,
   group: undefined as undefined | string,
   posts: [] as Post[],
   settings: {} as any,
@@ -10,6 +12,7 @@ const ExistingDataContext = createContext({
     | undefined
     | {
         integration: string;
+        draftEditor?: BrowserDraftEditor;
         group: string;
         posts: Post[];
         settings: any;

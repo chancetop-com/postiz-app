@@ -89,9 +89,13 @@ export class NotificationService {
     orgId: string,
     subject: string,
     message: string,
-    type?: NotificationType
+    type?: NotificationType,
+    occurrenceId?: string
   ) {
-    const userOrg = await this._organizationRepository.getAllUsersOrgs(orgId);
+    const userOrg = await this._organizationRepository.getAllUsersOrgs(
+      orgId,
+      !!occurrenceId
+    );
     for (const user of userOrg?.users || []) {
       // 'info' type is always sent regardless of preferences
       if (type !== 'info') {
@@ -103,7 +107,18 @@ export class NotificationService {
           continue;
         }
       }
-      await this.sendEmail(user.user.email, subject, message);
+      if (occurrenceId) {
+        await this._emailService.sendEmail(
+          user.user.email,
+          subject,
+          message,
+          'top',
+          undefined,
+          `browser_review_${occurrenceId}_${user.user.id}`
+        );
+      } else {
+        await this.sendEmail(user.user.email, subject, message);
+      }
     }
   }
 

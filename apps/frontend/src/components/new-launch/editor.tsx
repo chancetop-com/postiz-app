@@ -424,27 +424,31 @@ export const EditorWrapper: FC<{
           />
         )}
       </div>
-      {!!internal && !existingData?.integration && (
-        <div
-          className="mt-[12px] flex gap-[20px] items-center cursor-pointer select-none mobile:mt-0 mobile:w-[40px] mobile:h-[40px] mobile:justify-center mobile:rounded-[8px] mobile:bg-btnSimple"
-          onClick={goBackToGlobal}
-        >
-          <div className="flex gap-[6px] items-center mobile:hidden">
-            <div className="w-[8px] h-[8px] rounded-full bg-[#FC69FF]" />
-            <div className="text-[14px] font-[600]">
-              {t('editing_a_specific_network', 'Editing a Specific Network')}
+      {!!internal &&
+        (!existingData?.integration ||
+          [existingData, ...(existingData.siblings || [])].some(
+            (row) => row.integration === current && row.draftEditor
+          )) && (
+          <div
+            className="mt-[12px] flex gap-[20px] items-center cursor-pointer select-none mobile:mt-0 mobile:w-[40px] mobile:h-[40px] mobile:justify-center mobile:rounded-[8px] mobile:bg-btnSimple"
+            onClick={goBackToGlobal}
+          >
+            <div className="flex gap-[6px] items-center mobile:hidden">
+              <div className="w-[8px] h-[8px] rounded-full bg-[#FC69FF]" />
+              <div className="text-[14px] font-[600]">
+                {t('editing_a_specific_network', 'Editing a Specific Network')}
+              </div>
+            </div>
+            <div className="flex gap-[6px] items-center">
+              <div>
+                <ResetIcon />
+              </div>
+              <div className="text-[13px] font-[600] mobile:hidden">
+                {t('back_to_global', 'Back to global')}
+              </div>
             </div>
           </div>
-          <div className="flex gap-[6px] items-center">
-            <div>
-              <ResetIcon />
-            </div>
-            <div className="text-[13px] font-[600] mobile:hidden">
-              {t('back_to_global', 'Back to global')}
-            </div>
-          </div>
-        </div>
-      )}
+        )}
     </div>
   );
 

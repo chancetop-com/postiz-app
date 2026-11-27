@@ -1,3 +1,5 @@
+import { BrowserPublishingService } from '@gitroom/nestjs-libraries/database/prisma/browser-publishing/browser-publishing.service';
+import type { BrowserOccurrenceRef } from '@gitroom/nestjs-libraries/database/prisma/browser-publishing/occurrence';
 import { Injectable } from '@nestjs/common';
 import {
   Activity,
@@ -105,7 +107,8 @@ export class PostActivity {
     private _refreshIntegrationService: RefreshIntegrationService,
     private _webhookService: WebhooksService,
     private _temporalService: TemporalService,
-    private _subscriptionService: SubscriptionService
+    private _subscriptionService: SubscriptionService,
+    private browserPublishing?: BrowserPublishingService
   ) {}
 
   @ActivityMethod()
@@ -115,42 +118,51 @@ export class PostActivity {
 
   @ActivityMethod()
   async searchForMissingThreeHoursPosts() {
+    await this.browserPublishing?.syncPendingRevocations();
     const list = await this._postService.searchForMissingThreeHoursPosts();
     for (const post of list) {
       // the list can be long, the post may have been published since it was loaded
       const current = await this._postService.getPostState(post.id);
-      if (current?.state !== 'QUEUE') {
+      if (
+        current?.state !== 'QUEUE' ||
+        current.browserWorkflowId !== post.browserWorkflowId
+      ) {
         continue;
       }
 
       await this._temporalService.client
         .getRawClient()
-        .workflow.signalWithStart('postWorkflowV112', {
-          workflowId: `post_${post.id}`,
-          taskQueue: 'main',
-          signal: 'poke',
-          workflowIdConflictPolicy: 'USE_EXISTING',
-          signalArgs: [],
-          args: [
-            {
-              taskQueue: post.integration.providerIdentifier
-                .split('-')[0]
-                .toLowerCase(),
-              postId: post.id,
-              organizationId: post.organizationId,
-            },
-          ],
-          typedSearchAttributes: new TypedSearchAttributes([
-            {
-              key: postIdSearchParam,
-              value: post.id,
-            },
-            {
-              key: organizationId,
-              value: post.organizationId,
-            },
-          ]),
-        });
+        .workflow.signalWithStart(
+          post.integration.providerIdentifier.startsWith('browser-')
+            ? 'browserPostWorkflow'
+            : 'postWorkflowV112',
+          {
+            workflowId: current.browserWorkflowId || `post_${post.id}`,
+            taskQueue: 'main',
+            signal: 'poke',
+            workflowIdConflictPolicy: 'USE_EXISTING',
+            signalArgs: [],
+            args: [
+              {
+                taskQueue: post.integration.providerIdentifier
+                  .split('-')[0]
+                  .toLowerCase(),
+                postId: post.id,
+                organizationId: post.organizationId,
+              },
+            ],
+            typedSearchAttributes: new TypedSearchAttributes([
+              {
+                key: postIdSearchParam,
+                value: post.id,
+              },
+              {
+                key: organizationId,
+                value: post.organizationId,
+              },
+            ]),
+          }
+        );
     }
   }
 
@@ -495,14 +507,44 @@ export class PostActivity {
   }
 
   @ActivityMethod()
-  async checkPostStatus(integration: Integration, pendingData: any) {
+  browserSchedule(ref: BrowserOccurrenceRef) {
+    return this.browserPublishing.schedule(ref);
+  }
+
+  @ActivityMethod()
+  browserTiming(ref: BrowserOccurrenceRef) {
+    return this.browserPublishing.timing(ref);
+  }
+
+  @ActivityMethod()
+  browserPrepare(ref: BrowserOccurrenceRef) {
+    return this.browserPublishing.prepare(ref);
+  }
+
+  @ActivityMethod()
+  browserHandoff(ref: BrowserOccurrenceRef) {
+    return withHeartbeat(() => this.browserPublishing.handoff(ref));
+  }
+
+  @ActivityMethod()
+  browserNextOccurrence(ref: BrowserOccurrenceRef) {
+    return this.browserPublishing.nextOccurrence(ref);
+  }
+
+  @ActivityMethod()
+  async checkPostStatus(integration: Integration | null, pendingData: any) {
+    if (!integration) return this.browserPublishing.checkPending(pendingData);
     integration = await this._integrationService.decryptTokens(integration);
     const getIntegration = this._integrationManager.getSocialIntegration(
       integration.providerIdentifier
     );
 
     return this.handleDisconnect(integration, () =>
-      getIntegration.checkPostStatus(integration.token, pendingData, integration)
+      getIntegration.checkPostStatus(
+        integration.token,
+        pendingData,
+        integration
+      )
     );
   }
 

@@ -348,5 +348,6 @@ export const toPickerDate = (date: Dayjs) =>
     date.date(),
     date.hour(),
     date.minute(),
-    date.second()
+    date.second(),
+    date.millisecond()
   );

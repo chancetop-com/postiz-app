@@ -1,3 +1,4 @@
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
 import {
   ArrayMinSize,
   IsArray,
@@ -26,12 +27,15 @@ export class Integration {
   @IsDefined()
   @IsString()
   id: string;
+
+  @IsOptional()
+  @IsString()
+  bindingId?: string;
 }
 
-export class PostContent {
+class BrowserDraftContent {
   @IsDefined()
   @IsString()
-  @Validate(ValidContent)
   @Transform(({ value }) => sanitizePostContent(value))
   content: string;
 
@@ -49,8 +53,29 @@ export class PostContent {
   image: MediaDto[];
 }
 
+export class BrowserDraftEditor {
+  @IsBoolean()
+  overridesShared: boolean;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @Type(() => BrowserDraftContent)
+  @ValidateNested({ each: true })
+  shared: BrowserDraftContent[];
+}
+
+export class PostContent extends BrowserDraftContent {
+  @Validate(ValidContent)
+  declare content: string;
+}
+
 export class Post {
   type?: string;
+
+  @IsOptional()
+  @Type(() => BrowserDraftEditor)
+  @ValidateNested()
+  draftEditor?: BrowserDraftEditor;
 
   @IsDefined()
   @Type(() => Integration)
@@ -60,7 +85,11 @@ export class Post {
   @IsDefined()
   @ArrayMinSize(1)
   @IsArray()
-  @Type(() => PostContent)
+  @Type((context) =>
+    context?.object?.type === 'draft' && isBrowserChannel(context.object.settings?.__type)
+      ? BrowserDraftContent
+      : PostContent
+  )
   @ValidateNested({ each: true })
   value: PostContent[];
 

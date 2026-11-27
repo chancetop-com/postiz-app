@@ -1,3 +1,6 @@
+import { BrowserOccurrenceRepository } from './browser-publishing/browser-occurrence.repository';
+import { BrowserPublishingService } from './browser-publishing/browser-publishing.service';
+import { BrowserPublishingRepository } from './browser-publishing/browser-publishing.repository';
 import { Global, Module } from '@nestjs/common';
 import { PrismaRepository, PrismaService, PrismaTransaction } from './prisma.service';
 import { OrganizationRepository } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.repository';
@@ -61,6 +64,9 @@ import { AdminStatsService } from '@gitroom/nestjs-libraries/database/prisma/adm
   imports: [],
   controllers: [],
   providers: [
+    BrowserPublishingService,
+    BrowserPublishingRepository,
+    BrowserOccurrenceRepository,
     PrismaService,
     PrismaRepository,
     PrismaTransaction,

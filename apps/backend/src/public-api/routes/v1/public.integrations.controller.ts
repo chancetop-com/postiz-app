@@ -1,3 +1,4 @@
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
 import {
   BadRequestException,
   Body,
@@ -21,7 +22,10 @@ import { GetIncludeDeletedFromRequest } from '@gitroom/nestjs-libraries/user/inc
 import { GetOAuthUserIdFromRequest } from '@gitroom/nestjs-libraries/user/oauth.user.id.from.request';
 import { Organization } from '@prisma/client';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
-import { CheckPolicies } from '@gitroom/backend/services/auth/permissions/permissions.ability';
+import {
+  CheckBrowserSchedulePolicy,
+  CheckPolicies,
+} from '@gitroom/backend/services/auth/permissions/permissions.ability';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MediaService } from '@gitroom/nestjs-libraries/database/prisma/media/media.service';
@@ -162,7 +166,7 @@ export class PublicIntegrationsController {
           : rawBody?.posts,
       },
       org.id,
-      rawBody?.type === 'draft' || true
+      rawBody?.type === 'draft'
     );
     body.type = rawBody.type;
 
@@ -200,7 +204,10 @@ export class PublicIntegrationsController {
     };
 
     for (const item of validation) {
-      if (item.emptyContent) {
+      if (
+        item.emptyContent &&
+        !(body.type === 'draft' && isBrowserChannel(item.identifier))
+      ) {
         fail(
           item,
           'Your post should have at least one character or one image.'
@@ -325,11 +332,22 @@ export class PublicIntegrationsController {
     @Query('group') group?: string
   ) {
     Sentry.metrics.count('public_api-request', 1);
-    return (await this._integrationService.getIntegrationsList(org.id))
+    return (
+      await this._integrationService.getIntegrationsList(
+        org.id,
+        process.env.BROWSER_PUBLISHING_DISCOVERY === 'true'
+      )
+    )
       .filter((integration) => !group || integration.customer?.id === group)
       .map((integration) => ({
         id: integration.id,
-        name: integration.customName || integration.name,
+        ...(integration.browserBindingId && {
+          browserPublishing: true,
+          bindingId: integration.browserBindingId,
+        }),
+        name: integration.browserBindingId
+          ? integration.name
+          : integration.customName || integration.name,
         identifier: integration.providerIdentifier,
         picture: integration.picture,
         disabled: integration.disabled,
@@ -672,6 +690,7 @@ export class PublicIntegrationsController {
   }
 
   @Put('/posts/:id/status')
+  @CheckBrowserSchedulePolicy('status')
   async changePostStatus(
     @GetOrgFromRequest() org: Organization,
     @Param('id') id: string,

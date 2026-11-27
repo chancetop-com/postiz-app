@@ -14,6 +14,8 @@ export type IntegrationContextType = {
     image?: Array<{
       path: string;
       id: string;
+      alt?: string;
+      type?: string;
     }>;
   }>;
 };

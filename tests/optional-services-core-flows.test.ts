@@ -127,9 +127,7 @@ const calendarPosts = [
   { id: 'post-1', state: 'QUEUE', publishDate: '2026-11-20T10:00:00.000Z' },
 ];
 
-const createOrUpdatePost = vi.fn(async () => ({
-  posts: [{ id: 'post-1', state: 'QUEUE' }],
-}));
+const createOrUpdatePosts = vi.fn(async () => [[{ id: 'post-1', state: 'QUEUE' }]]);
 const getPosts = vi.fn(async () => calendarPosts);
 const getPostById = vi.fn(async (_id: string, _org: string) => ({
   id: 'published-post',
@@ -201,7 +199,7 @@ const ssoService = {
     { provide: SubscriptionService, useValue: subscriptionService },
     PostsService,
     IntegrationManager,
-    { provide: PostsRepository, useValue: { createOrUpdatePost, getPosts, getPostById } },
+    { provide: PostsRepository, useValue: { createOrUpdatePosts, getPosts, getPostById } },
     { provide: IntegrationService, useValue: integrationService },
     { provide: WebhooksService, useValue: {} },
     { provide: MediaService, useValue: mediaService },
@@ -370,14 +368,15 @@ describe('core flows without optional services', () => {
 
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual([{ postId: 'post-1', integration: 'int-1' }]);
-    expect(createOrUpdatePost).toHaveBeenCalledWith(
-      'schedule', ORGANIZATION_ID, body.date,
-      expect.objectContaining({
-        integration: { id: 'int-1' },
-        value: body.posts[0].value,
-        settings: expect.objectContaining({ __type: 'x', who_can_reply_post: 'everyone' }),
-      }),
-      [], 'WEB', undefined, false, expect.any(String)
+    expect(createOrUpdatePosts).toHaveBeenCalledWith(
+      ORGANIZATION_ID, expect.objectContaining({
+        type: 'schedule', date: body.date,
+        posts: [expect.objectContaining({
+          integration: { id: 'int-1' },
+          value: body.posts[0].value,
+          settings: expect.objectContaining({ __type: 'x', who_can_reply_post: 'everyone' }),
+        })],
+      }), 'WEB', false
     );
   });
 

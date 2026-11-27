@@ -1,3 +1,5 @@
+import { browserTargetAllowed } from '../browser-publishing/channel-access';
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
 import {
   BadRequestException,
   Injectable,
@@ -19,7 +21,6 @@ import {
 import { GetPostsDto } from '@gitroom/nestjs-libraries/dtos/posts/get.posts.dto';
 import { GetPostsListDto } from '@gitroom/nestjs-libraries/dtos/posts/get.posts.list.dto';
 import { groupBy, shuffle, uniqBy } from 'lodash';
-import { v4 as uuidv4 } from 'uuid';
 import { CreateGeneratedPostsDto } from '@gitroom/nestjs-libraries/dtos/generator/create.generated.posts.dto';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
@@ -409,44 +410,80 @@ export class PostsService {
     };
   }
 
+  private async postingIntegration(
+    org: string,
+    selection: { id: string; bindingId?: string }
+  ) {
+    if (!selection?.id || typeof selection.id !== 'string') {
+      throw new BadRequestException('Integration ID is required');
+    }
+    const integration = await this._integrationService.getIntegrationById(
+      org,
+      selection.id
+    );
+    if (
+      !integration ||
+      (selection.bindingId !== undefined &&
+        selection.bindingId !== integration.browserBindingId)
+    ) {
+      throw new BadRequestException(
+        (integration?.name || selection.id) +
+          ': Integration is unavailable in this organization'
+      );
+    }
+    return integration;
+  }
+
   async mapTypeToPost(
     body: CreatePostDto,
     organization: string,
     replaceDraft: boolean = false
   ): Promise<CreatePostDto> {
-    if (!body?.posts?.every((p) => p?.integration?.id)) {
+    if (
+      !Array.isArray(body?.posts) ||
+      !body.posts.every((p) => p?.integration?.id)
+    ) {
       throw new BadRequestException('All posts must have an integration id');
     }
 
+    const channels = await Promise.all(
+      body.posts.map((post) =>
+        this.postingIntegration(organization, post.integration)
+      )
+    );
     const mappedValues = {
       ...body,
-      type: replaceDraft ? 'schedule' : body?.type,
-      posts: await Promise.all(
-        body?.posts?.map(async (post) => {
-          const integration = await this._integrationService.getIntegrationById(
-            organization,
-            post.integration.id
-          );
-
-          if (!integration) {
-            throw new BadRequestException(
-              `Integration with id ${post.integration.id} not found`
-            );
-          }
-
-          return {
-            type: replaceDraft ? 'schedule' : body?.type,
-            ...post,
-            settings: {
-              ...(post.settings || ({} as any)),
-              __type: integration.providerIdentifier,
-            },
-          };
-        }) || []
-      ),
+      type: replaceDraft ? 'schedule' : body.type,
+      posts: body.posts.map((post, index) => {
+        const identifier = channels[index].providerIdentifier;
+        const browserDraft =
+          body.type === 'draft' && isBrowserChannel(identifier);
+        return {
+          ...post,
+          type: replaceDraft && !browserDraft ? 'schedule' : body.type,
+          settings: { ...(post.settings || {}), __type: identifier },
+        };
+      }),
     };
-
+    const defaultException = new ValidationPipe().createExceptionFactory();
     const validationPipe = new ValidationPipe({
+      exceptionFactory: (errors) => {
+        const invalid = errors
+          .find((error) => error.property === 'posts')
+          ?.children?.find((error) =>
+            isBrowserChannel(
+              channels[Number(error.property)]?.providerIdentifier
+            )
+          );
+        if (invalid) {
+          return new BadRequestException(
+            channels[Number(invalid.property)].name +
+              ': ' +
+              this.firstValidationError([invalid])
+          );
+        }
+        return defaultException(errors);
+      },
       skipMissingProperties: false,
       transform: true,
       transformOptions: {
@@ -587,9 +624,7 @@ export class PostsService {
       return getImageList;
     } catch (err: any) {
       if (prepareTikTokPhotos) throw err;
-      return (imagesList || []).filter((m) =>
-        this.isAllowedMediaPath(m?.path)
-      );
+      return (imagesList || []).filter((m) => this.isAllowedMediaPath(m?.path));
     }
   }
 
@@ -702,27 +737,32 @@ export class PostsService {
   ) {
     return {
       group: posts?.[0]?.group,
+      ...(posts[0]?.browserDraftEditor && {
+        draftEditor: JSON.parse(posts[0].browserDraftEditor),
+      }),
       posts: await Promise.all(
-        (posts || []).map(async ({ integration, ...post }) => ({
-          ...post,
-          ...(integration
-            ? {
-                integration: {
-                  id: integration.id,
-                  name: integration.name,
-                  picture: integration.picture,
-                  providerIdentifier: integration.providerIdentifier,
-                  profile: integration.profile,
-                },
-              }
-            : {}),
-          image: await this.updateMedia(
-            post.id,
-            JSON.parse(post.image || '[]'),
-            prepareTikTokPhotos,
-            post.organizationId
-          ),
-        }))
+        (posts || []).map(
+          async ({ integration, browserDraftEditor, ...post }) => ({
+            ...post,
+            ...(integration
+              ? {
+                  integration: {
+                    id: integration.id,
+                    name: integration.name,
+                    picture: integration.picture,
+                    providerIdentifier: integration.providerIdentifier,
+                    profile: integration.profile,
+                  },
+                }
+              : {}),
+            image: await this.updateMedia(
+              post.id,
+              JSON.parse(post.image || '[]'),
+              prepareTikTokPhotos,
+              post.organizationId
+            ),
+          })
+        )
       ),
       integrationPicture: posts[0]?.integration?.picture,
       integration: posts[0].integrationId,
@@ -913,8 +953,26 @@ export class PostsService {
     taskQueue: string,
     postId: string,
     orgId: string,
-    state: State
+    state: State,
+    browserWorkflowId?: string | null
   ) {
+    if (taskQueue === 'browser') {
+      if (state !== 'DRAFT' && browserWorkflowId) {
+        await this._temporalService.client
+          .getRawClient()
+          .workflow.start('browserPostWorkflow', {
+            workflowId: browserWorkflowId,
+            taskQueue: 'main',
+            workflowIdConflictPolicy: 'USE_EXISTING',
+            args: [{ postId, organizationId: orgId }],
+            typedSearchAttributes: new TypedSearchAttributes([
+              { key: postIdSearchParam, value: postId },
+              { key: organizationId, value: orgId },
+            ]),
+          });
+      }
+      return;
+    }
     try {
       const workflows = this._temporalService.client
         .getRawClient()
@@ -990,17 +1048,11 @@ export class PostsService {
   ) {
     return Promise.all(
       (posts || []).map(async (post) => {
-        const integration = await this._integrationService.getIntegrationById(
+        const integration = await this.postingIntegration(
           orgId,
-          post?.integration?.id
+          post?.integration
         );
-
-        if (!integration) {
-          throw new BadRequestException(
-            `Integration with id ${post?.integration?.id} not found`
-          );
-        }
-
+        const browser = isBrowserChannel(integration.providerIdentifier);
         const provider = this._integrationManager.getSocialIntegration(
           integration.providerIdentifier
         );
@@ -1020,6 +1072,18 @@ export class PostsService {
         // Settings DTO validation — mirrors the client `form.trigger()`.
         let valid = true;
         let settingsError = '';
+        if (
+          browser &&
+          !browserTargetAllowed(
+            integration.browserBinding?.provider,
+            settings.noPublish,
+            process.env.BROWSER_PUBLISHING_DEV_TEST_TARGETS === 'true'
+          )
+        ) {
+          valid = false;
+          settingsError =
+            'Preparation without publishing requires an authorized Chrome test account';
+        }
         if (provider?.dto) {
           const instance = plainToInstance(provider.dto, settings, {
             enableImplicitConversion: false,
@@ -1034,19 +1098,33 @@ export class PostsService {
         // Provider-specific media validation (the old client `checkValidity`).
         let errors: string | true = true;
         try {
-          errors = await provider.checkValidity(
-            media,
-            settings,
-            additionalSettings
-          );
+          if (browser) {
+            if (media.length !== 1) {
+              errors = 'A browser post supports one video or one image post';
+            } else {
+              const { __type, noPublish, ...options } = settings;
+              await this._postRepository.browserPublishContent(
+                orgId,
+                integration.providerIdentifier,
+                post.value[0].content || '',
+                options,
+                media[0]
+              );
+            }
+          } else {
+            errors = await provider.checkValidity(
+              media,
+              settings,
+              additionalSettings
+            );
+          }
         } catch (err: any) {
           errors = err?.message || 'Invalid media';
         }
 
-        const maximumCharacters = provider.maxLength(
-          additionalSettings,
-          settings
-        );
+        const maximumCharacters = browser
+          ? 100000
+          : provider.maxLength(additionalSettings, settings);
 
         const emptyContent = (post.value || []).some((a) => {
           const strip = stripHtmlValidation('normal', a.content || '', true);
@@ -1073,6 +1151,28 @@ export class PostsService {
         };
       })
     );
+  }
+
+  private async validateBrowserSchedules(
+    orgId: string,
+    posts: Parameters<PostsService['validatePosts']>[1]
+  ) {
+    if (!posts.length) return;
+    for (const result of await this.validatePosts(orgId, posts)) {
+      if (
+        !result.valid ||
+        result.errors !== true ||
+        result.emptyContent ||
+        result.tooLong
+      ) {
+        const reason =
+          result.settingsError ||
+          (typeof result.errors === 'string'
+            ? result.errors
+            : 'Check the browser post content');
+        throw new BadRequestException(result.name + ': ' + reason);
+      }
+    }
   }
 
   /** Returns the first class-validator message (incl. nested children), or ''. */
@@ -1126,9 +1226,21 @@ export class PostsService {
     creationMethod: CreationMethod,
     keepGroup = false
   ): Promise<any[]> {
-    const postList = [];
-    const batchId = uuidv4();
-    for (const post of body.posts) {
+    // Preflight the entire selection even for internal callers such as MCP or clipping.
+    const channels = await Promise.all(
+      body.posts.map((post) => this.postingIntegration(orgId, post.integration))
+    );
+    if (
+      (body.type === 'schedule' || body.type === 'now') &&
+      channels.some((channel) => isBrowserChannel(channel.providerIdentifier))
+    ) {
+      await this.validateBrowserSchedules(orgId, body.posts);
+    }
+    for (const [index, post] of body.posts.entries()) {
+      post.settings = {
+        ...post.settings,
+        __type: channels[index].providerIdentifier,
+      } as typeof post.settings;
       // the posts to update can't belong to another organization, an id that
       // doesn't exist yet is a new post (the editor makes one for every post)
       const postIds = [
@@ -1141,7 +1253,7 @@ export class PostsService {
           postIds
         ))
       ) {
-        throw new NotFoundException('Post not found');
+        throw new NotFoundException(channels[index].name + ': Post not found');
       }
       if (
         (body.type === 'schedule' || body.type === 'now') &&
@@ -1172,36 +1284,34 @@ export class PostsService {
         ...p,
         content: removeLinks ? stripLinks(updateContent[i]) : updateContent[i],
       }));
+    }
 
-      const { posts } = await this._postRepository.createOrUpdatePost(
-        body.type,
-        orgId,
-        body.type === 'now'
-          ? dayjs().format('YYYY-MM-DDTHH:mm:00')
-          : post.date || body.date,
-        post,
-        body.tags,
-        creationMethod,
-        body.inter,
-        keepGroup,
-        batchId
-      );
-
-      if (!posts?.length) {
-        return [] as any[];
-      }
-
+    const saved = await this._postRepository.createOrUpdatePosts(
+      orgId,
+      body.type === 'now'
+        ? { ...body, date: new Date().toISOString() }
+        : body,
+      creationMethod,
+      keepGroup
+    );
+    const postList = [];
+    for (const [index, posts] of saved.entries()) {
+      const post = body.posts[index];
       const existingIds = (post.value || []).map((p) => p.id).filter(Boolean);
       await this.detachStaleAnchors(
         posts.filter((p) => existingIds.includes(p.id))
       );
 
-      if (body.type !== 'update') {
+      if (
+        body.type !== 'update' ||
+        (posts[0].browserWorkflowId && posts[0].state === 'QUEUE')
+      ) {
         this.startWorkflow(
           post.settings.__type.split('-')[0].toLowerCase(),
           posts[0].id,
           orgId,
-          posts[0].state
+          posts[0].state,
+          posts[0].browserWorkflowId
         ).catch((err) => {});
       }
 
@@ -1246,7 +1356,10 @@ export class PostsService {
       );
     }
 
+    const integration = (root as any).integration;
+    const browser = isBrowserChannel(integration.providerIdentifier);
     if (
+      !browser &&
       root.state === 'QUEUE' &&
       dayjs.utc(root.publishDate).isBefore(dayjs.utc())
     ) {
@@ -1254,8 +1367,6 @@ export class PostsService {
         'The publish time of this post already passed, it cannot be updated'
       );
     }
-
-    const integration = (root as any).integration;
 
     // Drafts may be incomplete, but a new Page ID must arrive as a string to preserve its digits.
     const locationId = settings?.location?.id;
@@ -1307,7 +1418,13 @@ export class PostsService {
       },
     ]);
 
-    if (validation.emptyContent) {
+    if (
+      validation.emptyContent &&
+      !(
+        root.state === 'DRAFT' &&
+        isBrowserChannel(integration.providerIdentifier)
+      )
+    ) {
       throw new BadRequestException(
         `${validation.name}: Your post should have at least one character or one image.`
       );
@@ -1335,6 +1452,15 @@ export class PostsService {
       }
     }
 
+    if (browser) {
+      await this._postRepository.updateBrowserSettings(
+        orgId,
+        root,
+        mergedSettings
+      );
+      return { postId: root.id, publishDate: root.publishDate.toISOString() };
+    }
+
     const date = dayjs.utc(root.publishDate).format('YYYY-MM-DDTHH:mm:ss');
 
     const [output] = await this.createPost(
@@ -1353,6 +1479,9 @@ export class PostsService {
           {
             integration,
             group: root.group,
+            ...(root.browserDraftEditor && {
+              draftEditor: JSON.parse(root.browserDraftEditor),
+            }),
             settings: mergedSettings,
             value,
           },
@@ -1392,15 +1521,37 @@ export class PostsService {
       throw new BadRequestException('Post not found');
     }
 
+    if (
+      status === 'schedule' &&
+      isBrowserChannel(getPostById.integration.providerIdentifier)
+    ) {
+      const rows = await this.getPostsRecursively(id, false, orgId, true);
+      await this.validateBrowserSchedules(orgId, [
+        {
+          integration: { id: getPostById.integrationId },
+          settings: JSON.parse(getPostById.settings || '{}'),
+          value: rows.map((row) => ({
+            content: row.content,
+            image: JSON.parse(row.image || '[]'),
+          })),
+        },
+      ]);
+    }
     const state: State = status === 'draft' ? 'DRAFT' : 'QUEUE';
-    await this._postRepository.changeState(id, state);
+    const scheduled = await this._postRepository.changeScheduledState(
+      id,
+      orgId,
+      state,
+      isBrowserChannel(getPostById.integration.providerIdentifier)
+    );
 
     try {
       await this.startWorkflow(
         getPostById.integration.providerIdentifier.split('-')[0].toLowerCase(),
         getPostById.id,
         orgId,
-        state
+        state,
+        scheduled.browserWorkflowId
       );
     } catch (err) {}
 
@@ -1412,7 +1563,8 @@ export class PostsService {
     id: string,
     date: string,
     action: 'schedule' | 'update' = 'schedule',
-    republish = false
+    republish = false,
+    assertScheduleAllowed?: () => Promise<void>
   ) {
     const getPostById = await this._postRepository.getPostById(id, orgId);
 
@@ -1420,6 +1572,9 @@ export class PostsService {
       throw new NotFoundException('Post not found');
     }
 
+    if (isBrowserChannel(getPostById.integration.providerIdentifier)) {
+      await this.postingIntegration(orgId, { id: getPostById.integrationId });
+    }
     if (action === 'schedule' && !republish) {
       this.guardAgainstRepublish(getPostById, 'changeDate');
     }
@@ -1431,10 +1586,15 @@ export class PostsService {
       id,
       date,
       getPostById.state === 'DRAFT',
-      action
+      action,
+      republish,
+      assertScheduleAllowed
     );
 
-    if (action === 'schedule') {
+    if (
+      action === 'schedule' ||
+      (newDate.browserWorkflowId && newDate.state === 'QUEUE')
+    ) {
       try {
         await this.startWorkflow(
           getPostById.integration.providerIdentifier
@@ -1442,7 +1602,8 @@ export class PostsService {
             .toLowerCase(),
           getPostById.id,
           orgId,
-          getPostById.state === 'DRAFT' ? 'DRAFT' : 'QUEUE'
+          newDate.state === 'DRAFT' ? 'DRAFT' : 'QUEUE',
+          newDate.browserWorkflowId
         );
       } catch (err) {}
     }

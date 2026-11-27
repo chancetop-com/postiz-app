@@ -18,9 +18,10 @@ model Organization {
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   deletedAt           DateTime?
-  allowTrial          Boolean              @default(false)
-  isTrailing          Boolean              @default(false)
-  shortlink           ShortLinkPreference  @default(ASK)
+  allowTrial          Boolean                    @default(false)
+  isTrailing          Boolean                    @default(false)
+  browserPublishing   BrowserPublishingMerchant?
+  shortlink           ShortLinkPreference        @default(ASK)
   autoPost            AutoPost[]
   Comments            Comments[]
   credits             Credits[]
@@ -50,6 +51,28 @@ model Organization {
   @@index([streakSince])
   @@index([paymentId])
   @@index([deletedAt])
+}
+
+model BrowserPublishingMerchant {
+  organizationId String                  @id
+  merchantId     String
+  enabled        Boolean                 @default(false)
+  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bindings       BrowserProfileBinding[]
+}
+
+model BrowserProfileBinding {
+  id             String                    @id @default(uuid())
+  organizationId String
+  provider       String
+  profileId      String
+  name           String
+  active         Boolean                   @default(true)
+  merchant       BrowserPublishingMerchant @relation(fields: [organizationId], references: [organizationId], onDelete: Cascade)
+  channels       Integration[]
+
+  @@unique([organizationId, provider, profileId])
+  @@unique([id, organizationId])
 }
 
 model Tags {
@@ -383,6 +406,8 @@ model Integration {
   name                  String
   customName            String?
   picture               String?
+  browserBindingId      String?
+  browserBinding        BrowserProfileBinding? @relation(fields: [browserBindingId, organizationId], references: [id, organizationId], onDelete: Restrict)
   providerIdentifier    String
   type                  String
   token                 String
@@ -466,7 +491,40 @@ model Comments {
   @@index([deletedAt])
 }
 
+model BrowserPostOccurrence {
+  timing         Json?
+  workflowId     String    @id
+  postId         String
+  dueAt          DateTime
+  status         String    @default("pending")
+  startedAt      DateTime?
+  settledAt      DateTime?
+  nextWorkflowId String?
+  resultDeadlineAt DateTime?
+  revocationPending Boolean @default(false)
+  reviewRequiredAt DateTime?
+  reviewReason     String?
+  reviewEmailPending String?
+  reviewerId       String?
+  reviewedAt       DateTime?
+  reason           String?
+  releaseId        String?
+  url              String?
+  note             String?
+  post           Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@index([postId, dueAt])
+  @@index([reviewRequiredAt])
+  @@index([revocationPending, workflowId])
+}
+
 model Post {
+  browserDraftEditor String?
+  browserWorkflowId String?
+  browserDueAt      DateTime?
+  browserClaimDeadlineAt DateTime?
+  browserImmediate  Boolean @default(false)
+  browserLocked     Boolean @default(false)
+  browserOccurrences BrowserPostOccurrence[]
   id                         String                    @id @default(cuid())
   state                      State                     @default(QUEUE)
   publishDate                DateTime

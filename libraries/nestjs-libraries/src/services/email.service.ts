@@ -7,6 +7,7 @@ import { SesProvider } from '@gitroom/nestjs-libraries/emails/ses.provider';
 import { TemporalService } from 'nestjs-temporal-core';
 import { timer } from '@gitroom/helpers/utils/timer';
 import { randomUUID } from 'crypto';
+import { WorkflowExecutionAlreadyStartedError } from '@temporalio/common';
 
 @Injectable()
 export class EmailService {
@@ -43,19 +44,25 @@ export class EmailService {
     subject: string,
     html: string,
     addTo: 'top' | 'bottom',
-    replyTo?: string
+    replyTo?: string,
+    deliveryId?: string
   ) {
     if (!to || !subject) {
       return;
     }
 
-    return this._temporalService.client
-      .getRawClient()
-      ?.workflow.start('sendSingleEmailWorkflow', {
+    const client = this._temporalService.client.getRawClient();
+    if (!client && deliveryId) throw new Error('Email queue unavailable');
+    try {
+      return await client?.workflow.start('sendSingleEmailWorkflow', {
         taskQueue: 'main',
-        workflowId: `send_email_${randomUUID()}`,
+        workflowId: deliveryId || `send_email_${randomUUID()}`,
+        ...(deliveryId && { workflowIdReusePolicy: 'REJECT_DUPLICATE' as const, workflowIdConflictPolicy: 'USE_EXISTING' as const }),
         args: [{ to, subject, html, replyTo, addTo }],
       });
+    } catch (error) {
+      if (!deliveryId || !(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    }
   }
 
   async sendEmailSync(

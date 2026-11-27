@@ -1,3 +1,4 @@
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
 import 'reflect-metadata';
 
 import { Injectable } from '@nestjs/common';
@@ -227,6 +228,7 @@ export class IntegrationManager {
   }
 
   getInternalPlugs(providerName: string) {
+    if (isBrowserChannel(providerName)) return { internalPlugs: [] };
     const p = socialIntegrationList.find((p) => p.identifier === providerName)!;
     return {
       internalPlugs:

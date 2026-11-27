@@ -1,5 +1,11 @@
 'use client';
 
+import { TikTokInstagramSettings } from './browser/tiktok-instagram-settings';
+import { RednoteBrowserSettings } from './rednote-browser.settings';
+import { Checkbox } from '@gitroom/react/form/checkbox';
+import { useSettings } from '@gitroom/frontend/components/launches/helpers/use.values';
+import { useIntegration } from '@gitroom/frontend/components/launches/helpers/use.integration';
+import { browserPlatforms } from '@gitroom/helpers/utils/browser-publishing';
 import { selectedChannels } from '../selected.channels';
 import DevtoProvider from '@gitroom/frontend/components/new-launch/providers/devto/devto.provider';
 import XProvider from '@gitroom/frontend/components/new-launch/providers/x/x.provider';
@@ -32,7 +38,10 @@ import { GeneralPreviewComponent } from '@gitroom/frontend/components/launches/g
 import { IntegrationContext } from '@gitroom/frontend/components/launches/helpers/use.integration';
 import { Button } from '@gitroom/react/form/button';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
-import { PostComment } from '@gitroom/frontend/components/new-launch/providers/high.order.provider';
+import {
+  PostComment,
+  withProvider,
+} from '@gitroom/frontend/components/new-launch/providers/high.order.provider';
 import WordpressProvider from '@gitroom/frontend/components/new-launch/providers/wordpress/wordpress.provider';
 import ListmonkProvider from '@gitroom/frontend/components/new-launch/providers/listmonk/listmonk.provider';
 import GmbProvider from '@gitroom/frontend/components/new-launch/providers/gmb/gmb.provider';
@@ -42,7 +51,46 @@ import WhopProvider from '@gitroom/frontend/components/new-launch/providers/whop
 import MeweProvider from '@gitroom/frontend/components/new-launch/providers/mewe/mewe.provider';
 import TumblrProvider from '@gitroom/frontend/components/new-launch/providers/tumblr/tumblr.provider';
 
+function BrowserSettings() {
+  const { integration } = useIntegration();
+  const { register } = useSettings();
+  const t = useT();
+  return (
+    <>
+      {['browser-rednote', 'browser-xiaohongshu'].includes(
+        integration?.identifier || ''
+      ) ? (
+        <RednoteBrowserSettings />
+      ) : (
+        <TikTokInstagramSettings />
+      )}
+      {integration?.browserTestTarget && (
+        <Checkbox
+          variant="hollow"
+          label={t(
+            'browser_prepare_only',
+            'Prepare in Chrome and stop before publishing'
+          )}
+          {...register('noPublish')}
+        />
+      )}
+    </>
+  );
+}
+
+const BrowserProvider = withProvider({
+  postComment: PostComment.POST,
+  comments: false,
+  minimumCharacters: [],
+  maximumCharacters: 100000,
+  SettingsComponent: BrowserSettings,
+});
+
 export const Providers = [
+  ...Object.keys(browserPlatforms).map((platform) => ({
+    identifier: 'browser-' + platform,
+    component: BrowserProvider,
+  })),
   {
     identifier: 'devto',
     component: DevtoProvider,

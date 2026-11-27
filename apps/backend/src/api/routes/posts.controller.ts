@@ -1,3 +1,4 @@
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
 import {
   Body,
   Controller,
@@ -15,7 +16,11 @@ import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.reque
 import { Organization, User } from '@prisma/client';
 import { GetPostsDto } from '@gitroom/nestjs-libraries/dtos/posts/get.posts.dto';
 import { GetPostsListDto } from '@gitroom/nestjs-libraries/dtos/posts/get.posts.list.dto';
-import { CheckPolicies } from '@gitroom/backend/services/auth/permissions/permissions.ability';
+import {
+  BrowserScheduleCheck,
+  CheckBrowserSchedulePolicy,
+  CheckPolicies,
+} from '@gitroom/backend/services/auth/permissions/permissions.ability';
 import { ApiTags } from '@nestjs/swagger';
 import { GeneratorDto } from '@gitroom/nestjs-libraries/dtos/generator/generator.dto';
 import { CreateGeneratedPostsDto } from '@gitroom/nestjs-libraries/dtos/generator/create.generated.posts.dto';
@@ -222,7 +227,10 @@ export class PostsController {
     };
 
     for (const item of validation) {
-      if (item.emptyContent) {
+      if (
+        item.emptyContent &&
+        !(rawBody?.type === 'draft' && isBrowserChannel(item.identifier))
+      ) {
         fail(
           item,
           'Your post should have at least one character or one image.'
@@ -294,6 +302,7 @@ export class PostsController {
   }
 
   @Put('/:id/date')
+  @CheckBrowserSchedulePolicy('date')
   changeDate(
     @GetOrgFromRequest() org: Organization,
     @Param('id') id: string,
@@ -301,9 +310,17 @@ export class PostsController {
     // 'update' is the safe default: clients that don't send an action must
     // never requeue (and thereby republish) a post by accident
     @Body('action') action: 'schedule' | 'update' = 'update',
-    @Body('republish') republish = false
+    @Body('republish') republish = false,
+    @BrowserScheduleCheck() assertScheduleAllowed: () => Promise<void>
   ) {
-    return this._postsService.changeDate(org.id, id, date, action, republish);
+    return this._postsService.changeDate(
+      org.id,
+      id,
+      date,
+      action,
+      republish,
+      assertScheduleAllowed
+    );
   }
 
   @Post('/separate-posts')

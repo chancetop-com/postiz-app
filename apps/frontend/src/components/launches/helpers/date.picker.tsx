@@ -73,31 +73,29 @@ export const DatePickerPanel: FC<{
 
   // the pickers give machine-local dates, so their wall clock is read with
   // plain dayjs and then placed in the user's timezone
-  const changeDate = useCallback(
-    (type: 'date' | 'time') => (day: Date) => {
-      onChange(
-        newDayjs(
-          type === 'time'
-            ? date.format('YYYY-MM-DD') + ' ' + dayjs(day).format('HH:mm:ss')
-            : dayjs(day).format('YYYY-MM-DD') + ' ' + date.format('HH:mm:ss')
-        )
-      );
-    },
-    [date]
-  );
-
-  const changeTime = useCallback(
-    (hour: number, minute: number) => {
-      onChange(
-        newDayjs(
-          date.format('YYYY-MM-DD') +
-            ' ' +
-            [hour, minute, 0].map((p) => String(p).padStart(2, '0')).join(':')
-        )
-      );
-    },
-    [date]
-  );
+  const setWallMinute = (day: string, hour: number, minute: number) => {
+    // The picker edits days and minutes, retaining the post's seconds and milliseconds.
+    const hhmm = [hour, minute]
+      .map((n) => String(n).padStart(2, '0'))
+      .join(':');
+    const wall = day + 'T' + hhmm + date.format(':ss.SSS');
+    // A repeated wall time has two instants. Keep the post's offset when
+    // it still maps to the chosen wall time in the user's timezone.
+    const sameOffset = newDayjs(wall + date.format('Z'));
+    onChange(
+      sameOffset.format('YYYY-MM-DDTHH:mm:ss.SSS') === wall
+        ? sameOffset
+        : newDayjs(wall)
+    );
+  };
+  const changeTime = (hour: number, minute: number) =>
+    setWallMinute(date.format('YYYY-MM-DD'), hour, minute);
+  const changeDate = (type: 'date' | 'time') => (day: Date) => {
+    const local = dayjs(day);
+    if (type === 'date')
+      setWallMinute(local.format('YYYY-MM-DD'), date.hour(), date.minute());
+    else changeTime(local.hour(), local.minute());
+  };
 
   if (sheet) {
     const twelveHours = isUSCitizen();

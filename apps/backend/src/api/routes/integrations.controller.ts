@@ -113,26 +113,36 @@ export class IntegrationsController {
     return {
       integrations: await Promise.all(
         (
-          await this._integrationService.getIntegrationsList(org.id)
+          await this._integrationService.getIntegrationsList(
+            org.id,
+            process.env.BROWSER_PUBLISHING_DISCOVERY === 'true'
+          )
         ).map(async (p) => {
           const findIntegration = this._integrationManager.getSocialIntegration(
             p.providerIdentifier
           );
           return {
-            name: p.customName || p.name,
+            ...(p.browserBindingId && {
+              browserPublishing: true,
+              browserTestTarget:
+                p.browserBinding?.provider === 'local-chrome' &&
+                process.env.BROWSER_PUBLISHING_DEV_TEST_TARGETS === 'true',
+              bindingId: p.browserBindingId,
+            }),
+            name: p.browserBindingId ? p.name : p.customName || p.name,
             originalName: p.name,
             id: p.id,
             internalId: p.internalId,
             disabled: p.disabled,
-            editor: findIntegration.editor,
+            editor: p.browserBindingId ? 'normal' : findIntegration.editor,
             stripLinks: !!findIntegration?.stripLinks?.(),
             picture: p.picture || '/no-picture.jpg',
             identifier: p.providerIdentifier,
             inBetweenSteps: p.inBetweenSteps,
             refreshNeeded: p.refreshNeeded,
-            isCustomFields: !!findIntegration.customFields,
-            isChromeExtension: !!findIntegration.isChromeExtension,
-            ...(findIntegration.customFields
+            isCustomFields: !!findIntegration?.customFields,
+            isChromeExtension: !!findIntegration?.isChromeExtension,
+            ...(findIntegration?.customFields
               ? { customFields: await findIntegration.customFields() }
               : {}),
             display: p.profile,

@@ -12,6 +12,7 @@ import React, {
 import { AddEditModalProps } from '@gitroom/frontend/components/new-launch/add.edit.modal';
 import clsx from 'clsx';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { isBrowserChannel } from '@gitroom/helpers/utils/browser-publishing';
 import { PicksSocialsComponent } from '@gitroom/frontend/components/new-launch/picks.socials.component';
 import { EditorWrapper } from '@gitroom/frontend/components/new-launch/editor';
 import { SelectCurrent } from '@gitroom/frontend/components/new-launch/select.current';
@@ -78,6 +79,32 @@ import {
   MediaSettingsSection,
   useMediaSettingsValues,
 } from '@gitroom/frontend/components/new-launch/media.settings.section';
+
+function postContent(value: {
+  content: string;
+  delay?: number;
+  media?: {
+    id: string;
+    path: string;
+    alt?: string;
+    thumbnail?: string;
+    thumbnailTimestamp?: number;
+  }[];
+}) {
+  return {
+    content: value.content,
+    delay: value.delay || 0,
+    image: (value.media || []).map(
+      ({ id, path, alt, thumbnail, thumbnailTimestamp }) => ({
+        id,
+        path,
+        alt,
+        thumbnail,
+        thumbnailTimestamp,
+      })
+    ),
+  };
+}
 
 export const ManageModal: FC<AddEditModalProps> = (props) => {
   const t = useT();
@@ -716,24 +743,28 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
           existingPosts.find((p) => p.integration === post.id)?.group || group,
         ...(channelDates[post.id]
           ? {
-              date: channelDates[post.id].utc().format('YYYY-MM-DDTHH:mm:ss'),
+              date: channelDates[post.id].toISOString(),
             }
           : {}),
         settings: { ...(post.settings || {}) },
-        value: post.values.map((value: any) => ({
-          ...(value.id ? { id: value.id } : {}),
-          content: value.content,
-          delay: value.delay || 0,
-          image:
-            (value?.media || []).map(
-              ({ id, path, alt, thumbnail, thumbnailTimestamp }: any) => ({
-                id,
-                path,
-                alt,
-                thumbnail,
-                thumbnailTimestamp,
-              })
-            ) || [],
+        ...(saveTypeOf(post.id) === 'draft' &&
+        post.draftEditor &&
+        (!existingData.integration || existingPosts.some((p) => p.draftEditor))
+          ? {
+              draftEditor: {
+                overridesShared: post.draftEditor.overridesShared,
+                shared: post.draftEditor.shared.map(postContent),
+              },
+            }
+          : {}),
+        value: post.values.map((value: any, index: number) => ({
+          // Shared editor rows have temporary IDs. An existing browser post always
+          // keeps the root/comment IDs belonging to this particular channel.
+          id: isBrowserChannel(post.identifier)
+            ? existingPosts.find((p) => p.integration === post.id)?.posts[index]
+                ?.id
+            : value.id,
+          ...postContent(value),
         })),
       }));
 
@@ -763,7 +794,11 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
           integrationById(id)?.ref?.current?.[where]?.();
         };
 
-        const notEnoughChars = checkAllValid.filter((p: any) => p.emptyContent);
+        const notEnoughChars = checkAllValid.filter(
+          (p: any) =>
+            p.emptyContent &&
+            !(saveTypeOf(p.id) === 'draft' && isBrowserChannel(p.identifier))
+        );
 
         for (const item of notEnoughChars) {
           toaster.show(
@@ -872,7 +907,7 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
         ...(repeater ? { inter: repeater } : {}),
         tags,
         shortLink,
-        date: date.utc().format('YYYY-MM-DDTHH:mm:ss'),
+        date: date.toISOString(),
         posts,
       };
 
@@ -1130,7 +1165,8 @@ export const ManageModal: FC<AddEditModalProps> = (props) => {
                     <div className="flex mobile:items-center mobile:gap-[4px]">
                       <div className="flex-1 mobile:flex-initial mobile:min-w-0">
                         {(!existingData.integration ||
-                          !!existingData.siblings?.length) && <SelectCurrent />}
+                          !!existingData.siblings?.length ||
+                          existingData.draftEditor) && <SelectCurrent />}
                       </div>
                       {!existingData.integration && (
                         <>
