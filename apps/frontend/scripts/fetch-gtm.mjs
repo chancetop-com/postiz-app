@@ -1,4 +1,4 @@
-import { writeFile, mkdir, readFile } from 'node:fs/promises';
+import { writeFile, mkdir, readFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +7,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const envPath = resolve(__dirname, '..', '..', '..', '.env');
 const outPath = resolve(__dirname, '..', 'public', 'g.js');
 
-if (!process.env.NEXT_PUBLIC_GTM_ID && existsSync(envPath)) {
+const runtime = process.argv.includes('--runtime');
+if (runtime) {
+  // A restarted container must never serve an earlier deployment's container ID.
+  await rm(outPath, { force: true });
+} else if (!process.env.NEXT_PUBLIC_GTM_ID && existsSync(envPath)) {
   const content = await readFile(envPath, 'utf8');
   for (const raw of content.split('\n')) {
     const line = raw.trim();
@@ -35,7 +39,7 @@ if (!id) {
 const url = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(id)}`;
 try {
   console.log(`[fetch-gtm] fetching ${url}`);
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
   if (!res.ok) {
     console.warn(`[fetch-gtm] non-OK response ${res.status}, skipping`);
     process.exit(0);

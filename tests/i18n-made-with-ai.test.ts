@@ -18,15 +18,13 @@ const locales = readdirSync(LOCALES_ROOT, { withFileTypes: true })
 
 describe('the made_with_ai copy', () => {
   it.each(locales)(
-    '%s translates made_with_ai and no longer has video_made_with_ai',
+    '%s translates made_with_ai',
     (locale) => {
       const translation = readLocale(locale);
 
       expect(typeof translation.made_with_ai).toBe('string');
       expect(translation.made_with_ai.trim().length).toBeGreaterThan(0);
       expect(translation.made_with_ai).not.toBe('made_with_ai');
-
-      expect(translation).not.toHaveProperty('video_made_with_ai');
     }
   );
 

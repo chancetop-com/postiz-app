@@ -1,23 +1,88 @@
-# We want the docker builds to be clean, and as fast as possible. Don't send
-# any half-built stuff in the build context as a pre-caution (also saves copying
-# 180k files in node_modules that isn't used!).
-**/node_modules
-node_modules/*
+# Root build context ignore rules for Postiz layered container builds.
+# Keep build contexts minimal and never leak local secrets or dev artifacts.
+
+# Dependencies and package stores
 node_modules
-docker-data/*
+**/node_modules
+.pnpm-store
+**/.pnpm-store
+
+# Build outputs and incremental caches
 dist
+**/dist
 .nx
-/apps/frontend/.next
-/apps/backend/dist
-/apps/workers/dist
-/apps/cron/dist
-/apps/commands/dist
-.devcontainer
+**/.next
+**/*.tsbuildinfo
+coverage
+tmp
+reports
+apps/frontend/public/g.js
+docker-data
+
+# Local environment files and secrets
+.env
+.env.*
+**/.env
+**/.env.*
+.secrets
+**/.secrets
+.apple
+**/.apple
+*.pem
+**/*.pem
+*.p8
+**/*.p8
+
+# Version control, CI, editor, and OS metadata
+.git
 **/.git
+.github
+.devcontainer
+.idea
+.vscode
+**/*.vscode
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
+*.log
+**/*.log
+*.swp
+*.swo
+npm-debug.log*
+
+# Documentation, tests, and local scratch/agent workspaces
+doc
+docs
+tests
+.scratch
+.codegraph
+.claude
 **/*.md
 **/LICENSE
-**/npm-debug.log
-**/*.vscode
-.git
-.github
-reports
+
+# Local uploads and dev container configs (root-anchored so var/docker and
+# apps/frontend/src/app/(app)/api/uploads are preserved)
+uploads
+docker
+docker-compose*.yaml
+docker-compose*.yml
+Dockerfile.dev
+
+# Packaging scripts, tests, provenance, and metadata under k8s/ while keeping
+# the four layered Dockerfiles and ACR application task
+k8s/**
+!k8s/Dockerfile
+!k8s/build-app.yaml
+!k8s/Dockerfile.base
+!k8s/Dockerfile.deps
+!k8s/Dockerfile.runtime-deps
+
+# Non-deployed sub-application source trees; keep package.json manifests so
+# `pnpm install --frozen-lockfile` validates all workspace importers
+apps/commands/**
+!apps/commands/package.json
+apps/extension/**
+!apps/extension/package.json
+apps/sdk/**
+!apps/sdk/package.json

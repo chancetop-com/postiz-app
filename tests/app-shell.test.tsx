@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 /**
@@ -30,8 +30,8 @@ vi.mock('@gitroom/frontend/components/layout/sentry.component', () => ({
 vi.mock('@gitroom/frontend/components/layout/layout.context', () => ({
   default: ({ children }: any) => <>{children}</>,
 }));
-vi.mock('@gitroom/react/helpers/variable.context', () => ({
-  VariableContextComponent: ({ children }: any) => <>{children}</>,
+vi.mock('@gitroom/react/helpers/mantine.wrapper', () => ({
+  MantineWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 vi.mock('@gitroom/helpers/utils/utm.saver', () => ({ default: () => null }));
 vi.mock('@gitroom/frontend/components/layout/dubAnalytics', () => ({
@@ -55,6 +55,11 @@ vi.mock('@gitroom/react/translation/i18n.config', () => ({
 }));
 
 import AppLayout from '@gitroom/frontend/app/(app)/layout';
+import ProviderLayout from '@gitroom/frontend/app/(provider)/layout';
+import ExtensionLayout from '@gitroom/frontend/app/(extension)/layout';
+import { useVariables } from '@gitroom/react/helpers/variable.context';
+
+afterEach(() => vi.unstubAllEnvs());
 
 describe('app shell', () => {
   it('renders the light theme and the local font by default', async () => {
@@ -67,4 +72,21 @@ describe('app shell', () => {
     expect(html).not.toMatch(/<body[^>]*class="[^"]*\bdark\b/);
     expect(html).toContain('page');
   });
+});
+
+const PublicSettings = () => {
+  const { ssoParentOrigins, version, appVersion } = useVariables();
+  return <output>{[ssoParentOrigins, version, appVersion].join('|')}</output>;
+};
+
+it.each([
+  ['dashboard', AppLayout],
+  ['provider', ProviderLayout],
+  ['extension', ExtensionLayout],
+] as const)('exposes the deployed SSO origins and versions in the %s layout', async (_name, layout) => {
+  vi.stubEnv('NEXT_PUBLIC_SSO_PARENT_ORIGINS', 'https://merchant.example');
+  vi.stubEnv('NEXT_PUBLIC_VERSION', 'release-123');
+  vi.stubEnv('NEXT_PUBLIC_APP_VERSION', 'app-456');
+  const html = renderToStaticMarkup(await layout({ children: <PublicSettings /> }));
+  expect(html).toContain('https://merchant.example|release-123|app-456');
 });

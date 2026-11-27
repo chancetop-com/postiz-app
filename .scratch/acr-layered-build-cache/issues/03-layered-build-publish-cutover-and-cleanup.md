@@ -1,0 +1,18 @@
+# 03 — Layered build, ACR publish, and wrapper cutover with legacy packaging retirement
+
+**What to build:** Cut over the canonical application image definition and all build/publish entrypoints to the repository-root four-layer cache chain, and retire superseded packaging files so only one unambiguous packaging flow remains. Update the canonical application image definition to inherit its builder stage from the builder-dependencies layer and its runtime stage from the runtime-dependencies layer using the repository root context, copying only compiled artifacts and runtime config into the runtime layer while preserving the three-process manager layout, `/api/` health check, and startup schema-sync entrypoint contract. Migrate local build, remote ACR publish, and the one-command publish-and-deploy wrapper to share the cache-check and ordered rebuild orchestration (three independent ACR ops cache repositories for cloud publishes to comply with the per-repository latest-3 cleanup policy; local-only tags for local builds with zero remote access), supporting default clean-tree rejection, explicit `--allow-dirty` with automatic `-dirty` tag suffixing, and explicit `--rebuild-cache`. Remove the retired source-copying preparer, inactive legacy runtime image definition, duplicate process-manager config, and subdirectory ignore file, and update all offline CLI fixture tests, runtime-contract assertions, and startup-sync Vitest checks.
+
+**Blocked by:** 02 — Root build context ignore rules, three cache-layer image definitions, and shared guard/digest helper
+
+**Status:** resolved
+
+- [x] Canonical application image definition builds from the repository root context, inherits from configurable builder-dependencies and runtime-dependencies base arguments, copies only compiled app artifacts and runtime configuration into the runtime stage, and preserves the startup schema-sync entrypoint, PM2 three-process paths, `/api/` health check, and zero public build arguments.
+- [x] Cloud publish entrypoint checks each of the three independent ops cache repositories in order (base → builder dependencies → runtime dependencies), skips existing cache tags on hit, builds missing layers (or all layers under `--rebuild-cache`), and then builds and pushes only the application image without invoking any cluster deployment command.
+- [x] Local build entrypoint executes the identical three-layer check/build chain against local container daemon tags (supporting `--rebuild-cache`), writes updated build provenance including resolved cache layer tags and source/worktree state, and never invokes cloud CLI, registry login, image push, or cluster commands.
+- [x] Both local build and cloud publish (as well as the one-command wrapper) reject dirty working trees by default, accept `--allow-dirty` with an automatic `-dirty` suffix on default generated tags, and preserve strict action separation (dry-run executes zero external commands; wrapper without `--deploy` never touches Kubernetes).
+- [x] Superseded legacy files (source-copying preparer, inactive legacy runtime image definition, duplicate process-manager config, subdirectory ignore file, and untracked generated copies) are removed, and ignore/contract references are updated cleanly.
+- [x] Offline stubbed-CLI fixture tests (using stubbed container, cloud, and cluster binaries on `PATH` inside throwaway Git repos), static runtime-contract tests, and the startup-sync Vitest suite are updated and pass with zero real registry or cluster calls.
+
+## Comments
+
+- Resolved on `feat/acr-layered-build-cache` in commits `a21c113b` and `97b14434` (`k8s/tests/build-pipeline.test.sh`: 169/169 passed, `k8s/tests/runtime-contract.test.sh`: 78/78 passed, `tests/startup-sync.test.ts`: 17/17 passed).

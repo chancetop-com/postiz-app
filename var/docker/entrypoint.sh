@@ -10,7 +10,7 @@
 #
 # Usage: entrypoint.sh <command> [args...]
 #   Dockerfile.dev           -> sh -c "nginx && pnpm run pm2"
-#   k8s/Dockerfile(.runtime) -> sh -c "nginx && pm2-runtime ecosystem.config.cjs"
+#   k8s/Dockerfile -> sh -c "nginx && pm2-runtime ecosystem.config.cjs"
 # ============================================================
 set -eu
 
@@ -35,6 +35,11 @@ else
   echo "[startup-sync] the database keeps its rows and whatever the failed sync already changed." >&2
   echo "[startup-sync] inspect the error above before retrying; do not drop tables or data to force a start." >&2
   exit "$status"
+fi
+
+# Prepare the same-origin GTM script before Next indexes its public directory.
+if [ -n "${NEXT_PUBLIC_GTM_ID:-}" ] || [ -f apps/frontend/public/g.js ]; then
+  node apps/frontend/scripts/fetch-gtm.mjs --runtime
 fi
 
 exec "$@"

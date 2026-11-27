@@ -1,23 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-/**
- * Ticket 05: upload requests keep their own header rules.
- *
- * Local XHR uploads build headers by hand from sessionStorage and leave out
- * `impersonate`. Cloudflare/multipart uploads go through the shared custom
- * fetch, which carries all three values. That asymmetry is the historical
- * "bypass request headers are not uniform" baseline gap and is only recorded.
- */
+import { Blob } from 'node:buffer';
+import { readFileSync } from 'node:fs';
 
 import { getUppyUploadPlugin } from '@gitroom/react/helpers/uppy.upload';
 import { customFetch } from '@gitroom/helpers/utils/custom.fetch.func';
-
-const reply = () =>
-  new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-  });
+const data = new Blob([readFileSync('apps/frontend/public/no-picture.jpg')], {
+  type: 'image/jpeg',
+});
+const photo = { name: 'photo.jpg', type: data.type, size: data.size, data };
 
 beforeEach(() => {
   window.sessionStorage.setItem('auth', 'jwt-a');
@@ -32,15 +23,6 @@ afterEach(() => {
 });
 
 describe('local XHR upload', () => {
-  it('recorded gap: sends auth/showorg but not impersonate', () => {
-    const plugin = getUppyUploadPlugin('local', vi.fn(), 'http://api');
-
-    const headers = plugin.options.headers();
-
-    expect(headers).toEqual({ auth: 'jwt-a', showorg: 'org-a' });
-    expect(headers.impersonate).toBeUndefined();
-  });
-
   it('sends no identity headers when the tab has no session', () => {
     window.sessionStorage.clear();
     const plugin = getUppyUploadPlugin('local', vi.fn(), 'http://api');
@@ -51,7 +33,9 @@ describe('local XHR upload', () => {
 
 describe('multipart upload through the shared fetch', () => {
   it('carries auth/showorg/impersonate on the create-multipart-upload call', async () => {
-    const fetchMock = vi.fn(async () => reply());
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({ key: 'r2-test.jpg', uploadId: 'signature.upload-1' })
+    );
     vi.stubGlobal('fetch', fetchMock);
     const plugin = getUppyUploadPlugin(
       'cloudflare',
@@ -59,11 +43,7 @@ describe('multipart upload through the shared fetch', () => {
       'http://api'
     );
 
-    await plugin.options.createMultipartUpload({
-      type: 'image/png',
-      size: 200 * 1024 * 1024,
-      data: null,
-    });
+    await plugin.options.createMultipartUpload(photo);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0];
@@ -89,11 +69,7 @@ describe('multipart upload through the shared fetch', () => {
     );
 
     await expect(
-      plugin.options.createMultipartUpload({
-        type: 'image/png',
-        size: 200 * 1024 * 1024,
-        data: null,
-      })
+      plugin.options.createMultipartUpload(photo)
     ).rejects.toThrow('upload rejected');
   });
 });

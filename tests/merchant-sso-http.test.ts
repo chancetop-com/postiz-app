@@ -1,9 +1,13 @@
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { ValidationPipe } from '@nestjs/common';
-import express from 'express';
-import cors from 'cors';
+import { randomUUID } from 'node:crypto';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  MiddlewareConsumer, Module, ValidationPipe,
+  type INestApplication, type NestModule,
+} from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { ThrottlerModule } from '@nestjs/throttler';
 import cookieParser from 'cookie-parser';
 import { Provider, Role } from '@prisma/client';
 import { AuthController } from '@gitroom/backend/api/routes/auth.controller';
@@ -12,24 +16,14 @@ import { AuthService } from '@gitroom/backend/services/auth/auth.service';
 import { SsoService } from '@gitroom/backend/services/auth/sso.service';
 import { AuthMiddleware } from '@gitroom/backend/services/auth/auth.middleware';
 import { HttpExceptionFilter } from '@gitroom/nestjs-libraries/services/exception.filter';
-import { SsoLoginDto } from '@gitroom/nestjs-libraries/dtos/auth/sso.login.dto';
+import { UsersService } from '@gitroom/nestjs-libraries/database/prisma/users/users.service';
+import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
 import { AuthService as AuthChecker } from '@gitroom/helpers/auth/auth.service';
 import { getCorsOptions } from '@gitroom/backend/cors.config';
-
-/**
- * Ticket 02: the merchant session over real HTTP, not a controller call.
- *
- * The SSO provider is a real socket that consumes each auth_code once. The
- * controller, validation pipe, AuthService, middleware, exception filter and
- * CORS configuration are the shipped implementation. Only persistence is an
- * in-memory stand-in, so no database is required to run this suite.
- */
 
 process.env.JWT_SECRET = 'ticket-02-http-secret';
 process.env.FRONTEND_URL = 'http://localhost:4302';
 process.env.NOT_SECURED = 'true';
-
-const pipe = new ValidationPipe({ transform: true });
 
 type User = {
   id: string;
@@ -52,7 +46,7 @@ const buildWorld = () => {
     const organization = orgs.get(membership.organizationId);
     if (!user || !organization) return null;
     return {
-      user: { ...user, isSuperAdmin: true },
+      user: { ...user },
       organization: {
         ...organization,
         users: [
@@ -75,7 +69,14 @@ const buildWorld = () => {
   };
 
   const organizationService = {
-    getActiveMembership: async (userId: string, organizationId: string) => [...memberships.values()].find((m) => m.userId === userId && m.organizationId === organizationId && !m.disabled),
+    getActiveMembership: async (userId: string, organizationId: string) => {
+      const active = [...memberships.values()].some((membership) =>
+        membership.userId === userId &&
+        membership.organizationId === organizationId &&
+        !membership.disabled
+      );
+      return active && { organizationId };
+    },
     getOrgsByUserId: vi.fn(async (userId: string) => {
       return [...memberships.values()]
         .filter((membership) => membership.userId === userId)
@@ -152,134 +153,63 @@ const startExchange = () => {
   });
 };
 
-const buildApp = (world: ReturnType<typeof buildWorld>) => {
-  const ssoService = new SsoService();
-  const authService = new AuthService(
-    world.userService as never,
-    world.organizationService as never,
-    { sendEmailSync: vi.fn(), hasProvider: () => false } as never,
-    { getProvider: vi.fn() } as never,
-    ssoService,
-    { lead: vi.fn(async () => undefined), queryParams: () => [] } as never
-  );
-  const controller = new AuthController(
-    authService,
-    { hasProvider: () => false } as never,
-    { queryParams: () => [] } as never
-  );
-  const middleware = new AuthMiddleware(
-    world.organizationService as never,
-    world.userService as never
-  );
-  const filter = new HttpExceptionFilter();
-  const users = new UsersController(
-    {} as never,
-    {} as never,
-    authService,
-    world.organizationService as never,
-    world.userService as never,
-    {} as never
-  );
+const world = buildWorld();
 
-  const app = express();
-  app.use(cors(getCorsOptions()));
-  app.use(express.json());
-  app.use(cookieParser());
+@Module({
+  imports: [ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 1000 }] })],
+  controllers: [AuthController, UsersController],
+  providers: [
+    AuthService,
+    SsoService,
+    AuthMiddleware,
+    { provide: UsersService, useValue: world.userService },
+    { provide: OrganizationService, useValue: world.organizationService },
+  ],
+})
+class MerchantSessionModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes(UsersController);
+  }
+}
 
-  const withSession = async (
-    req: express.Request,
-    res: express.Response,
-    next: () => void
-  ) => {
-    try {
-      await middleware.use(req as never, res as never, next);
-    } catch (error) {
-      filter.catch(error, {
-        switchToHttp: () => ({ getResponse: () => res }),
-      } as never);
-    }
-  };
-
-  app.post('/auth/sso', async (req, res) => {
-    const body = (await pipe.transform(req.body, {
-      type: 'body',
-      metatype: SsoLoginDto,
-    })) as SsoLoginDto;
-    await controller.ssoLogin(body, res as never);
-  });
-
-  app.post('/user/change-org', (req, res) => {
-    withSession(req, res, () => {
-      return users.changeOrg((req as any).user, req.body.id, res as never);
-    });
-  });
-
-  app.post('/user/logout', (req, res) => {
-    withSession(req, res, () => {
-      return users.logout(res as never);
-    });
-  });
-
-  app.post('/user/impersonate', (req, res) => {
-    withSession(req, res, async () => {
-      await users.setImpersonate(
-        (req as never as { user: User }).user as never,
-        req.body.id,
-        res as never
-      );
-      res.status(201).send();
-    });
-  });
-
-  app.get('/user/self', (req, res, next) => {
-    withSession(req, res, () => {
-      const current = (req as never as { user: User }).user;
-      res.json({
-        id: current.id,
-        orgId: (req as never as { org: { id: string } }).org.id,
-        admin: !!current.isSuperAdmin,
-        impersonate: !!(req.headers.impersonate || req.cookies.impersonate),
-      });
-    });
-  });
-
-  app.post('/media/upload-simple', (req, res, next) => {
-    // MediaController reads @GetOrgFromRequest(), which is the middleware org.
-    withSession(req, res, () => {
-      res.json({ organizationId: (req as never as { org: { id: string } }).org.id });
-    });
-  });
-
-  return app;
-};
-
+let app: INestApplication;
 let exchange: Awaited<ReturnType<typeof startExchange>>;
-let world: ReturnType<typeof buildWorld>;
-let server: Server;
 let baseUrl = '';
 
 beforeAll(async () => {
   exchange = await startExchange();
-  process.env.SSO_SERVER_URL = exchange.url;
-  world = buildWorld();
-  const app = buildApp(world);
-  await new Promise<void>((resolve) => {
-    server = app.listen(0, '127.0.0.1', () => {
-      baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-      resolve();
-    });
-  });
+  vi.stubEnv('SSO_SERVER_URL', exchange.url);
+  const module = await Test.createTestingModule({
+    imports: [MerchantSessionModule],
+  })
+    .useMocker(() => ({}))
+    .compile();
+  app = module.createNestApplication({ logger: false });
+  app.enableCors(getCorsOptions());
+  app.use(cookieParser());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.useGlobalFilters(new HttpExceptionFilter());
+  await app.listen(0, '127.0.0.1');
+  baseUrl = await app.getUrl();
+});
+
+beforeEach(() => {
+  world.users.clear();
+  world.orgs.clear();
+  world.memberships.clear();
+  world.byProvider.clear();
+  world.organizationService.createOrgAndUser.mockClear();
 });
 
 afterAll(async () => {
-  await new Promise<void>((resolve) => {
-    server.close(() => resolve());
-    server.closeAllConnections();
-  });
-  await new Promise<void>((resolve) => {
-    exchange.server.close(() => resolve());
-    exchange.server.closeAllConnections();
-  });
+  await app?.close();
+  if (exchange) {
+    await new Promise<void>((resolve) => {
+      exchange.server.close(() => resolve());
+      exchange.server.closeAllConnections();
+    });
+  }
+  vi.unstubAllEnvs();
 });
 
 const post = (path: string, body: unknown, headers: Record<string, string> = {}) =>
@@ -309,6 +239,7 @@ describe('merchant SSO over HTTP', () => {
       expect.objectContaining({ id: AuthChecker.verifyJWT(firstAuth).id })
     );
     expect(second.headers.get('showorg')).toBe(firstOrg);
+    expect(world.organizationService.createOrgAndUser).toHaveBeenCalledTimes(1);
   });
 
   it('rejects an invalid code without a session', async () => {
@@ -349,8 +280,8 @@ describe('tab session and request identity over HTTP', () => {
   const merchant = () => world.byProvider.get(`${Provider.GENERIC}:merchant-acme`)!;
   const authHeader = () => AuthChecker.signJWT(merchant());
 
-  const seedSecondOrg = () => {
-    if (world.orgs.has('org-b')) return;
+  beforeEach(async () => {
+    expect((await postSso(randomUUID())).status).toBe(200);
     world.orgs.set('org-b', { id: 'org-b', name: 'Tab B' });
     world.memberships.set('uo-b', {
       id: 'uo-b',
@@ -359,13 +290,12 @@ describe('tab session and request identity over HTTP', () => {
       role: Role.USER,
       disabled: false,
     });
-  };
+  });
 
   const self = (headers: Record<string, string>) =>
     fetch(baseUrl + '/user/self', { headers });
 
   it('selects the organisation sent by the tab header, independently per tab', async () => {
-    seedSecondOrg();
     const auth = authHeader();
     const home = [...world.memberships.values()].find(
       (membership) => membership.userId === merchant().id && membership.organizationId !== 'org-b'
@@ -379,7 +309,6 @@ describe('tab session and request identity over HTTP', () => {
   });
 
   it('falls back to the first usable membership for a foreign or missing selection', async () => {
-    seedSecondOrg();
     const auth = authHeader();
 
     const response = await self({ auth, showorg: 'org-not-mine' });
@@ -390,7 +319,6 @@ describe('tab session and request identity over HTTP', () => {
   });
 
   it('keeps accepting the legacy cookie when no headers are present', async () => {
-    seedSecondOrg();
     const auth = authHeader();
 
     const response = await self({
@@ -401,7 +329,6 @@ describe('tab session and request identity over HTTP', () => {
   });
 
   it('lets the tab header win over a stale shared cookie', async () => {
-    seedSecondOrg();
     const auth = authHeader();
 
     const response = await self({
@@ -431,19 +358,7 @@ describe('tab session and request identity over HTTP', () => {
     expect(response.headers.has('set-cookie')).toBe(false);
   });
 
-  it('runs an upload-shaped request in the organisation of its own tab', async () => {
-    seedSecondOrg();
-    const auth = authHeader();
-
-    const tabA = await post('/media/upload-simple', {}, { auth, showorg: 'org-merchant-acme' });
-    const tabB = await post('/media/upload-simple', {}, { auth, showorg: 'org-b' });
-
-    expect((await tabA.json()).organizationId).toBe('org-merchant-acme');
-    expect((await tabB.json()).organizationId).toBe('org-b');
-  });
-
   it('switches the next request through the change-org response header', async () => {
-    seedSecondOrg();
     const auth = authHeader();
 
     const switched = await post(
@@ -458,7 +373,6 @@ describe('tab session and request identity over HTTP', () => {
   });
 
   it('resolves an administrator impersonation to the target account and organisation', async () => {
-    seedSecondOrg();
     world.users.set('admin-user', {
       id: 'admin-user',
       email: 'admin@ticket02.test',

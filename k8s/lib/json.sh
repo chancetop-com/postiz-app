@@ -2,9 +2,8 @@
 # ============================================================
 # Shared JSON helpers for the k8s build scripts.
 #
-# Sourced by prepare-build-context.sh (manifest) and build-local.sh
-# (provenance), so both emit the same escaping for values interpolated
-# into hand-written JSON.
+# Sourced by build-local.sh (provenance) so hand-written JSON escapes values
+# consistently.
 # ============================================================
 
 # Escape one string for a double-quoted JSON scalar.

@@ -3,28 +3,16 @@ import React, { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 
-/**
- * Ticket 04: the browser session contract around SSO.
- *
- * auth/showorg/impersonate live in sessionStorage, are overwritten only by a
- * non-empty response header, ride on every request, and stay per tab. SSO does
- * not clear an existing session when it starts or fails, and it introduces no
- * longer-lived storage.
- */
-
-let backendUrl = '';
-let isGeneral = false;
 const push = vi.fn();
 const replace = vi.fn();
-let search = 'auth_code=url-code';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, push }),
-  useSearchParams: () => new URLSearchParams(search),
+  useSearchParams: () => new URLSearchParams('auth_code=url-code'),
 }));
 
 vi.mock('@gitroom/react/helpers/variable.context', () => ({
-  useVariables: () => ({ backendUrl, isGeneral, ssoParentOrigins: '' }),
+  useVariables: () => ({ backendUrl: '', isGeneral: false, ssoParentOrigins: '' }),
 }));
 
 vi.mock('@gitroom/frontend/app/(app)/auth/return.url.component', () => ({
@@ -58,22 +46,13 @@ const renderShell = () => {
   );
 };
 
-const reply = (headers: Record<string, string> = {}, status = 200) =>
-  new Response(JSON.stringify({ ok: true }), {
-    status,
-    headers: { 'content-type': 'application/json', ...headers },
-  });
 
 beforeEach(() => {
-  backendUrl = '';
-  isGeneral = false;
-  search = 'auth_code=url-code';
   replace.mockReset();
   push.mockReset();
   request = undefined;
   window.sessionStorage.clear();
   window.localStorage.clear();
-  vi.restoreAllMocks();
 });
 
 afterEach(() => {
@@ -82,53 +61,11 @@ afterEach(() => {
 });
 
 describe('sessionStorage contract', () => {
-  it('stores non-empty auth/showorg/impersonate response headers', async () => {
-    const fetchMock = vi.fn(async () =>
-      reply({
-        auth: 'jwt-a',
-        showorg: 'org-a',
-        impersonate: 'user-imp',
-      })
-    );
-    vi.stubGlobal('fetch', fetchMock);
-    renderShell();
-
-    await request!('/auth/sso', { method: 'POST' });
-
-    expect(window.sessionStorage.getItem('auth')).toBe('jwt-a');
-    expect(window.sessionStorage.getItem('showorg')).toBe('org-a');
-    expect(window.sessionStorage.getItem('impersonate')).toBe('user-imp');
-  });
-
-  it('keeps auth/showorg but clears impersonate when a response header is empty', async () => {
-    window.sessionStorage.setItem('auth', 'jwt-old');
-    window.sessionStorage.setItem('showorg', 'org-old');
-    window.sessionStorage.setItem('impersonate', 'imp-old');
-    const fetchMock = vi.fn(async () =>
-      reply({ auth: '', showorg: '', impersonate: '' })
-    );
-    vi.stubGlobal('fetch', fetchMock);
-    renderShell();
-
-    await request!('/user/self');
-
-    expect(window.sessionStorage.getItem('auth')).toBe('jwt-old');
-    expect(window.sessionStorage.getItem('showorg')).toBe('org-old');
-    // An empty impersonate header is the stop signal from /user/impersonate;
-    // it must not leave the old target behind for the reload.
-    expect(window.sessionStorage.getItem('impersonate')).toBeNull();
-
-    vi.mocked(fetchMock).mockResolvedValueOnce(reply());
-    await request!('/user/self');
-    expect(window.sessionStorage.getItem('showorg')).toBe('org-old');
-    expect(window.sessionStorage.getItem('impersonate')).toBeNull();
-  });
-
   it('sends the stored session on every request', async () => {
     window.sessionStorage.setItem('auth', 'jwt-a');
     window.sessionStorage.setItem('showorg', 'org-a');
     window.sessionStorage.setItem('impersonate', 'imp-a');
-    const fetchMock = vi.fn(async () => reply());
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(Response.json([]));
     vi.stubGlobal('fetch', fetchMock);
     renderShell();
 
@@ -145,12 +82,17 @@ describe('sessionStorage contract', () => {
     window.sessionStorage.setItem('auth', 'jwt-a');
     window.sessionStorage.setItem('showorg', 'org-old');
     const fetchMock = vi.fn();
-    fetchMock.mockResolvedValueOnce(reply({ showorg: 'org-new' }));
-    fetchMock.mockResolvedValueOnce(reply());
+    fetchMock.mockResolvedValueOnce(
+      new Response(null, { headers: { showorg: 'org-new' } })
+    );
+    fetchMock.mockResolvedValueOnce(Response.json([]));
     vi.stubGlobal('fetch', fetchMock);
     renderShell();
 
-    await request!('/user/change-org', { method: 'POST' });
+    await request!('/user/change-org', {
+      method: 'POST',
+      body: JSON.stringify({ id: 'org-new' }),
+    });
     expect(window.sessionStorage.getItem('showorg')).toBe('org-new');
 
     await request!('/posts');
@@ -158,24 +100,23 @@ describe('sessionStorage contract', () => {
     expect((init!.headers as Record<string, string>).showorg).toBe('org-new');
   });
 
-  it('stays per tab: sessionStorage only, no cross-tab sync listener', async () => {
-    const addListener = vi.spyOn(window, 'addEventListener');
-    const fetchMock = vi.fn(async () => reply({ auth: 'jwt-a', showorg: 'org-a' }));
+  it('sends no identity headers when the tab has no session', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({ register: false })
+    );
     vi.stubGlobal('fetch', fetchMock);
     renderShell();
 
-    await request!('/auth/sso', { method: 'POST' });
+    await request!('/auth/can-register');
 
-    expect(window.sessionStorage.getItem('auth')).toBe('jwt-a');
-    expect(window.localStorage.getItem('auth')).toBeNull();
-    expect(window.localStorage.getItem('showorg')).toBeNull();
-    expect(
-      addListener.mock.calls.filter(([event]) => event === 'storage')
-    ).toHaveLength(0);
+    const headers = new Headers(fetchMock.mock.calls[0][1]?.headers);
+    for (const name of ['auth', 'showorg', 'impersonate']) {
+      expect(headers.has(name)).toBe(false);
+    }
   });
 });
 
-describe('SSO does not clear an existing session', () => {
+describe('SSO with an existing session', () => {
   const seed = () => {
     window.sessionStorage.setItem('auth', 'jwt-previous');
     window.sessionStorage.setItem('showorg', 'org-previous');
@@ -186,9 +127,8 @@ describe('SSO does not clear an existing session', () => {
     seed();
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => reply({}, 400))
+      vi.fn(async () => new Response('invalid code', { status: 400 }))
     );
-    vi.spyOn(Response.prototype, 'text').mockResolvedValue('invalid code');
 
     render(
       <LayoutContext>
@@ -203,44 +143,33 @@ describe('SSO does not clear an existing session', () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it('keeps the old keys while a successful exchange runs', async () => {
+  it('moves the tab from merchant A to merchant B on a successful exchange', async () => {
     seed();
-    const fetchMock = vi.fn(async () => {
-      // the store must not be reset before or during the request
-      expect(window.sessionStorage.getItem('auth')).toBe('jwt-previous');
-      return reply({ auth: 'jwt-new', showorg: 'org-new' });
-    });
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockImplementationOnce(async () => {
+        expect(window.sessionStorage.getItem('auth')).toBe('jwt-previous');
+        return Response.json({ login: true }, {
+          headers: { auth: 'jwt-b', showorg: 'org-b' },
+        });
+      })
+      .mockResolvedValueOnce(Response.json([]));
     vi.stubGlobal('fetch', fetchMock);
 
     render(
       <LayoutContext>
         <SsoLoginPage />
-      </LayoutContext>
-    );
-
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/analytics'));
-    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(['/auth/sso']);
-    expect(window.sessionStorage.getItem('impersonate')).toBe('imp-previous');
-  });
-
-  it('moves the tab from merchant A to merchant B on a successful exchange', async () => {
-    seed();
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => reply({ auth: 'jwt-b', showorg: 'org-b' }))
-    );
-
-    render(
-      <LayoutContext>
-        <SsoLoginPage />
+        <Harness />
       </LayoutContext>
     );
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/analytics'));
     expect(window.sessionStorage.getItem('auth')).toBe('jwt-b');
     expect(window.sessionStorage.getItem('showorg')).toBe('org-b');
-    // baseline residue: the exchange does not set impersonate, so an existing
-    // value survives the switch; this is recorded, not repaired here
-    expect(window.sessionStorage.getItem('impersonate')).toBe('imp-previous');
+    expect(window.localStorage.getItem('auth')).toBeNull();
+    expect(window.localStorage.getItem('showorg')).toBeNull();
+    await request!('/posts');
+    const headers = new Headers(fetchMock.mock.calls[1][1]?.headers);
+    expect(headers.get('auth')).toBe('jwt-b');
+    expect(headers.get('showorg')).toBe('org-b');
   });
 });

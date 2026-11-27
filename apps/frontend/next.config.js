@@ -1,8 +1,11 @@
 // @ts-check
+import { PHASE_PRODUCTION_BUILD } from 'next/constants.js';
 import { withSentryConfig } from '@sentry/nextjs';
 
+const hasSentryAuthToken = Boolean(process.env.SENTRY_AUTH_TOKEN?.trim());
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const baseNextConfig = {
   // Plain Next output: the image starts the app with `next start` on 4200,
   // which needs the complete .next directory (including .next/static) and the
   // runtime dependencies, not a standalone server bundle.
@@ -25,18 +28,6 @@ const nextConfig = {
   },
   reactStrictMode: false,
   transpilePackages: ['crypto-hash'],
-  // Enable production sourcemaps for Sentry
-  productionBrowserSourceMaps: true,
-
-  // Custom webpack config to ensure sourcemaps are generated properly
-  webpack: (config, { buildId, dev, isServer, defaultLoaders }) => {
-    // Enable sourcemaps for both client and server in production
-    if (!dev) {
-      config.devtool = isServer ? 'source-map' : 'hidden-source-map';
-    }
-
-    return config;
-  },
   async redirects() {
     return [
       {
@@ -60,7 +51,8 @@ const nextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+/** @type {Parameters<typeof withSentryConfig>[1]} */
+const sentryOptions = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -92,7 +84,10 @@ export default withSentryConfig(nextConfig, {
     finalize: true,
     // Use git commit hash for releases in monorepo
     name:
-      process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || undefined,
+      process.env.SENTRY_RELEASE ||
+      process.env.VERCEL_GIT_COMMIT_SHA ||
+      process.env.GITHUB_SHA ||
+      undefined,
   },
 
   // NextJS specific optimizations for monorepo
@@ -112,4 +107,37 @@ export default withSentryConfig(nextConfig, {
     // Don't fail the build if Sentry upload fails in monorepo context
     return;
   },
-});
+};
+
+/** @type {import('next').NextConfig} */
+const sentryNextConfig = {
+  ...baseNextConfig,
+  productionBrowserSourceMaps: true,
+  // Custom webpack config to ensure sourcemaps are generated properly
+  webpack: (config, { dev, isServer }) => {
+    // Enable sourcemaps for both client and server in production
+    if (!dev) {
+      config.devtool = isServer ? 'source-map' : 'hidden-source-map';
+    }
+
+    return config;
+  },
+};
+
+/** @type {import('next').NextConfig} */
+const defaultNextConfig = {
+  ...baseNextConfig,
+  productionBrowserSourceMaps: false,
+  experimental: {
+    ...baseNextConfig.experimental,
+    serverSourceMaps: false,
+    turbopackSourceMaps: false,
+  },
+};
+
+// Only generate production sourcemaps and wrap with Sentry when uploading to Sentry
+/** @param {string} phase */
+export default function nextConfig(phase) {
+  if (hasSentryAuthToken) return withSentryConfig(sentryNextConfig, sentryOptions);
+  return phase === PHASE_PRODUCTION_BUILD ? defaultNextConfig : baseNextConfig;
+}

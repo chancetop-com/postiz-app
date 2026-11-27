@@ -49,28 +49,14 @@ describe('the add-channel identifier contract', () => {
 });
 
 describe('the hidden providers keep their registration', () => {
-  const registered = socialIntegrationList.map((provider) => provider.identifier);
-
-  it('still serves every registered provider through the connect allow-list', () => {
-    const manager = new IntegrationManager();
-    // `getAllowedSocialsIntegrations` guards POST /integrations/social-connect,
-    // so a narrower list here would be a backend disable.
-    expect(manager.getAllowedSocialsIntegrations()).toEqual(registered);
-  });
-
-  it('still returns hidden providers from GET /integrations', async () => {
+  it('keeps hidden providers available for listing and connection', async () => {
     const manager = new IntegrationManager();
     const { social } = await manager.getAllIntegrations();
-    const identifiers = social.map((provider: any) => provider.identifier);
-    expect(identifiers).toEqual(
-      expect.arrayContaining([
-        'linkedin-page',
-        'tiktok-business',
-        'tumblr',
-        'bluesky',
-        'x',
-      ])
-    );
+    const expectedProviders = expect.arrayContaining([
+      'linkedin-page', 'tiktok-business', 'tumblr', 'bluesky', 'x',
+    ]);
+    expect(social.map((provider) => provider.identifier)).toEqual(expectedProviders);
+    expect(manager.getAllowedSocialsIntegrations()).toEqual(expectedProviders);
   });
 
   it('does not hide providers by default in the shipped environment example', () => {

@@ -1,0 +1,44 @@
+# ============================================================
+# Postiz builder dependencies cache layer (ADR-0001)
+#
+# Content-addressed builder dependency tree rebuilt only when lockfile,
+# package manifests, frontend postinstall script, Prisma schema, or
+# cache layer definitions change:
+#   - pinned Node 22.23.4 full builder image
+#   - pinned pnpm@10.6.1
+#   - manifest-only COPY (all workspace importers + fetch-gtm.mjs + schema.prisma)
+#   - frozen-lockfile install + local Prisma client generation + engine binaries
+#
+# No application source code is copied here, and zero NEXT_PUBLIC_* build
+# args are accepted.
+# ============================================================
+ARG NODE_VERSION=22.23.4
+FROM node:${NODE_VERSION}-bookworm
+
+WORKDIR /app
+
+# Toolchain pinned to match root package.json engines.node and packageManager.
+ARG PNPM_PACKAGE=pnpm@10.6.1
+RUN npm install --no-update-notifier --no-fund --global "$PNPM_PACKAGE" \
+ && npm cache clean --force
+
+# Copy only dependency manifests, workspace configuration, frontend postinstall
+# helper, and Prisma schema so business code edits never invalidate this layer.
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/backend/package.json ./apps/backend/package.json
+COPY apps/commands/package.json ./apps/commands/package.json
+COPY apps/extension/package.json ./apps/extension/package.json
+COPY apps/frontend/package.json ./apps/frontend/package.json
+COPY apps/frontend/scripts/fetch-gtm.mjs ./apps/frontend/scripts/fetch-gtm.mjs
+COPY apps/orchestrator/package.json ./apps/orchestrator/package.json
+COPY apps/sdk/package.json ./apps/sdk/package.json
+COPY libraries/nestjs-libraries/src/database/prisma/schema.prisma \
+     ./libraries/nestjs-libraries/src/database/prisma/schema.prisma
+
+# Frozen install generates the Prisma 6.5.0 client via root postinstall (local
+# pinned CLI, no database connection). Explicitly ensure @prisma/engines
+# binaries exist as well because root pnpm.onlyBuiltDependencies skips its
+# postinstall script, and container startup schema sync needs schema-engine offline.
+RUN pnpm config set store-dir /pnpm-store \
+ && pnpm install --frozen-lockfile \
+ && node -e 'require("@prisma/engines").ensureBinariesExist().catch((err) => { console.error(err); process.exit(1); })'

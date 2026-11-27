@@ -1,0 +1,36 @@
+# ============================================================
+# Postiz runtime OS base cache layer (ADR-0001)
+#
+# Rarely changing slim runtime base shared across builds:
+#   - pinned Node 22.23.4 slim runtime
+#   - nginx (reverse proxy) and curl (healthcheck)
+#   - pinned pnpm@10.6.1 and pm2
+#   - system user `www` and writable runtime directories
+#
+# Built with:
+#   docker build -f k8s/Dockerfile.base -t postiz-base:<base-tag> .
+#   az acr build --file k8s/Dockerfile.base --image ops/postiz-base:<base-tag> .
+# ============================================================
+ARG NODE_VERSION=22.23.4
+FROM node:${NODE_VERSION}-bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx curl \
+ && rm -rf /var/lib/apt/lists/*
+
+# Same pinned pnpm as the builder: the runtime entrypoint executes
+# `pnpm run prisma-db-push`, matching root package.json packageManager.
+ARG PNPM_PACKAGE=pnpm@10.6.1
+RUN npm --no-update-notifier --no-fund --global install "$PNPM_PACKAGE" pm2 \
+ && npm cache clean --force
+
+# The image runs as root: the deployment mounts the /uploads PVC and expects
+# to write there. Preserve the existing root/volume permission model.
+RUN addgroup --system www \
+ && adduser --system --ingroup www --home /www --shell /usr/sbin/nologin www \
+ && mkdir -p /www /uploads /app /var/log/nginx \
+ && chown -R www:www /www /uploads /var/lib/nginx /var/log/nginx /app
+
+WORKDIR /app
+
+# USER www  # Run as root for PVC write permissions

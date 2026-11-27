@@ -1,0 +1,30 @@
+{{- $token := index .Values "sentryToken" -}}
+version: v1.1.0
+steps:
+  - build: >-
+      -f k8s/Dockerfile
+      --build-arg DEPS_IMAGE={{.Values.depsImage}}
+      --build-arg RUNTIME_DEPS_IMAGE={{.Values.runtimeImage}}{{ if $token }}
+      --secret id=sentry_token,src=/run/postiz/token --build-arg SENTRY_UPLOAD=1
+      --build-arg SENTRY_RELEASE={{.Values.sentryRelease}}
+      --build-arg SENTRY_ORG={{.Values.sentryOrg}} --build-arg SENTRY_PROJECT={{.Values.sentryProject}}{{ end }}
+      -t {{.Values.image}}{{ if eq .Values.pushLatest "publish" }} -t {{.Values.latestImage}}{{ end }} .
+    timeout: 3600
+    env:
+      - DOCKER_BUILDKIT=1
+{{ if $token }}
+    volumeMounts:
+      - name: sentry
+        mountPath: /run/postiz
+{{ end }}
+  - push:
+      - '{{.Values.image}}'
+{{ if eq .Values.pushLatest "publish" }}
+      - '{{.Values.latestImage}}'
+{{ end }}
+{{ if $token }}
+volumes:
+  - name: sentry
+    secret:
+      token: '{{ $token | b64enc }}'
+{{ end }}

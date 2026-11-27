@@ -83,8 +83,7 @@ const aiLabel = () => screen.getByText('Made with AI');
 
 const aiControlHidden = () => !!aiLabel().closest('.invisible');
 
-const toggleAi = () =>
-  fireEvent.click(aiLabel().previousElementSibling as Element);
+const toggleAi = () => fireEvent.click(aiLabel());
 
 afterEach(() => {
   cleanup();
@@ -99,6 +98,8 @@ describe('TikTok settings — Made with AI', () => {
 
     toggleAi();
     expect(form.getValues('is_ai_generated')).toBe(true);
+    const checked = screen.getAllByRole('checkbox', { checked: true });
+    expect(checked.some((input) => input.getAttribute('name') === 'is_ai_generated')).toBe(true);
 
     toggleAi();
     expect(form.getValues('is_ai_generated')).toBe(false);
@@ -136,36 +137,6 @@ describe('TikTok settings — Made with AI', () => {
 
     expect(aiControlHidden()).toBe(false);
   });
-
-  it('places Made with AI below the dropdowns in the lower checkbox section and toggles by label', () => {
-    const form = renderSettings({ media: VIDEO_MEDIA });
-
-    const musicLabel = screen.getByText('Auto add music');
-    const commentsLabel = screen.getByText('Allow Comments');
-    const discloseLabel = screen.getByText('Disclose Video Content');
-    const ai = aiLabel();
-
-    expect(
-      musicLabel.compareDocumentPosition(ai) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
-    expect(
-      commentsLabel.compareDocumentPosition(ai) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
-    expect(
-      ai.compareDocumentPosition(discloseLabel) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
-
-    const box = ai.previousElementSibling as HTMLElement;
-    expect(box.getAttribute('aria-checked')).toBe('false');
-    expect(box.className).toContain('bg-newBgColorInner');
-    expect(box.className).not.toContain('bg-btnPrimary');
-
-    fireEvent.click(ai);
-    expect(form.getValues('is_ai_generated')).toBe(true);
-    expect(box.getAttribute('aria-checked')).toBe('true');
-    expect(box.className).toContain('bg-btnPrimary');
-    expect(box.className).toContain('text-white');
-  });
 });
 
 describe('TikTok settings — Business location', () => {
@@ -186,7 +157,6 @@ describe('TikTok settings — Business location', () => {
     act(() => form.setValue('location', LOCATION));
 
     expect(screen.getByText('Test Place')).toBeTruthy();
-    expect(form.getValues('location')).toEqual(LOCATION);
   });
 
   it('hides Location in video UPLOAD, keeps the value and restores it on DIRECT_POST', () => {

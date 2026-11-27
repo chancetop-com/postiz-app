@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================
-# Tests for the source-image runtime contract (ticket 13).
+# Tests for the layered source-image runtime contract (ADR-0001).
 #
-# These are fast, static assertions over the packaging inputs. They are a
-# regression guard only: the behavioural proof (three processes, /api/, media
-# persistence, native modules) lives in
-# .scratch/postiz-stable-merge-implementation/rehearsals/13/.
+# Fast, static assertions focused strictly on runtime-image contracts:
+# toolchain pinning, four-layer Dockerfile split, zero NEXT_PUBLIC_* build
+# args, plain Next output, PM2 three-process layout, /api/ healthcheck,
+# startup schema sync, and runtime-deps pruning contract.
 #
 # Never talks to a registry, a cluster or the Docker daemon.
 #
@@ -17,47 +17,56 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 K8S_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd -- "$K8S_DIR/.." && pwd)"
 
+# shellcheck source=lib/assert.sh
+. "$SCRIPT_DIR/lib/assert.sh"
+
 DOCKERFILE="$K8S_DIR/Dockerfile"
+DOCKERFILE_BASE="$K8S_DIR/Dockerfile.base"
+DOCKERFILE_DEPS="$K8S_DIR/Dockerfile.deps"
+DOCKERFILE_RUNTIME_DEPS="$K8S_DIR/Dockerfile.runtime-deps"
 ECOSYSTEM="$REPO_ROOT/var/docker/ecosystem.config.cjs"
-NEXT_CONFIG="$REPO_ROOT/apps/frontend/next.config.js"
 BUILD_LOCAL="$K8S_DIR/build-local.sh"
 BUILD_POSTIZ="$K8S_DIR/build-postiz.sh"
+PACKAGE_JSON="$REPO_ROOT/package.json"
 
-PASS=0
-FAIL=0
-FAILED_NAMES=()
-
-ok() { PASS=$((PASS + 1)); printf '  ok   %s\n' "$1"; }
-no() { FAIL=$((FAIL + 1)); FAILED_NAMES+=("$1"); printf '  FAIL %s\n' "$1"; }
-
-assert_eq() {
-  if [ "$2" = "$3" ]; then ok "$1"; else no "$1 (expected [$3], got [$2])"; fi
-}
-
-assert_contains() { # description file needle
-  if grep -qF -- "$3" "$2"; then ok "$1"; else no "$1 (missing [$3] in $2)"; fi
-}
-
-assert_not_contains() {
-  if grep -qF -- "$3" "$2"; then no "$1 (unexpected [$3] in $2)"; else ok "$1"; fi
-}
+EXPECTED_NODE="$(PACKAGE_JSON="$PACKAGE_JSON" node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.env.PACKAGE_JSON, "utf8")).engines.node)')"
+EXPECTED_PNPM_SPEC="$(PACKAGE_JSON="$PACKAGE_JSON" node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.env.PACKAGE_JSON, "utf8")).packageManager)')"
 
 # ------------------------------------------------------------
-# Toolchain: builder and runtime both on Node 22.23.4, pnpm 10.6.1
+# Toolchain & four-layer Dockerfile split
 # ------------------------------------------------------------
-echo "toolchain"
-upstream_node="$(awk '/^FROM node:/{print $2; exit}' "$DOCKERFILE" | cut -d: -f2)"
-runtime_node="$(awk '/^FROM node:/{print $2}' "$DOCKERFILE" | tail -1 | cut -d: -f2)"
-assert_eq "builder base image is node 22.23.4" "$upstream_node" "22.23.4-bookworm"
-assert_eq "runtime base image is node 22.23.4" "$runtime_node" "22.23.4-bookworm-slim"
+echo "toolchain and layered Dockerfiles"
+deps_node="$(awk '/^FROM node:/{print $2; exit}' "$DOCKERFILE_DEPS" | cut -d: -f2)"
+base_node="$(awk '/^FROM node:/{print $2; exit}' "$DOCKERFILE_BASE" | cut -d: -f2)"
+assert_eq "Dockerfile.deps pins Node ${EXPECTED_NODE} full builder image" "$deps_node" '${NODE_VERSION}-bookworm'
+assert_eq "Dockerfile.base pins Node ${EXPECTED_NODE} slim runtime image" "$base_node" '${NODE_VERSION}-bookworm-slim'
 
-if grep -qE 'npm (install|i) -g pnpm(@[0-9.]+)?' "$DOCKERFILE"; then
-  no "pnpm is installed from an unpinned global npm install"
-else
-  ok "pnpm is not installed from an unpinned global npm install"
-fi
-assert_contains "builder pins pnpm 10.6.1" "$DOCKERFILE" "pnpm@10.6.1"
-assert_contains "builder installs with --frozen-lockfile" "$DOCKERFILE" "--frozen-lockfile"
+assert_contains "base default Node pin" "$DOCKERFILE_BASE" "ARG NODE_VERSION=$EXPECTED_NODE"
+assert_contains "deps default Node pin" "$DOCKERFILE_DEPS" "ARG NODE_VERSION=$EXPECTED_NODE"
+assert_contains "Dockerfile.base pins ${EXPECTED_PNPM_SPEC}" "$DOCKERFILE_BASE" "$EXPECTED_PNPM_SPEC"
+assert_contains "Dockerfile.deps pins ${EXPECTED_PNPM_SPEC}" "$DOCKERFILE_DEPS" "$EXPECTED_PNPM_SPEC"
+assert_contains "Dockerfile.deps installs with --frozen-lockfile" "$DOCKERFILE_DEPS" "--frozen-lockfile"
+
+assert_regex "Dockerfile.runtime-deps inherits DEPS_IMAGE for pruning" "$DOCKERFILE_RUNTIME_DEPS" '^FROM[[:space:]]+\$\{DEPS_IMAGE\}'
+assert_regex "Dockerfile.runtime-deps inherits BASE_IMAGE for runtime deps" "$DOCKERFILE_RUNTIME_DEPS" '^FROM[[:space:]]+\$\{BASE_IMAGE\}'
+assert_regex "runtime dependency pruning is offline and non-interactive" "$DOCKERFILE_RUNTIME_DEPS" 'CI=true[[:space:]]+npm_config_offline=true[[:space:]]+pnpm prune --prod'
+
+assert_regex "Dockerfile builder stage inherits DEPS_IMAGE" "$DOCKERFILE" '^FROM[[:space:]]+\$\{DEPS_IMAGE\}[[:space:]]+AS[[:space:]]+builder'
+assert_regex "Dockerfile runtime stage inherits RUNTIME_DEPS_IMAGE" "$DOCKERFILE" '^FROM[[:space:]]+\$\{RUNTIME_DEPS_IMAGE\}[[:space:]]+AS[[:space:]]+runtime'
+assert_not_regex "Dockerfile never pulls raw node base image directly" "$DOCKERFILE" '^FROM[[:space:]]+node:'
+assert_not_contains "Dockerfile never runs pnpm install" "$DOCKERFILE" "pnpm install"
+assert_not_contains "Dockerfile never runs apt-get" "$DOCKERFILE" "apt-get"
+assert_not_regex "Dockerfile runtime does not re-copy builder node_modules" "$DOCKERFILE" '^COPY[[:space:]]+--from=builder[[:space:]]+/app/node_modules'
+assert_contains "Dockerfile builds workspace with pnpm run build" "$DOCKERFILE" "pnpm run build"
+assert_contains "Dockerfile copies compiled backend dist" "$DOCKERFILE" "./apps/backend/dist"
+assert_contains "Dockerfile copies compiled orchestrator dist" "$DOCKERFILE" "./apps/orchestrator/dist"
+assert_contains "Dockerfile copies Prisma schema for startup sync" "$DOCKERFILE" "libraries/nestjs-libraries/src/database/prisma/schema.prisma"
+assert_contains "Dockerfile copies startup entrypoint" "$DOCKERFILE" "var/docker/entrypoint.sh"
+assert_contains "Dockerfile copies nginx config" "$DOCKERFILE" "var/docker/nginx.conf"
+assert_contains "Dockerfile copies PM2 ecosystem config" "$DOCKERFILE" "var/docker/ecosystem.config.cjs"
+assert_regex "Dockerfile exposes port 5000" "$DOCKERFILE" '^EXPOSE[[:space:]]+5000$'
+assert_regex "Dockerfile uses startup schema-sync entrypoint" "$DOCKERFILE" '^ENTRYPOINT[[:space:]]+\["/app/var/docker/entrypoint\.sh"\]$'
+assert_contains "Dockerfile starts nginx and pm2-runtime" "$DOCKERFILE" 'nginx && pm2-runtime ecosystem.config.cjs'
 
 # ------------------------------------------------------------
 # Healthcheck: the root route /api/ exists in the backend
@@ -80,8 +89,11 @@ fi
 # ------------------------------------------------------------
 echo "runtime configuration"
 
-assert_not_contains "Dockerfile declares no NEXT_PUBLIC_* build args" "$DOCKERFILE" "ARG NEXT_PUBLIC_"
-assert_not_contains "Dockerfile sets no NEXT_PUBLIC_* env values" "$DOCKERFILE" "ENV NEXT_PUBLIC_"
+for df in "$DOCKERFILE_BASE" "$DOCKERFILE_DEPS" "$DOCKERFILE_RUNTIME_DEPS" "$DOCKERFILE"; do
+  name="$(basename "$df")"
+  assert_not_contains "$name declares no NEXT_PUBLIC_* build args" "$df" "ARG NEXT_PUBLIC_"
+  assert_not_contains "$name sets no NEXT_PUBLIC_* env values" "$df" "ENV NEXT_PUBLIC_"
+done
 assert_not_contains "build-local.sh passes no NEXT_PUBLIC_* build args" "$BUILD_LOCAL" "--build-arg NEXT_PUBLIC_"
 assert_not_contains "build-postiz.sh passes no NEXT_PUBLIC_* build args" "$BUILD_POSTIZ" "--build-arg NEXT_PUBLIC_"
 
@@ -95,26 +107,10 @@ client_reads="$(
 )"
 assert_eq "client modules do not read NEXT_PUBLIC_* from process.env" "$client_reads" ""
 
-# The server layouts must pass the public values into the context.
-for layout in "$REPO_ROOT/apps/frontend/src/app/(app)/layout.tsx" \
-              "$REPO_ROOT/apps/frontend/src/app/(provider)/layout.tsx" \
-              "$REPO_ROOT/apps/frontend/src/app/(extension)/layout.tsx"; do
-  assert_contains "runtime SSO origins are passed by $(basename "$(dirname "$layout")")" "$layout" "ssoParentOrigins={process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS"
-  assert_contains "runtime version is passed by $(basename "$(dirname "$layout")")" "$layout" "version={process.env.NEXT_PUBLIC_VERSION"
-  assert_contains "runtime app version is passed by $(basename "$(dirname "$layout")")" "$layout" "appVersion={process.env.NEXT_PUBLIC_APP_VERSION"
-done
-assert_not_contains "the SSO page does not read the SSO origins from process.env" \
-  "$REPO_ROOT/apps/frontend/src/app/(app)/sso/page.tsx" "process.env.NEXT_PUBLIC_SSO_PARENT_ORIGINS"
-assert_not_contains "the Facebook component does not read the pixel from process.env" \
-  "$REPO_ROOT/apps/frontend/src/components/layout/facebook.component.tsx" "process.env.NEXT_PUBLIC_FACEBOOK_PIXEL"
-assert_not_contains "the public API component does not read the version from process.env" \
-  "$REPO_ROOT/apps/frontend/src/components/public-api/public.component.tsx" "process.env.NEXT_PUBLIC_VERSION"
-
 # ------------------------------------------------------------
 # Next output: plain `next start`, no standalone
 # ------------------------------------------------------------
 echo "next output"
-assert_not_contains "next.config.js no longer requests standalone output" "$NEXT_CONFIG" "output: 'standalone'"
 assert_contains "Dockerfile keeps the complete .next output" "$DOCKERFILE" "./apps/frontend/.next"
 assert_contains "Dockerfile keeps the frontend public directory" "$DOCKERFILE" "./apps/frontend/public"
 assert_contains "Dockerfile keeps the frontend package.json" "$DOCKERFILE" "./apps/frontend/package.json"
@@ -146,12 +142,4 @@ else
   FAILED_NAMES+=("pm2 process set")
 fi
 
-# ------------------------------------------------------------
-# Summary
-# ------------------------------------------------------------
-echo
-echo "runtime-contract: $PASS passed, $FAIL failed"
-if [ "$FAIL" -ne 0 ]; then
-  printf 'failed: %s\n' "${FAILED_NAMES[@]}"
-  exit 1
-fi
+report_and_exit "runtime-contract"

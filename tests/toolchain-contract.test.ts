@@ -13,7 +13,7 @@ describe('toolchain declaration', () => {
 
   it('uses the same Prisma CLI and client version', () => {
     expect(pkg.dependencies['@prisma/client']).toBeDefined();
-    expect(pkg.devDependencies.prisma).toBe(pkg.dependencies['@prisma/client']);
+    expect(pkg.dependencies.prisma).toBe(pkg.dependencies['@prisma/client']);
   });
 
   it('runs the database sync without accepting data loss', () => {

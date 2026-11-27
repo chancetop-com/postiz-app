@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -8,73 +9,27 @@ const schemaPath = path.resolve(
 );
 const schema = readFileSync(schemaPath, 'utf8');
 
+it('generates an upgrade without dropping pre-merge tables', () => {
+  const previousSchema = path.resolve(
+    import.meta.dirname,
+    '../.scratch/postiz-stable-merge-implementation/rehearsals/03/old-schema.prisma'
+  );
+  const sql = execFileSync(
+    'pnpm',
+    [
+      'exec', 'prisma', 'migrate', 'diff', '--script',
+      '--from-schema-datamodel', previousSchema,
+      '--to-schema-datamodel', schemaPath,
+    ],
+    { encoding: 'utf8' }
+  );
+  expect(sql.match(/^DROP TABLE\b.*$/gim) ?? []).toEqual([]);
+});
+
 const models = new Map<string, string>();
 for (const match of schema.matchAll(/^model\s+(\w+)\s*\{([\s\S]*?)^\}/gm)) {
   models.set(match[1], match[2]);
 }
-
-/**
- * Every model that existed before the v2.25.3 merge (customization commit
- * 6fdf7cb5) must still be declared. `db push` only adds to the database, so a
- * model that silently disappears from the schema would turn a later sync into a
- * drop. This list is the guard, not the absence of a delete statement.
- */
-const BASELINE_MODELS = [
-  'Organization',
-  'Tags',
-  'TagsPosts',
-  'User',
-  'UsedCodes',
-  'UserOrganization',
-  'GitHub',
-  'Trending',
-  'TrendingLog',
-  'ItemUser',
-  'Star',
-  'Media',
-  'SocialMediaAgency',
-  'SocialMediaAgencyNiche',
-  'Credits',
-  'Subscription',
-  'Customer',
-  'Integration',
-  'Signatures',
-  'Comments',
-  'Post',
-  'Notifications',
-  'MessagesGroup',
-  'PayoutProblems',
-  'Orders',
-  'OrderItems',
-  'Messages',
-  'Plugs',
-  'ExisingPlugData',
-  'PopularPosts',
-  'IntegrationsWebhooks',
-  'Webhooks',
-  'AutoPost',
-  'Sets',
-  'ThirdParty',
-  'Errors',
-  'Mentions',
-  'mastra_ai_spans',
-  'mastra_evals',
-  'mastra_messages',
-  'mastra_resources',
-  'mastra_scorers',
-  'mastra_threads',
-  'mastra_traces',
-  'mastra_workflow_snapshot',
-  'OAuthApp',
-  'OAuthAuthorization',
-  'Announcement',
-];
-
-describe('prisma schema keeps the pre-merge models', () => {
-  it.each(BASELINE_MODELS)('still declares %s', (model) => {
-    expect(models.has(model)).toBe(true);
-  });
-});
 
 describe('new columns default the way existing rows need them', () => {
   const field = (model: string, name: string) => {
@@ -112,13 +67,5 @@ describe('new columns default the way existing rows need them', () => {
     expect(field('OAuthApp', 'dynamic')).toContain('@default(false)');
     expect(field('OAuthApp', 'organizationId')).toMatch(/String\?/);
     expect(field('OAuthApp', 'clientSecret')).toMatch(/String\?/);
-  });
-
-  it('adds the clippings relation without changing channel credentials', () => {
-    expect(field('Integration', 'internalId')).toMatch(/String\b/);
-    expect(field('Integration', 'rootInternalId')).toMatch(/String\?/);
-    expect(field('Integration', 'token')).toMatch(/String\b/);
-    expect(field('Integration', 'refreshToken')).toMatch(/String\?/);
-    expect(field('Integration', 'tokenExpiration')).toMatch(/DateTime\?/);
   });
 });

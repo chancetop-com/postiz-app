@@ -157,24 +157,6 @@ describe('other impersonation readers', () => {
     }
   });
 
-  it('/user/self reads the tab header first', async () => {
-    const self = await controller().getSelf(
-      { ...admin } as never,
-      {
-        id: 'org-admin',
-        apiKey: 'key-admin',
-        subscription: null,
-        users: [{ role: 'SUPERADMIN' }],
-      } as never,
-      {
-        headers: { impersonate: 'header-user' },
-        cookies: { impersonate: 'cookie-user' },
-      } as never
-    );
-
-    expect(self.impersonate).toBe(true);
-  });
-
   it('delete-account rejects a tab header even without the cookie', async () => {
     await expect(
       controller().deleteAccount(

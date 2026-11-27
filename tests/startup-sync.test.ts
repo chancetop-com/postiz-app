@@ -113,6 +113,33 @@ describe('container startup database sync', () => {
     expect(result.stderr).toMatch(/refus/i);
   });
 
+  it('serves the deployed GTM script and clears stale assets on failure or disablement', () => {
+    const box = sandbox();
+    const frontend = path.join(box.root, 'apps/frontend');
+    mkdirSync(path.join(frontend, 'scripts'), { recursive: true });
+    mkdirSync(path.join(frontend, 'public'));
+    copyFileSync(path.join(repoRoot, 'apps/frontend/scripts/fetch-gtm.mjs'),
+      path.join(frontend, 'scripts/fetch-gtm.mjs'));
+    const asset = path.join(frontend, 'public/g.js');
+    writeFileSync(asset, 'workstation');
+    const mockFetch = path.join(box.root, 'offline-fetch.mjs');
+    writeFileSync(mockFetch, `
+      globalThis.fetch = async url => {
+        if (url === 'https://www.googletagmanager.com/gtm.js?id=GTM-DEPLOY')
+          return new Response('deployment script');
+        return new Response(null, { status: 503 });
+      };
+    `);
+    const runtime = { NODE_OPTIONS: `--import=${mockFetch}`, NEXT_PUBLIC_GTM_ID: 'GTM-DEPLOY' };
+    expect(box.run([box.app], runtime).status).toBe(0);
+    expect(readFileSync(asset, 'utf8')).toBe('deployment script');
+    expect(box.run([box.app], { ...runtime, NEXT_PUBLIC_GTM_ID: 'GTM-OTHER' }).status).toBe(0);
+    expect(existsSync(asset)).toBe(false);
+    writeFileSync(asset, 'previous deployment');
+    expect(box.run([box.app]).status).toBe(0);
+    expect(existsSync(asset)).toBe(false);
+  });
+
   it('passes the exit code of the application command through', () => {
     const box = sandbox();
 
@@ -132,73 +159,23 @@ describe('container startup database sync', () => {
   });
 });
 
-const readDockerfile = (name: string) => readFileSync(path.join(repoRoot, name), 'utf8');
-
-/**
- * Splits a Dockerfile into named build stages. `Dockerfile.dev` has a single
- * unnamed stage, which is reported as `default`.
- */
-const stagesOf = (text: string) => {
-  const stages = new Map<string, string[]>();
-  let current = 'default';
-  for (const line of text.split('\n')) {
-    const from = /^FROM\s+(.+)$/i.exec(line.trim());
-    if (from) {
-      const named = /\sAS\s+([\w.-]+)\s*$/i.exec(from[1]);
-      current = named ? named[1].toLowerCase() : stages.size === 0 ? 'default' : `stage${stages.size}`;
-      stages.set(current, [line]);
-      continue;
-    }
-    if (!stages.has(current)) {
-      stages.set(current, []);
-    }
-    stages.get(current)?.push(line);
-  }
-  return stages;
-};
-
-const runtimeImages = [
-  { name: 'root image', file: 'Dockerfile.dev', stage: 'default' },
-  { name: 'single-image candidate', file: 'k8s/Dockerfile', stage: 'runtime' },
-  { name: 'packaged runtime image', file: 'k8s/Dockerfile.runtime', stage: 'runtime' },
-];
-
-describe.each(runtimeImages)('$name', ({ file, stage }) => {
-  const text = readDockerfile(file);
-  const body = (stagesOf(text).get(stage) ?? []).join('\n');
-
-  it('uses the shared startup entrypoint and does not start the app first', () => {
-    expect(body).toMatch(/^ENTRYPOINT\s+\[\s*"\/app\/var\/docker\/entrypoint\.sh"/m);
-    expect(body).toMatch(/^CMD\s+\[/m);
-    expect(body).not.toMatch(/^CMD[^\n]*prisma/m);
-    expect(body).not.toMatch(/(^|\n)ENTRYPOINT[^\n]*pm2/m);
-  });
-
-  it('ships the root script, the schema and the pinned Prisma CLI', () => {
-    const copiesWholeTree = /^COPY\s+\.\s+\/app\s*$/m.test(body);
-    if (!copiesWholeTree) {
-      expect(body).toMatch(/COPY[^\n]*package\.json/);
-      expect(body).toMatch(/COPY[^\n]*schema\.prisma/);
-      expect(body).toMatch(/COPY[^\n]*entrypoint\.sh/);
-    }
-    expect(body).toContain(pkg.packageManager);
-  });
+it('uses the shared startup entrypoint in the development image', () => {
+  const devImage = readFileSync(path.join(repoRoot, 'Dockerfile.dev'), 'utf8');
+  expect(devImage).toMatch(/^ENTRYPOINT\s+\[\s*"\/app\/var\/docker\/entrypoint\.sh"\s*\]/m);
 });
 
-describe.each(runtimeImages)('$name build rules', ({ file }) => {
-  const stages = stagesOf(readDockerfile(file));
-
-  it('never applies the schema while the image is being built', () => {
-    for (const [name, lines] of stages) {
-      const stage = lines.join('\n');
-      expect(stage).not.toMatch(/prisma\s+db\s+push/);
-      if (name === 'runtime' || name === 'default') {
-        continue;
-      }
-      expect(stage).not.toMatch(/--accept-data-loss/);
-      expect(stage).not.toMatch(/DATABASE_URL=/);
-    }
-  });
+it.each([
+  'Dockerfile.dev',
+  'k8s/Dockerfile',
+  'k8s/Dockerfile.base',
+  'k8s/Dockerfile.deps',
+  'k8s/Dockerfile.runtime-deps',
+])('%s keeps schema sync out of the image build', (file) => {
+  const dockerfile = readFileSync(path.join(repoRoot, file), 'utf8');
+  expect(dockerfile).not.toMatch(/prisma\s+db\s+push/);
+  if (file !== 'Dockerfile.dev') {
+    expect(dockerfile).not.toMatch(/--accept-data-loss|DATABASE_URL=/);
+  }
 });
 
 describe('root package scripts', () => {
@@ -218,7 +195,7 @@ describe('root package scripts', () => {
   it('generates only the client during install', () => {
     expect(pkg.scripts.postinstall).toContain('prisma-generate');
     expect(pkg.scripts.postinstall).not.toContain('db push');
-    expect(pkg.scripts['prisma-generate']).toContain('generate');
+    expect(pkg.scripts['prisma-generate']).toMatch(/^prisma\s+generate\b/);
     expect(pkg.scripts['prisma-generate']).not.toContain('db push');
   });
 });

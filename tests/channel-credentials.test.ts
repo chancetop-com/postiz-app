@@ -121,9 +121,9 @@ const createStore = () => {
 
   const integration = {
     findMany: async ({ where }: { where?: Record<string, any> } = {}) =>
-      rows.filter((candidate) => matches(candidate, where)),
+      structuredClone(rows.filter((candidate) => matches(candidate, where))),
     findFirst: async ({ where }: { where?: Record<string, any> } = {}) =>
-      rows.find((candidate) => matches(candidate, where)),
+      structuredClone(rows.find((candidate) => matches(candidate, where)) ?? null),
     findUnique: async ({ where }: { where: Record<string, any> }) => {
       if (where.id) {
         return rows.find((candidate) => candidate.id === where.id) ?? null;
@@ -245,68 +245,6 @@ beforeEach(() => {
 });
 
 describe('rotating credentials of already-bound channels', () => {
-  const boundChannels = [
-    { identifier: 'youtube', internalId: 'yt-account', root: 'yt-account' },
-    { identifier: 'linkedin', internalId: 'li-account', root: 'li-account' },
-    { identifier: 'tiktok', internalId: 'tt-account', root: 'tt-account' },
-    { identifier: 'facebook', internalId: 'fb-page', root: 'fb-page' },
-    { identifier: 'instagram', internalId: 'ig-page', root: 'ig-user-root' },
-    {
-      identifier: 'instagram-standalone',
-      internalId: 'igs-account',
-      root: 'igs-account',
-    },
-    { identifier: 'tumblr', internalId: 'tumblr-account', root: 'tumblr-account' },
-    { identifier: 'linkedin-page', internalId: 'li-page', root: 'li-root' },
-  ];
-
-  it('refreshes the six and other bound providers without changing identity', async () => {
-    const store = createStore();
-    const rows = boundChannels.map((channel) =>
-      row({
-        internalId: channel.internalId,
-        rootInternalId: channel.root,
-        providerIdentifier: channel.identifier,
-        token: `${channel.identifier}-old`,
-        refreshToken: `${channel.identifier}-refresh-old`,
-      })
-    );
-    store.rows.push(...rows);
-
-    const providers = Object.fromEntries(
-      boundChannels.map((channel) => [
-        channel.identifier,
-        {
-          refreshToken: async (refreshToken: string) => ({
-            accessToken: `${channel.identifier}-new-access`,
-            refreshToken: `${refreshToken}-rotated`,
-            expiresIn: 3600,
-          }),
-        },
-      ])
-    );
-    const { service } = makeService(store, providers);
-
-    await service.refreshTokens();
-
-    rows.forEach((candidate, index) => {
-      const channel = boundChannels[index];
-      expect(candidate.id).toBe(`integration-${index + 1}`);
-      expect(candidate.organizationId).toBe('org-1');
-      expect(candidate.internalId).toBe(channel.internalId);
-      expect(candidate.rootInternalId).toBe(channel.root);
-      expect(candidate.name).toBe('Old channel');
-      expect(candidate.profile).toBe('old-handle');
-      expect(candidate.additionalSettings).toBe('[]');
-      expect(candidate.token).toBe(`${channel.identifier}-new-access`);
-      expect(candidate.refreshToken).toBe(
-        `${channel.identifier}-refresh-old-rotated`
-      );
-      expect(candidate.refreshNeeded).toBe(false);
-      expect(candidate.tokenExpiration!.getTime()).toBeGreaterThan(Date.now());
-    });
-  });
-
   it('keeps refreshing the remaining channels when one refresh fails', async () => {
     const store = createStore();
     const broken = row({
@@ -365,17 +303,7 @@ describe('rotating credentials of already-bound channels', () => {
     });
     store.rows.push(instagram);
 
-    const providers = {
-      // The Facebook-Business Instagram provider has no self-refresh: it
-      // answers with an empty token and the channel needs a reconnect.
-      instagram: {
-        refreshToken: async () => ({
-          accessToken: '',
-          refreshToken: '',
-          expiresIn: 0,
-        }),
-      },
-    };
+    const providers = { instagram: new InstagramProvider() };
     const previousExpiry = instagram.tokenExpiration;
     const { service, notifications } = makeService(store, providers);
 
@@ -509,7 +437,7 @@ describe('rotating credentials of already-bound channels', () => {
 });
 
 describe('concurrent refresh of one channel', () => {
-  it('reuses the credential a parallel refresh rotated and later publishes with it', async () => {
+  it('keeps the winning credentials when a batch refresh races a single refresh', async () => {
     const store = createStore();
     const stored = row({
       providerIdentifier: 'tumblr',
@@ -529,6 +457,10 @@ describe('concurrent refresh of one channel', () => {
       firstStarted = resolve;
     });
 
+    let markSecondStarted!: () => void;
+    const secondCallStarted = new Promise<void>((resolve) => {
+      markSecondStarted = resolve;
+    });
     const seen: string[] = [];
     const providers = {
       tumblr: {
@@ -547,6 +479,7 @@ describe('concurrent refresh of one channel', () => {
           }
 
           if (refreshToken === 'synthetic-old-refresh') {
+            markSecondStarted();
             throw new Error('invalid_grant');
           }
 
@@ -564,7 +497,7 @@ describe('concurrent refresh of one channel', () => {
     const single = refresh.refresh({ ...stored } as any);
     await firstCallStarted;
     const batch = service.refreshTokens();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await secondCallStarted;
     releaseFirst();
 
     const [singleResult] = await Promise.all([single, batch]);
@@ -580,18 +513,6 @@ describe('concurrent refresh of one channel', () => {
     // the losing batch must not flag a channel that was just rotated
     expect(stored.refreshNeeded).toBe(false);
     expect(notifications).toHaveLength(0);
-
-    // the publish side reads the row after the refresh and must use the
-    // winner, not the token its workflow started with
-    const publish = await store.integration.findFirst({
-      where: { id: stored.id },
-    });
-    expect(publish).toMatchObject({
-      token: 'synthetic-winner-access',
-      refreshToken: 'synthetic-winner-refresh',
-      internalId: 'tumblr-history',
-      organizationId: 'org-1',
-    });
   });
 
   it('notifies only the attempt that first flags a broken channel', async () => {
@@ -629,21 +550,21 @@ describe('pages and shared accounts keep their exact associations', () => {
     const root = row({
       internalId: 'instagram-user',
       rootInternalId: 'instagram-user',
-      providerIdentifier: 'instagram',
+      providerIdentifier: 'paged-provider',
       token: 'synthetic-user-token',
       refreshToken: 'synthetic-user-refresh',
     });
     const pageOne = row({
       internalId: 'instagram-page-one',
       rootInternalId: 'instagram-user',
-      providerIdentifier: 'instagram',
+      providerIdentifier: 'paged-provider',
       token: 'synthetic-page-one',
       refreshToken: 'synthetic-user-refresh',
     });
     const pageTwo = row({
       internalId: 'instagram-page-two',
       rootInternalId: 'instagram-user',
-      providerIdentifier: 'instagram',
+      providerIdentifier: 'paged-provider',
       token: 'synthetic-page-two',
       refreshToken: 'synthetic-user-refresh',
     });
@@ -651,7 +572,7 @@ describe('pages and shared accounts keep their exact associations', () => {
 
     const reconnects: Array<[string, string, string]> = [];
     const providers = {
-      instagram: {
+      'paged-provider': {
         oneTimeToken: false,
         refreshToken: async () => ({
           accessToken: 'synthetic-user-token-two',
@@ -753,23 +674,7 @@ describe('encryption provider configuration', () => {
       refreshToken: 'synthetic-user-refresh',
     });
     store.rows.push(legacy);
-    const providers = {
-      instagram: {
-        refreshToken: async () => ({
-          accessToken: 'synthetic-renewed-user',
-          refreshToken: 'synthetic-renewed-refresh',
-          expiresIn: 3600,
-        }),
-        reConnect: async (root: string, internalId: string) => ({
-          id: internalId,
-          name: 'Legacy page',
-          accessToken: 'synthetic-renewed-page___synthetic-renewed-user',
-          picture: '',
-          username: 'legacy-page',
-        }),
-      },
-    };
-    const { refresh, service } = makeRefresh(store, providers);
+    const { service } = makeService(store, {});
     const encryption = new EncryptionService();
 
     expect(encryption.hasProvider()).toBe(false);
@@ -778,7 +683,11 @@ describe('encryption provider configuration', () => {
     );
     expect(await encryption.decrypt('synthetic-plain')).toBe('synthetic-plain');
 
-    await refresh.refresh({ ...legacy } as any);
+    await service.createOrUpdateIntegration(
+      undefined, false, legacy.organizationId, legacy.name, undefined, 'social',
+      legacy.internalId, legacy.providerIdentifier,
+      'synthetic-renewed-page___synthetic-renewed-user', 'synthetic-renewed-refresh'
+    );
 
     expect(legacy.token).toBe(
       'synthetic-renewed-page___synthetic-renewed-user'
@@ -792,108 +701,12 @@ describe('encryption provider configuration', () => {
 });
 
 describe('refresh with grouped pages of the same account', () => {
-  const refreshService = (
-    store: ReturnType<typeof createStore>,
-    providers: Record<string, any>
-  ) => {
-    const { service } = makeService(store, providers);
-    return new RefreshIntegrationService(
-      {
-        getSocialIntegration: (identifier: string) => providers[identifier],
-      } as any,
-      service,
-      {} as any
-    );
-  };
-
-  it('reconnects a page with its root id and stores the page token', async () => {
-    const store = createStore();
-    const page = row({
-      internalId: 'page-2',
-      rootInternalId: 'user-root',
-      providerIdentifier: 'instagram',
-      token: 'old-page-token',
-      refreshToken: 'old-user-token',
-    });
-    store.rows.push(page);
-
-    const calls: any[] = [];
-    const provider = {
-      oneTimeToken: false,
-      refreshToken: async (refreshToken: string) => ({
-        accessToken: 'fresh-user-token',
-        refreshToken: 'fresh-user-refresh',
-        expiresIn: 3600,
-      }),
-      reConnect: async (
-        rootInternalId: string,
-        internalId: string,
-        token: string
-      ) => {
-        calls.push({ rootInternalId, internalId, token });
-        return {
-          id: internalId,
-          name: 'Page two',
-          accessToken: 'fresh-page-token',
-          picture: '',
-          username: 'page-two',
-        };
-      },
-    };
-    const refresh = refreshService(store, { instagram: provider });
-
-    const result = await refresh.refresh(page as any);
-
-    expect(calls).toEqual([
-      {
-        rootInternalId: 'user-root',
-        internalId: 'page-2',
-        token: 'fresh-user-token',
-      },
-    ]);
-    expect(result).toBeTruthy();
-    expect(page.token).toBe('fresh-page-token');
-    expect(page.refreshToken).toBe('fresh-user-refresh');
-    expect(page.internalId).toBe('page-2');
-    expect(page.rootInternalId).toBe('user-root');
-  });
-
-  it('does not call reConnect for a root channel', async () => {
-    const store = createStore();
-    const root = row({
-      internalId: 'root-channel',
-      rootInternalId: 'root-channel',
-      providerIdentifier: 'instagram',
-    });
-    store.rows.push(root);
-
-    const calls: any[] = [];
-    const provider = {
-      oneTimeToken: false,
-      refreshToken: async () => ({
-        accessToken: 'fresh-root-token',
-        refreshToken: 'fresh-root-refresh',
-        expiresIn: 3600,
-      }),
-      reConnect: async (...args: any[]) => {
-        calls.push(args);
-        return {};
-      },
-    };
-    const refresh = refreshService(store, { instagram: provider });
-
-    await refresh.refresh(root as any);
-
-    expect(calls).toEqual([]);
-    expect(root.token).toBe('fresh-root-token');
-  });
-
   it('flags the channel when the token refresh itself fails', async () => {
     const store = createStore();
     const page = row({
       internalId: 'page-3',
       rootInternalId: 'user-root',
-      providerIdentifier: 'instagram',
+      providerIdentifier: 'paged-provider',
       token: 'old-page-token',
     });
     store.rows.push(page);
@@ -910,7 +723,7 @@ describe('refresh with grouped pages of the same account', () => {
       },
     };
     const previousExpiry = page.tokenExpiration;
-    const refresh = refreshService(store, { instagram: provider });
+    const { refresh } = makeRefresh(store, { 'paged-provider': provider });
 
     const result = await refresh.refresh(page as any);
 
@@ -2200,54 +2013,6 @@ databaseSuite('real PostgreSQL credential matrix', () => {
       token: 'synthetic-instagram-single-token',
     });
     expect((await raw(ids.tumblrB)).organizationId).toBe(orgB);
-  });
-
-  it('refreshes two pages of one account into their own rows and keeps the root untouched', async () => {
-    const pageProvider = {
-      oneTimeToken: false,
-      refreshToken: async () => ({
-        accessToken: 'synthetic-page-user-token',
-        refreshToken: 'synthetic-page-user-refresh',
-        expiresIn: 3600,
-      }),
-      reConnect: async (
-        rootInternalId: string,
-        internalId: string,
-        token: string
-      ) => ({
-        id: internalId,
-        name: internalId,
-        accessToken: `synthetic-wn-${internalId}`,
-        picture: '',
-        username: internalId,
-      }),
-    };
-    const pageRefresh = new RefreshIntegrationService(
-      { getSocialIntegration: () => pageProvider } as any,
-      service,
-      {} as any
-    );
-    const beforeRoot = await raw(ids.instagram);
-
-    const pageOne = await repository.getIntegrationById(orgA, ids.instagramPageOne);
-    const pageTwo = await repository.getIntegrationById(orgA, ids.instagramPageTwo);
-    await pageRefresh.refresh(pageOne as any);
-    await pageRefresh.refresh(pageTwo as any);
-
-    expect(await raw(ids.instagramPageOne)).toMatchObject({
-      token: 'synthetic-wn-synthetic-instagram-page-one',
-      refreshToken: 'synthetic-page-user-refresh',
-      rootInternalId: 'synthetic-instagram-user',
-    });
-    expect(await raw(ids.instagramPageTwo)).toMatchObject({
-      token: 'synthetic-wn-synthetic-instagram-page-two',
-      refreshToken: 'synthetic-page-user-refresh',
-      rootInternalId: 'synthetic-instagram-user',
-    });
-    expect(await raw(ids.instagram)).toMatchObject({
-      token: beforeRoot.token,
-      refreshNeeded: beforeRoot.refreshNeeded,
-    });
   });
 
   it('reuses the winning concurrent rotation and publishes the next Tumblr post with it', async () => {

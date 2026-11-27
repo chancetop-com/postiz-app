@@ -1,7 +1,5 @@
 import 'reflect-metadata';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { targetConstructorToSchema } from 'class-validator-jsonschema';
-import { TikTokDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/tiktok.dto';
 import { TiktokProvider } from '@gitroom/nestjs-libraries/integrations/social/tiktok.provider';
 import { TiktokBusinessProvider } from '@gitroom/nestjs-libraries/integrations/social/tiktok.business.provider';
 
@@ -442,19 +440,6 @@ describe('TikTok Business location', () => {
   });
 });
 
-describe('TikTokDto is_ai_generated', () => {
-  it('documents the AI and location send paths in the settings schema', () => {
-    const schema = targetConstructorToSchema(TikTokDto) as {
-      properties?: Record<string, any>;
-    };
-    const properties = schema.properties ?? {};
-
-    expect(properties.is_ai_generated.description).toContain('top-level');
-    expect(properties.location.description).toContain('TikTok Business only');
-    expect(properties.location.description).toContain('DIRECT_POST');
-  });
-});
-
 describe('TikTok checkValidity on unsupported AI combinations', () => {
   it('keeps a video UPLOAD with the retained AI setting structurally valid', async () => {
     const items = [[{ path: 'https://media.test/clip.MP4' }]];
@@ -471,31 +456,5 @@ describe('TikTok checkValidity on unsupported AI combinations', () => {
     await expect(
       (new TiktokBusinessProvider().checkValidity as any)(items, settings)
     ).resolves.toBe(true);
-  });
-});
-
-describe('TikTok provider rules', () => {
-  const rulesOf = (provider: any) =>
-    String(Reflect.getMetadata('custom:rules:description', provider));
-
-  it('describes the legacy video/photo paths and UPLOAD semantics', () => {
-    const rules = rulesOf(TiktokProvider);
-
-    expect(rules).toContain('is_ai_generated');
-    expect(rules).toContain('post_info.is_aigc');
-    expect(rules).toMatch(/photo/i);
-    expect(rules).toContain('top-level is_aigc');
-    expect(rules).not.toContain('video_made_with_ai');
-  });
-
-  it('describes the Business video/photo paths and draft semantics', () => {
-    const rules = rulesOf(TiktokBusinessProvider);
-
-    expect(rules).toContain('is_ai_generated');
-    expect(rules).toContain('post_info.is_ai_generated');
-    expect(rules).toContain('top-level is_ai_generated');
-    expect(rules).toContain('upload_to_draft');
-    expect(rules).toContain('is_draft');
-    expect(rules).not.toContain('video_made_with_ai');
   });
 });

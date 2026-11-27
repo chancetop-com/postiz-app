@@ -1,16 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/react';
-
-/**
- * Ticket 07: every add-channel entry comes from the same filtered social list,
- * so the desktop modal, the mobile drawer and onboarding all show exactly the
- * agreed identifiers.
- *
- * The payload below mirrors what `GET /integrations` returns from the stable
- * release, including separate identifiers for personal and business accounts.
- */
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -57,23 +48,8 @@ const social = [
   provider('mastodon', 'Mastodon', { isExternal: true }),
 ];
 
-const icons = (container: HTMLElement) =>
-  Array.from(container.querySelectorAll('img')).map((img) =>
-    img.getAttribute('src')
-  );
-
-const renderAdd = (props: Record<string, unknown> = {}) =>
-  render(
-    <AddProviderComponent
-      social={social}
-      article={[
-        { identifier: 'devto', name: 'Dev.to' },
-        { identifier: 'medium', name: 'Medium' },
-      ]}
-      invite={false}
-      {...props}
-    />
-  );
+const renderAdd = (invite = false) =>
+  render(<AddProviderComponent social={social} article={[]} invite={invite} />);
 
 afterEach(() => {
   cleanup();
@@ -81,19 +57,18 @@ afterEach(() => {
 });
 
 describe('the add-channel entries', () => {
-  it('offers exactly the agreed identifiers, in server order', () => {
-    const { container } = renderAdd();
+  it.each([false, true])('offers the supported channels (invite=%s)', (invite) => {
+    renderAdd(invite);
 
-    // entry order follows `GET /integrations`, only the set is the contract
-    expect(icons(container)).toEqual([
-      '/icons/platforms/linkedin.png',
-      '/icons/platforms/facebook.png',
-      '/icons/platforms/instagram.png',
-      '/icons/platforms/instagram-standalone.png',
-      '/icons/platforms/youtube.svg',
-      '/icons/platforms/tiktok.png',
-      '/icons/platforms/tiktok-business.png',
-    ]);
+    for (const label of [
+      'LinkedIn', 'Facebook Page', 'Instagram (Facebook Business)',
+      'Instagram (Standalone)', 'YouTube', 'Tiktok', 'TikTok Business',
+    ]) {
+      expect(screen.getByText(label)).toBeTruthy();
+    }
+    for (const label of ['X', 'LinkedIn Page', 'Dev.to', 'Tumblr', 'Bluesky', 'Mastodon']) {
+      expect(screen.queryByText(label)).toBeNull();
+    }
   });
 
   it.each([
@@ -106,41 +81,5 @@ describe('the add-channel entries', () => {
     expect(request).toHaveBeenCalledWith(
       expect.stringContaining(`/integrations/social/${identifier}?`)
     );
-  });
-
-  it('keeps the two Instagram entries distinguishable', () => {
-    const { container } = renderAdd();
-    const sources = icons(container);
-
-    expect(sources).toContain('/icons/platforms/instagram.png');
-    expect(sources).toContain('/icons/platforms/instagram-standalone.png');
-    expect(container.textContent).toContain('Facebook Business');
-    expect(container.textContent).toContain('Standalone');
-  });
-
-  it('does not render article providers as add entries', () => {
-    const { container } = renderAdd();
-    expect(container.textContent).not.toContain('Medium');
-  });
-
-  it('applies the same identifier list to the invite and mobile variants', () => {
-    const desktop = icons(renderAdd().container);
-    cleanup();
-
-    const invite = renderAdd({ invite: true });
-    expect(icons(invite.container)).toEqual(desktop);
-    cleanup();
-
-    // mobile renders the same filtered list, not a second curated one
-    const mobile = renderAdd({ isMobile: true });
-    expect(icons(mobile.container)).toEqual(desktop);
-  });
-
-  it('applies the same identifier list to the onboarding step', () => {
-    const desktop = icons(renderAdd().container);
-    cleanup();
-
-    const onboarding = renderAdd({ onboarding: true });
-    expect(icons(onboarding.container)).toEqual(desktop);
   });
 });

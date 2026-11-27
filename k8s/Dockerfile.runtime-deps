@@ -1,0 +1,61 @@
+# ============================================================
+# Postiz runtime dependencies cache layer (ADR-0001)
+#
+# Takes the cached builder-dependencies image, prunes development-only
+# packages while explicitly preserving the generated Prisma client and
+# local Prisma engine binaries, and layers the pruned node_modules onto
+# the slim runtime OS base image.
+#
+# Built as a separate Dockerfile so classic non-BuildKit remote builders
+# (such as `az acr build`) deterministically reuse cached layers without
+# re-running dependency installation.
+# ============================================================
+ARG BASE_IMAGE=postiz-base:local
+ARG DEPS_IMAGE=postiz-deps:local
+
+# ===== Stage 1: prune development dependencies =====
+FROM ${DEPS_IMAGE} AS deps-prune
+
+WORKDIR /app
+
+# Preserve generated Prisma client (.prisma) and downloaded Prisma engine
+# binaries across `pnpm prune --prod`: with node-linker=hoisted, pnpm prune
+# prompts interactively to relink node_modules and silently no-ops in non-TTY
+# builds unless CI=true is set, and npm_config_offline=true reuses /pnpm-store
+# without stalling on skipped cross-platform optional packages.
+RUN set -eu \
+ && test -d /app/node_modules/.prisma \
+ && cp -a /app/node_modules/.prisma /tmp/.prisma \
+ && mkdir -p /tmp/.prisma-engines \
+ && find /app/node_modules/@prisma/engines -maxdepth 1 \
+      \( -name 'libquery_engine-*' -o -name 'schema-engine-*' -o -name 'query-engine-*' \) \
+      -exec cp -a {} /tmp/.prisma-engines/ \; \
+ && test -n "$(find /tmp/.prisma-engines -maxdepth 1 -name 'schema-engine-*')" \
+ && CI=true npm_config_offline=true pnpm prune --prod --ignore-scripts \
+ && test ! -e /app/node_modules/eslint \
+ && rm -rf /app/node_modules/.prisma \
+ && mv /tmp/.prisma /app/node_modules/.prisma \
+ && cp -a /tmp/.prisma-engines/. /app/node_modules/@prisma/engines/ \
+ && rm -rf /tmp/.prisma-engines
+
+# ===== Stage 2: slim runtime dependencies layer =====
+FROM ${BASE_IMAGE} AS runtime-deps
+
+WORKDIR /app
+
+COPY --from=deps-prune /app/node_modules ./node_modules
+
+# Verify offline on the slim runtime base that:
+#   1. the pinned local Prisma 6.5.0 CLI executes without devDependencies or network
+#   2. both Query Engine and Schema Engine resolve locally from @prisma/engines
+#   3. the preserved generated @prisma/client loads cleanly
+RUN set -eu \
+ && CHECKPOINT_DISABLE=1 PRISMA_HIDE_UPDATE_MESSAGE=1 \
+    HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 NO_PROXY= \
+    /app/node_modules/.bin/prisma --version > /tmp/prisma-version.txt \
+ && cat /tmp/prisma-version.txt \
+ && grep -Eq '^prisma[[:space:]]*:[[:space:]]*6\.5\.0$' /tmp/prisma-version.txt \
+ && grep -Eq '^Query Engine \(Node-API\)[[:space:]]*:.*@prisma/engines/' /tmp/prisma-version.txt \
+ && grep -Eq '^Schema Engine[[:space:]]*:.*@prisma/engines/' /tmp/prisma-version.txt \
+ && rm -f /tmp/prisma-version.txt \
+ && node -e 'const { PrismaClient } = require("@prisma/client"); if (typeof PrismaClient !== "function") process.exit(1);'
